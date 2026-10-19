@@ -5,6 +5,8 @@
 #include "Object.h"
 #include <iostream>
 
+# define M_PI           3.14159265f
+
 union SDL_Event;
 
 struct Engine {

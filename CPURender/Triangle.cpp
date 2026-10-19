@@ -1,10 +1,11 @@
 #include "Triangle.h"
 
-bool Triangle::IsFront()
+bool Triangle::IsFront(bool _clockwise)
 {
     glm::vec3 normal = glm::cross(v2.pos - v1.pos, v3.pos - v1.pos);
 
-    return normal.z < 0;
+    if(_clockwise) return normal.z < 0;
+    return normal.z > 0;
 }
 
 bool Triangle::IsInTriangle(glm::vec2 _point)

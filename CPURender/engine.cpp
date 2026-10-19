@@ -15,6 +15,9 @@
 
 #define FIRE_PALETTE_SIZE 37
 
+#define NEAR 0.1f
+#define FAR 100.0f
+
 static uint8_t firePixels[FIRE_W * FIRE_H];
 
 static const uint32_t fire_palette[FIRE_PALETTE_SIZE] = {
@@ -79,6 +82,8 @@ void Engine::init()
                         0, 0, 0, 1 };
 
     std::shared_ptr<Object> debugTriangle = std::make_shared<Object>();
+    std::shared_ptr<Object> debugTriangle2 = std::make_shared<Object>();
+    std::shared_ptr<Object> debugTriangle3 = std::make_shared<Object>();
 
     float red[3] = { 255, 0, 0 };
     float green[3] = { 0, 255, 0 };
@@ -86,9 +91,9 @@ void Engine::init()
     float white[3] = { 255, 255, 255 };
 
     Triangle t1;
-    t1.v1 = {glm::vec3(-1.0f, 0.0f, 0.0f), { 255, 0, 0 } };
+    t1.v1 = {glm::vec3(1.0f, 0.0f, 0.0f), { 0, 0, 255 } };
     t1.v2 = {glm::vec3(0.0f, 1.0f, 0.0f), { 0, 255, 0 } };
-    t1.v3 = {glm::vec3(1.0f, 0.0f, 0.0f), { 0, 0, 255 } };
+    t1.v3 = {glm::vec3(-1.0f, 0.0f, 0.0f), { 255, 0, 0 } };
 
     debugTriangle->mesh.triangles.push_back(t1);
     debugTriangle->transform = { 1, 0, 0, 0,
@@ -96,7 +101,26 @@ void Engine::init()
                                 0, 0, 1, 0,
                                 0, 0, 2, 1 };
 
+    debugTriangle2->mesh.triangles.push_back(t1);
+    debugTriangle2->transform = { 1, 0, 0, 0,
+                                0, 1, 0, 0,
+                                0, 0, 1, 0,
+                                0.5, 0, 2, 1 };
+
+    //debugTriangle2->transform = glm::rotate(debugTriangle2->transform, 3.1415f / 4.0f, { 0, 1, 0 });
+
+
+    //debugTriangle3->mesh.triangles.push_back(t1);
+    //debugTriangle3->transform = { 1, 0, 0, 0,
+    //                            0, 1, 0, 0,
+    //                            0, 0, 1, 0,
+    //                            0, 0, 3, 1 };
+
+    //debugTriangle3->transform = glm::rotate(debugTriangle2->transform, 3.1415f, { 0, 1, 0 });
+
     objects.push_back(debugTriangle);
+    objects.push_back(debugTriangle2);
+    //objects.push_back(debugTriangle3);
 }
 
 void Engine::handleEvent(const SDL_Event& event)
@@ -140,38 +164,69 @@ void Engine::handleEvent(const SDL_Event& event)
 
 void Engine::renderFrame(FinalFrameBuffer& frameBufferOut)
 {
-    //objects[0]->transform = glm::rotate(objects[0]->transform, -3.1415f / float(target_frame) * 2, glm::vec3(0, 1, 0));
-
-
     frameBufferOut.clear(0 | (0 << 8) | (0 << 16) | (0 << 24));
 
-    glm::mat4x4 proj = glm::perspectiveFov(90.0f, 320.0f, 240.0f, 0.1f, 100.0f);
-    //glm::mat4x4 proj = glm::perspective(75.0f, 4.0f / 3.0f, 0.1f, 100.f);
+    objects[0]->transform = glm::rotate(objects[0]->transform, 3.1415f * 4.0f / (float)target_frame, {0, 1, 0});
+
+    // Create Depth Buffer
+    size_t pixelCount = sizeof(frameBufferOut.colorData) / sizeof(uint32_t);
+    std::vector<float> depthBuffer = std::vector<float>(pixelCount);
+    std::fill(depthBuffer.begin(), depthBuffer.end(), FAR);
+
+    glm::mat4x4 proj = glm::perspectiveFov(M_PI/2.0f, 320.0f, 240.0f, NEAR, FAR);
 
     glm::mat4x4 view = glm::inverse(mainCam.transform);
     glm::vec4 viewport = glm::vec4(0, 0, 320, 240);
 
-    glm::mat4x4 modelView = view * objects[0]->transform;
+    size_t objCount = objects.size();
+    for (int i = 0; i < objCount; i++)
+    {
+        glm::mat4x4 modelView = view * objects[i]->transform;
 
-    // To screen
-    Triangle screenSpace = objects[0]->mesh.triangles[0];
-    screenSpace.v1.pos = glm::project(screenSpace.v1.pos, modelView, proj, viewport);
-    screenSpace.v2.pos = glm::project(screenSpace.v2.pos, modelView, proj, viewport);
-    screenSpace.v3.pos = glm::project(screenSpace.v3.pos, modelView, proj, viewport);
+        size_t triCount = objects[i]->mesh.triangles.size();
+        for (int j = 0; j < triCount; j++)
+        {
+            // To screen
+            Triangle screenSpace = objects[i]->mesh.triangles[j];
+            screenSpace.v1.pos = glm::project(screenSpace.v1.pos, modelView, proj, viewport);
+            screenSpace.v2.pos = glm::project(screenSpace.v2.pos, modelView, proj, viewport);
+            screenSpace.v3.pos = glm::project(screenSpace.v3.pos, modelView, proj, viewport);
 
-    if(screenSpace.IsFront() == false) return; // For now, Clockwise
+            if (screenSpace.IsFront() == false) continue; // For now, Clockwise
 
-    for (uint32_t x = 0; x < FIRE_W; x++) {
-        for (uint32_t y = 1; y < FIRE_H; y++) {
+            for (uint32_t x = 0; x < FIRE_W; x++) {
+                for (uint32_t y = 0; y < FIRE_H; y++) {
+                    uint32_t color = 0;
+                    if (screenSpace.IsInTriangle({ x, y }))
+                    {
+                        glm::vec3 bary = screenSpace.BarycentricWeight({ x, y });
 
-            uint32_t color = 0;
-            if (screenSpace.IsInTriangle({ x, y }))
-            {
-                color = screenSpace.GetPointColor({ x, y });
-                frameBufferOut.put_pixel(x, y, color);
+                        float pixelDepth = 0;
+                        pixelDepth += bary.x * screenSpace.v1.pos.z;
+                        pixelDepth += bary.y * screenSpace.v2.pos.z;
+                        pixelDepth += bary.z * screenSpace.v3.pos.z;
+                        pixelDepth = 1 / pixelDepth;
+                        
+                        if (pixelDepth > depthBuffer[x + FIRE_W * y])
+                        {
+                            continue;
+                        }
+
+                        if (pixelDepth > 1)
+                        {
+                            std::cout << "Behind near" << std::endl;
+                            continue;
+                        }
+
+                        depthBuffer[x + FIRE_W * y] = pixelDepth;
+                        color = screenSpace.GetPointColor({ x, y });
+                        frameBufferOut.put_pixel(x, y, color);
+                    }
+                }
             }
         }
     }
+    
 }
 
 void Engine::destroy()

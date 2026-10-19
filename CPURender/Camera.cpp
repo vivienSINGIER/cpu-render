@@ -20,3 +20,8 @@ void Camera::RotateRoll(float _angle)
 {
 	transform = glm::rotate(transform, _angle, glm::vec3(0, 0, 1));
 }
+
+glm::vec3 Camera::GetPosition()
+{
+	return { transform[3][0], transform[3][1], transform[3][2] };
+}

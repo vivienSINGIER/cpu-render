@@ -10,5 +10,7 @@ public:
 	void RotateYaw(float _angle);
 	void RotatePitch(float _angle);
 	void RotateRoll(float _angle);
+
+	glm::vec3 GetPosition();
 };
 

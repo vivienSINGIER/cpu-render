@@ -13,7 +13,7 @@ struct Triangle
 	Vertex v2;
 	Vertex v3;
 
-	bool IsFront();
+	bool IsFront(bool _clockwise = false);
 	bool IsInTriangle(glm::vec2 _point);
 	glm::vec3 BarycentricWeight(glm::vec2 _point);
 	uint32_t GetPointColor(glm::vec2 _point);
