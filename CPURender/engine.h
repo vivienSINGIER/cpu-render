@@ -1,11 +1,19 @@
 #pragma once
 
 #include "main.h"
-//Students can change whetever they want in this file
+#include "Camera.h"
+#include "Object.h"
+#include <iostream>
 
 union SDL_Event;
 
 struct Engine {
+
+	Camera mainCam;
+	Object debugTriangle;
+	std::vector<std::shared_ptr<Object>> objects;
+
+	const double target_frame = 1.0 / 60.0;
 
 	void init();
 

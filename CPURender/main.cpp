@@ -13,8 +13,6 @@ int main(void) {
     SDL_Texture *texture;
     SDL_Event event;
 
-    const double target_frame = 1.0 / 60.0;
-
     if (!SDL_Init(SDL_INIT_VIDEO)) {
         fprintf(stderr, "SDL_Init failed: %s\n", SDL_GetError());
         return EXIT_FAILURE;
@@ -106,8 +104,8 @@ int main(void) {
         double elapsed = (double)(end - start) / (double)SDL_GetPerformanceFrequency();
 
         /* Cap the framerate to 60 FPS (16 milliseconds each frame) */
-        if (elapsed < target_frame) {
-            SDL_Delay((uint32_t)((target_frame - elapsed) * 1000.0));
+        if (elapsed < engine.target_frame) {
+            SDL_Delay((uint32_t)((engine.target_frame - elapsed) * 1000.0));
         }
 
         frame++;

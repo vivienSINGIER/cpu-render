@@ -7,7 +7,7 @@
 #include "stb_image.h"
 #include <vector>
 #include <glm/mat4x4.hpp>
-
+#include <glm/gtc/matrix_transform.hpp>
 
 /* Doom fire variables and color palette */
 #define FIRE_W WIDTH
@@ -71,6 +71,32 @@ void Engine::init()
     }
     free(data);
     resetFire();
+
+    mainCam = Camera();
+    mainCam.transform = { 1, 0, 0, 0,
+                        0, 1, 0, 0,
+                        0, 0, 1, 0,
+                        0, 0, 0, 1 };
+
+    std::shared_ptr<Object> debugTriangle = std::make_shared<Object>();
+
+    float red[3] = { 255, 0, 0 };
+    float green[3] = { 0, 255, 0 };
+    float blue[3] = { 0, 0, 255 };
+    float white[3] = { 255, 255, 255 };
+
+    Triangle t1;
+    t1.v1 = {glm::vec3(-1.0f, 0.0f, 0.0f), { 255, 0, 0 } };
+    t1.v2 = {glm::vec3(0.0f, 1.0f, 0.0f), { 0, 255, 0 } };
+    t1.v3 = {glm::vec3(1.0f, 0.0f, 0.0f), { 0, 0, 255 } };
+
+    debugTriangle->mesh.triangles.push_back(t1);
+    debugTriangle->transform = { 1, 0, 0, 0,
+                                0, 1, 0, 0,
+                                0, 0, 1, 0,
+                                0, 0, 2, 1 };
+
+    objects.push_back(debugTriangle);
 }
 
 void Engine::handleEvent(const SDL_Event& event)
@@ -79,51 +105,71 @@ void Engine::handleEvent(const SDL_Event& event)
     {
         if (event.key.key == SDLK_SPACE)
         {
-            //We reset the fire on space bar down
-            resetFire();
+            mainCam.Translate({ 0, 1.0f, 0 });
+        }
+        if (event.key.key == SDLK_LCTRL)
+        {
+            mainCam.Translate({ 0, -1.0f, 0 });
+        }
+        if (event.key.key == SDLK_S)
+        {
+            mainCam.Translate({ 0, 0, -1.0f });
+        }
+        if (event.key.key == SDLK_Z)
+        {
+            mainCam.Translate({ 0, 0, 1.0f});
+        }
+        if (event.key.key == SDLK_Q)
+        {
+            mainCam.Translate({ 1.0f, 0, 0 });
+        }
+        if (event.key.key == SDLK_D)
+        {
+            mainCam.Translate({ -1.0f, 0, 0 });
+        }
+        if (event.key.key == SDLK_A)
+        {
+            mainCam.RotateYaw(3.1415f / 4.0f);
+        }
+        if (event.key.key == SDLK_E)
+        {
+            mainCam.RotateYaw(-3.1415f / 4.0f);
         }
     }
 }
 
 void Engine::renderFrame(FinalFrameBuffer& frameBufferOut)
 {
+    //objects[0]->transform = glm::rotate(objects[0]->transform, -3.1415f / float(target_frame) * 2, glm::vec3(0, 1, 0));
 
-    frameBufferOut.clear(0x000000);
 
-    /* Fire update */
+    frameBufferOut.clear(0 | (0 << 8) | (0 << 16) | (0 << 24));
+
+    glm::mat4x4 proj = glm::perspectiveFov(90.0f, 320.0f, 240.0f, 0.1f, 100.0f);
+    //glm::mat4x4 proj = glm::perspective(75.0f, 4.0f / 3.0f, 0.1f, 100.f);
+
+    glm::mat4x4 view = glm::inverse(mainCam.transform);
+    glm::vec4 viewport = glm::vec4(0, 0, 320, 240);
+
+    glm::mat4x4 modelView = view * objects[0]->transform;
+
+    // To screen
+    Triangle screenSpace = objects[0]->mesh.triangles[0];
+    screenSpace.v1.pos = glm::project(screenSpace.v1.pos, modelView, proj, viewport);
+    screenSpace.v2.pos = glm::project(screenSpace.v2.pos, modelView, proj, viewport);
+    screenSpace.v3.pos = glm::project(screenSpace.v3.pos, modelView, proj, viewport);
+
+    if(screenSpace.IsFront() == false) return; // For now, Clockwise
+
     for (uint32_t x = 0; x < FIRE_W; x++) {
         for (uint32_t y = 1; y < FIRE_H; y++) {
-            uint32_t src = FIRE_W * y + x;
-            uint32_t rand_idx = rand() % 4;
-            int32_t dst = (int32_t)src - FIRE_W;
-            int32_t dst_x = (int32_t)(src % FIRE_W) - (int32_t)rand_idx + 1;
-            if (dst < 0 || dst_x < 0 || dst_x >= FIRE_W) {
-                continue;
-            } else {
-                dst = dst - (int32_t)(src % FIRE_W) + dst_x;
-                uint8_t src_val = firePixels[src];
-                uint8_t decay = rand_idx & 1;
-                firePixels[dst] = (src_val > decay) ? (src_val - decay) : 0;
-            }
-        }
-    }
 
-    //draws the doomguy face texture at the center of the screen
-    for (int x = 0; x < doomFace.width; x++)
-    {
-        for (int y = 0; y < doomFace.height; y++) 
-        {
-            int posX = (WIDTH / 2 - doomFace.width/2) + x;
-            int posY = (HEIGHT / 2 - doomFace.height/2) + y;
-            frameBufferOut.put_pixel(posX, posY, doomFace.imageData[x + y*doomFace.width]);
-        }
-    }
-    /* Fire render */
-    for (int y = 0; y < FIRE_H; y++) {
-        for (int x = 0; x < FIRE_W; x++) {
-            uint8_t idx = firePixels[y * FIRE_W + x];
-            if(idx != 0)
-                frameBufferOut.put_pixel(x, y, fire_palette[idx]);
+            uint32_t color = 0;
+            if (screenSpace.IsInTriangle({ x, y }))
+            {
+                color = screenSpace.GetPointColor({ x, y });
+                frameBufferOut.put_pixel(x, y, color);
+            }
         }
     }
 }
