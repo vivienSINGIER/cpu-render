@@ -51,18 +51,17 @@ void Engine::renderFrame(Texture& _tex)
 {
     Texture doomGuy;
     doomGuy.Load("Assets/doomguy.png");
-    doomGuy.SetSize(WIDTH, HEIGHT);
     
     _tex.Clear(Color::BLACK);
 
     //draws the doomguy face texture at the center of the screen
-    for (uint32 x = 0; x < doomGuy.Width(); x++)
+    for (uint32 y = 0; y < doomGuy.Height(); y++)
     {
-        for (uint32 y = 0; y < doomGuy.Height(); y++) 
+        for (uint32 x = 0; x < doomGuy.Width(); x++) 
         {
-            uint32 posX = (WIDTH / 2 - doomGuy.Width()/2) + x;
-            uint32 posY = (HEIGHT / 2 - doomGuy.Height()/2) + y;
-            _tex.SetPixelColor(posX, posY, doomGuy.GetPixelColor(posX, posY));
+            uint32 posX = (WIDTH / 2 - doomGuy.Width() / 2) + x;
+            uint32 posY = (HEIGHT / 2 - doomGuy.Height() / 2) + y;
+            _tex.SetPixelColor(posX, posY, doomGuy.GetPixelColor(x, y));
         }
     }
 }
