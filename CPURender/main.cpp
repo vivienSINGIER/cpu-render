@@ -5,7 +5,6 @@
 #include "engine.h"
 //Students cannot change anything in this file
 
-
 /* Main function */
 int main(void) {
     SDL_Window *window;
