@@ -4,17 +4,19 @@
 
 struct FinalFrameBuffer;
 
+//Inspired by https://rtouti.github.io/graphics/perlin-noise-algorithm
 struct PerlinNoise
 {
 public:
 	static void InitTable();
 
-	static float Perlin(float x, float y);
+	static float Perlin(float x, float y, float frequency);
 
-	//TODO Remove when the custom perlin noise is working
-	static void GenerateWithGLM(FinalFrameBuffer* _output, float _smoothness);
+	//Adding multiple sinusoides of Perlin Noise with more frequency each time to get a fractal effect :)
+	static float FractalBrownianMotion(float x, float y, float frequency, int numOctaves);
 
-	static void Generate(FinalFrameBuffer* _output, float _smoothness);
+	//frequency in [0, 1], near 1 = high amount of variations | numOctaves is the amount of iterations for fractal effect -> 1 = classic perlin noise
+	static void Generate(FinalFrameBuffer* _output, float frequency = 0.005f, int numOctaves = 1);
 
 private:
 	static std::vector<int> m_permutation_table;

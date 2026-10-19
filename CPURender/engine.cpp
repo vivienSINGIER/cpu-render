@@ -50,8 +50,6 @@ void resetFire()
 
 void Engine::init()
 {
-    PerlinNoise::InitTable();
-
     printf("Init engine \n");
     static int nbrChannel;
     unsigned char* data = stbi_load("Assets/doomguy.png", &doomFace.width, &doomFace.height, &nbrChannel, 4);
@@ -90,9 +88,12 @@ void Engine::handleEvent(const SDL_Event& event)
 
 void Engine::renderFrame(FinalFrameBuffer& frameBufferOut)
 {
-    frameBufferOut.clear(0x000000);
+    frameBufferOut.clear(0xFF00D9);
 
-    PerlinNoise::Generate(&frameBufferOut, 1.f);
+    PerlinNoise::InitTable();
+    PerlinNoise::Generate(&frameBufferOut, 0.005f, 8);
+
+    system("pause");
 
     ///* Fire update */
     //for (uint32_t x = 0; x < FIRE_W; x++) {
