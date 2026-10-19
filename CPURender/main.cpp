@@ -71,7 +71,7 @@ int main(void) {
     engine.init();
     bool isRunning = true;
     uint32_t frame = 1;
-    FinalFrameBuffer frameBuffer;
+    Texture frameBuffers;
     
 
     /* Frame loop */
@@ -92,8 +92,8 @@ int main(void) {
         SDL_UpdateTexture(
             texture,
             NULL,
-            &frameBuffer.colorData,
-            WIDTH * sizeof(uint32_t)
+            frameBuffer.GetData(),
+            
         );
 
         /* Render texture and display the renderer */
