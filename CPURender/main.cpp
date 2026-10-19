@@ -2,8 +2,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "main.h"
+
+#include <iostream>
+#include <ostream>
+
 #include "engine.h"
 //Students cannot change anything in this file
+
 
 
 /* Main function */
@@ -49,7 +54,7 @@ int main(void) {
 
     texture = SDL_CreateTexture(
         renderer,
-        SDL_PIXELFORMAT_XRGB8888,
+        SDL_PIXELFORMAT_ARGB32,
         SDL_TEXTUREACCESS_STREAMING,
         WIDTH,
         HEIGHT
@@ -71,8 +76,7 @@ int main(void) {
     engine.init();
     bool isRunning = true;
     uint32_t frame = 1;
-    Texture frameBuffers;
-    
+    Texture frameBuffer(256, 256, Texture::LINEAR);
 
     /* Frame loop */
     while (isRunning) {
@@ -93,7 +97,7 @@ int main(void) {
             texture,
             NULL,
             frameBuffer.GetData(),
-            
+            (int)(frameBuffer.Width() * sizeof(Color))
         );
 
         /* Render texture and display the renderer */

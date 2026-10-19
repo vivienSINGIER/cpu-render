@@ -7,35 +7,68 @@ namespace
 {
     uint32 NearestPowerOf2(uint32 _value)
     {
-        uint32 result = 1;
+        uint32 n = 1;
         uint32 t = 2;
         while (t < _value)
         {
             t *= 2;
-            result++;
+            n++;
         }
-        return result;
+        return t;
     }
 }
 
-Texture::Texture(uint32 _size, Color _color)
+Texture::Texture(uint32 _width, uint32 _height, Encoding _enc, Color _color) : m_encoding(_enc)
 {
-    SetSize(_size);
+    SetSize(_width, _height);
     
-    m_data.assign(m_size, _color);
+    m_data.assign(static_cast<size_t>(_width) * static_cast<size_t>(_height), _color);
 }
 
-uint32 Texture::GetSize() const
+uint32 Texture::GetSize(uint32& _width, uint32& _height) const
+{
+    _width = m_width;
+    _height = m_height;
+    return m_size;
+}
+
+uint32 Texture::Size() const
 {
     return m_size;
 }
 
-void Texture::SetSize(uint32 _size)
+uint32 Texture::Width() const
 {
-    m_size = NearestPowerOf2(_size);
-    float offset = static_cast<float>(_size) / static_cast<float>(m_size);
-    m_offsets = { offset, offset };
+    return m_width;
+}
+
+uint32 Texture::Height() const
+{
+    return m_height;
+}
+
+void Texture::SetSize(uint32 _width, uint32 _height)
+{
+    uint32 s = NearestPowerOf2(std::max(_width, _height));
+    m_size = s * s;
+    m_width = _width;
+    m_height = _height;
     m_data.resize(m_size);
+}
+
+Texture Texture::ToLinear()
+{
+    Texture t(m_width, m_height, LINEAR);
+    
+    for (uint32 y = 0; y < m_height; ++y)
+    {
+        for (uint32 x = 0; x < m_width; ++x)
+        {
+            uint32 index = GetIndex(x, y);
+            t.SetPixelColor(x, y, m_data[index]);
+        }
+    }
+    return t;
 }
 
 void Texture::Load(std::string const& _filePath)
@@ -44,31 +77,26 @@ void Texture::Load(std::string const& _filePath)
     int width, height;
     unsigned char* data = stbi_load(_filePath.c_str(), &width, &height, &nbrChannel, 4);
     
-    if (width == height)
-        SetSize(width * width);
-    else
-    {
-        int max = std::max(width, height);
-        m_size = NearestPowerOf2(max * max);
-        float offsetX = static_cast<float>(width) / static_cast<float>(max);
-        float offsetY = static_cast<float>(height) / static_cast<float>(max);
-        m_offsets = { offsetX, offsetY };
-        m_data.resize(m_size);
-    }
+    if (data == nullptr)
+        return;
     
-    for (int i = 0; i < width; ++i)
+    SetSize(width, height);
+    
+    for (int y = 0; y < height; ++y)
     {
-        for (int j = 0; j < height; ++j)
+        for (int x = 0; x < width; ++x)
         {
-            int linearized2D = i + j * width;
-            uint32_t index = EncodeMorton2(width, height);
+            int linearized2D = x + y * width;
+            uint32_t index = GetIndex(x, y);
             
-            m_data.at(index).a = static_cast<uint8>(data[3 + linearized2D * nbrChannel] << 24);
-            m_data.at(index).r = static_cast<uint8>(data[0 + linearized2D * nbrChannel] << 16);
-            m_data.at(index).g = static_cast<uint8>(data[1 + linearized2D * nbrChannel] << 8);
-            m_data.at(index).b = static_cast<uint8>(data[2 + linearized2D * nbrChannel]);
+            m_data[index].a = data[3 + linearized2D * 4];
+            m_data[index].r = data[0 + linearized2D * 4];
+            m_data[index].g = data[1 + linearized2D * 4];
+            m_data[index].b = data[2 + linearized2D * 4];
         }
     }
+    
+    free(data);
 }
 
 void Texture::Clear(Color _color)
@@ -78,19 +106,31 @@ void Texture::Clear(Color _color)
 
 void Texture::SetPixelColor(uint32 _x, uint32 _y, Color _color)
 {
-    uint32 i = EncodeMorton2(_x, _y);
+    uint32 i = GetIndex(_x, _y);
     
-    m_data.at(i) = _color;
+    m_data[i] = _color;
 }
 
 Color Texture::GetPixelColor(uint32 _x, uint32 _y)
 {
-    uint32 i = EncodeMorton2(_x, _y);
-    return m_data.at(i);
+    uint32 i = GetIndex(_x, _y);
+    return m_data[i];
 }
 
 Color* Texture::GetData()
 {
     return m_data.data();
+}
+
+uint32 Texture::GetIndex(uint32 _x, uint32 _y)
+{
+    switch (m_encoding)
+    {
+    case MORTON:
+        return EncodeMorton2(_x, _y);
+    case LINEAR:
+        return _x + _y * m_width;
+    }
+    return 0;
 }
 

@@ -2,6 +2,7 @@
 #define TEXTURE_INL_DEFINED
 
 #include "Texture.h"
+#include "Morton.hpp"
 
 template <typename T>
 T Texture::GetPixelData(uint32 _x, uint32 _y)

@@ -49,17 +49,20 @@ void Engine::handleEvent(const SDL_Event& event)
 
 void Engine::renderFrame(Texture& _tex)
 {
-
+    Texture doomGuy;
+    doomGuy.Load("Assets/doomguy.png");
+    doomGuy.SetSize(WIDTH, HEIGHT);
+    
     _tex.Clear(Color::BLACK);
 
     //draws the doomguy face texture at the center of the screen
-    for (int x = 0; x < doomFace.width; x++)
+    for (uint32 x = 0; x < doomGuy.Width(); x++)
     {
-        for (int y = 0; y < doomFace.height; y++) 
+        for (uint32 y = 0; y < doomGuy.Height(); y++) 
         {
-            int posX = (WIDTH / 2 - doomFace.width/2) + x;
-            int posY = (HEIGHT / 2 - doomFace.height/2) + y;
-            frameBufferOut.put_pixel(posX, posY, doomFace.imageData[x + y*doomFace.width]);
+            uint32 posX = (WIDTH / 2 - doomGuy.Width()/2) + x;
+            uint32 posY = (HEIGHT / 2 - doomGuy.Height()/2) + y;
+            _tex.SetPixelColor(posX, posY, doomGuy.GetPixelColor(posX, posY));
         }
     }
 }

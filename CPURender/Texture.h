@@ -15,14 +15,21 @@ using namespace glm;
 class Texture
 {
 public:
-    Texture(uint32 _size = 256, Color _color = Color::BLACK);
+    enum Encoding { MORTON, LINEAR };
+    
+    Texture(uint32 _width = 256, uint32 _height = 256, Encoding _enc = MORTON, Color _color = Color::BLACK);
     ~Texture() = default;
 
+    Texture ToLinear();
+    
     void Load(std::string const& _filePath);
     void Clear(Color _color = Color::BLACK);
     
-    uint32 GetSize() const;
-    void SetSize(uint32 _size);
+    uint32 Size()                                   const;
+    uint32 Width()                                  const;
+    uint32 Height()                                 const;
+    uint32 GetSize(uint32& _width, uint32& _height) const;
+    void SetSize(uint32 _width, uint32 _height);
     
     void SetPixelColor(uint32 _x, uint32 _y, Color _color);
     Color GetPixelColor(uint32 _x, uint32 _y);
@@ -36,8 +43,13 @@ public:
     
 private:
     std::vector<Color> m_data;
+    uint32 m_width;
+    uint32 m_height;
     uint32 m_size;
-    vec2 m_offsets; 
+    
+    Encoding m_encoding;
+    
+    uint32 GetIndex(uint32 _x, uint32 _y);
 };
 
 #include "Texture.inl"
