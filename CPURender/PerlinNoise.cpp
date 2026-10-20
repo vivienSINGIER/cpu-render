@@ -131,7 +131,7 @@ void PerlinNoise::Generate(FinalFrameBuffer* _output, float frequency, int numOc
 
 void PerlinNoise::InitTable()
 {
-	srand(time(nullptr));
+	m_permutation_table.clear();
 
 	for (int i = 0; i < 256; ++i)
 	{

@@ -91,7 +91,7 @@ void Engine::renderFrame(FinalFrameBuffer& frameBufferOut)
     frameBufferOut.clear(0xFF00D9);
 
     PerlinNoise::InitTable();
-    PerlinNoise::Generate(&frameBufferOut, 0.005f, 8);
+    PerlinNoise::Generate(&frameBufferOut, 0.01f, 8);
 
     system("pause");
 
