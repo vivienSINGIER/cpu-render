@@ -39,16 +39,10 @@ void Engine::init()
     t1.v3 = {glm::vec3(-1.0f, 0.0f, 0.0f), { 255, 255, 0, 0 } };
 
     debugTriangle->mesh.triangles.push_back(t1);
-    debugTriangle->transform = { 1, 0, 0, 0,
-                                0, 1, 0, 0,
-                                0, 0, 1, 0,
-                                0, 0, 2, 1 };
+    debugTriangle->transform.SetPosition(glm::vec3(0, 0, 2));
 
     debugTriangle2->mesh.triangles.push_back(t1);
-    debugTriangle2->transform = { 1, 0, 0, 0,
-                                0, 1, 0, 0,
-                                0, 0, 1, 0,
-                                0.5, 0, 2, 1 };
+    debugTriangle2->transform.SetPosition(glm::vec3(0.5f, 0, 2));
 
     objects.push_back(debugTriangle);
     objects.push_back(debugTriangle2);
@@ -97,14 +91,14 @@ void Engine::renderFrame(Texture& _tex)
 {
     _tex.Clear(Color::BLACK);
 
-    objects[0]->transform = glm::rotate(objects[0]->transform, 3.1415f * 4.0f / (float)target_frame, {0, 1, 0});
+    objects[0]->transform.AddYPR(glm::vec3(0, 0.016f, 0)); //::rotate(objects[0]->transform, 3.1415f * 4.0f / (float)target_frame, { 0, 1, 0 });
 
     // Create Depth Buffer
     size_t pixelCount = _tex.Size();
     std::vector<float> depthBuffer = std::vector<float>(pixelCount);
     std::fill(depthBuffer.begin(), depthBuffer.end(), FAR);
 
-    glm::mat4x4 proj = glm::perspectiveFov(M_PI/2.0f, 320.0f, 240.0f, NEAR, FAR);
+    glm::mat4x4 proj = glm::perspectiveFov(M_PI/2.f, 320.0f, 240.0f, NEAR, FAR);
 
     glm::mat4x4 view = glm::inverse(mainCam.transform);
     glm::vec4 viewport = glm::vec4(0, 0, 320, 240);
@@ -112,7 +106,7 @@ void Engine::renderFrame(Texture& _tex)
     size_t objCount = objects.size();
     for (int i = 0; i < objCount; i++)
     {
-        glm::mat4x4 modelView = view * objects[i]->transform;
+        glm::mat4x4 modelView = view * objects[i]->transform.GetMatrix();
 
         size_t triCount = objects[i]->mesh.triangles.size();
         for (int j = 0; j < triCount; j++)

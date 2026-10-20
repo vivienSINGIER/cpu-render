@@ -63,26 +63,16 @@ void Transform::SetIdentity()
 {
     m_pos = { 0.0f, 0.0f, 0.0f };
     m_scale = { 1.0f, 1.0f, 1.0f };
-    m_quat = glm::quat();
+    m_quat = glm::identity<glm::quat>();
 
-    m_matrix = glm::mat4x4();
-    m_invMatrix = glm::mat4x4();
+    m_matrix = glm::identity<glm::mat4x4>();
+    m_invMatrix = glm::identity<glm::mat4x4>();
 
     ResetRotation();
 }
 
 void Transform::UpdateMatrix()
 {
-    /*
-    Matrix4<T> rot = MakeRotationQuat(_rot);
-    Matrix4<T> result;
-    result.rows[0] = _scale.x * rot.rows[0];
-    result.rows[1] = _scale.y * rot.rows[1];
-    result.rows[2] = _scale.z * rot.rows[2];
-    result.rows[3] = Vector4<T>(_pos, T(1));
-    return result;
-    */
-
     if (GetDirtyState(World))
     {
         glm::mat4x4 rot = glm::mat4_cast(m_quat);
@@ -309,9 +299,9 @@ void Transform::UpdateRotationFromQuaternion()
 
 void Transform::ResetRotation()
 {
-    m_quat = glm::quat();
+    m_quat = glm::identity<glm::quat>();
 
-    m_rotMatrix = glm::mat3x3();
+    m_rotMatrix = glm::identity<glm::mat3x3>();;
 }
 
 #pragma endregion
