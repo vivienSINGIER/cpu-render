@@ -50,3 +50,25 @@ uint32_t Triangle::GetPointColor(glm::vec2 _point)
 
     return color;
 }
+
+glm::vec4 Triangle::GetBoundingBox()
+{
+    float minX = v1.pos.x;
+    float maxX = v1.pos.x;
+    float minY = v1.pos.y;
+    float maxY = v1.pos.y;
+
+    minX = v2.pos.x < minX ? v2.pos.x : minX;
+    minX = v3.pos.x < minX ? v3.pos.x : minX;
+
+    maxX = v2.pos.x > maxX ? v2.pos.x : maxX;
+    maxX = v3.pos.x > maxX ? v3.pos.x : maxX;
+
+    minY = v2.pos.y < minY ? v2.pos.y : minY;
+    minY = v3.pos.y < minY ? v3.pos.y : minY;
+
+    maxY = v2.pos.y > maxY ? v2.pos.y : maxY;
+    maxY = v3.pos.y > maxY ? v3.pos.y : maxY;
+
+    return glm::vec4(floor(minX), floor(minY), ceil(maxX), ceil(maxY));
+}

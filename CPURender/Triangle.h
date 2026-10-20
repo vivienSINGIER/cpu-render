@@ -17,5 +17,6 @@ struct Triangle
 	bool IsInTriangle(glm::vec2 _point);
 	glm::vec3 BarycentricWeight(glm::vec2 _point);
 	uint32_t GetPointColor(glm::vec2 _point);
+	glm::vec4 GetBoundingBox();
 };
 
