@@ -4,6 +4,6 @@
 
 struct Mesh
 {
-	std::vector<Triangle> triangles;
+	std::vector<Vertex_IN> vertice;
 };
 
