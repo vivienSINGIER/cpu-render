@@ -34,9 +34,9 @@ void Engine::init()
     float white[3] = { 255, 255, 255 };
 
     Triangle t1;
-    t1.v1 = {glm::vec3(1.0f, 0.0f, 0.0f), { 0, 0, 255 } };
-    t1.v2 = {glm::vec3(0.0f, 1.0f, 0.0f), { 0, 255, 0 } };
-    t1.v3 = {glm::vec3(-1.0f, 0.0f, 0.0f), { 255, 0, 0 } };
+    t1.v1 = {glm::vec3(1.0f, 0.0f, 0.0f), { 255, 0, 0, 255 } };
+    t1.v2 = {glm::vec3(0.0f, 1.0f, 0.0f), { 255, 0, 255, 0 } };
+    t1.v3 = {glm::vec3(-1.0f, 0.0f, 0.0f), { 255, 255, 0, 0 } };
 
     debugTriangle->mesh.triangles.push_back(t1);
     debugTriangle->transform = { 1, 0, 0, 0,
@@ -95,12 +95,12 @@ void Engine::handleEvent(const SDL_Event& event)
 
 void Engine::renderFrame(Texture& _tex)
 {
-    frameBufferOut.clear(0 | (0 << 8) | (0 << 16) | (0 << 24));
+    _tex.Clear(Color::BLACK);
 
     objects[0]->transform = glm::rotate(objects[0]->transform, 3.1415f * 4.0f / (float)target_frame, {0, 1, 0});
 
     // Create Depth Buffer
-    size_t pixelCount = sizeof(frameBufferOut.colorData) / sizeof(uint32_t);
+    size_t pixelCount = _tex.Size();
     std::vector<float> depthBuffer = std::vector<float>(pixelCount);
     std::fill(depthBuffer.begin(), depthBuffer.end(), FAR);
 
@@ -129,7 +129,7 @@ void Engine::renderFrame(Texture& _tex)
 
             for (uint32_t x = box.x; x < box.z; x++) {
                 for (uint32_t y = box.y; y < box.w; y++) {
-                    uint32_t color = 0;
+                    Color color;
                     if (screenSpace.IsInTriangle({ x, y }))
                     {
                         glm::vec3 bary = screenSpace.BarycentricWeight({ x, y });
@@ -153,7 +153,7 @@ void Engine::renderFrame(Texture& _tex)
 
                         depthBuffer[x + FIRE_W * y] = pixelDepth;
                         color = screenSpace.GetPointColor({ x, y });
-                        frameBufferOut.put_pixel(x, y, color);
+                        _tex.SetPixelColor(x, y, color);
                     }
                 }
             }
