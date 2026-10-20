@@ -30,14 +30,13 @@ void Engine::init()
     triangleMesh.vertice.push_back({ glm::vec3(-1.0f, 0.0f, 0.0f), Color::RED });
 
     debugTriangle->mesh = triangleMesh;
-
     debugTriangle->transform.SetPosition(glm::vec3(0, 0, 2));
 
     debugTriangle2->mesh = triangleMesh;
-    debugTriangle2->transform.SetPosition(glm::vec3(0.5f, 0, 2));
+    debugTriangle2->transform.SetPosition(glm::vec3(0.5f, 0, 2.5f));
 
     objects.push_back(debugTriangle);
-    //objects.push_back(debugTriangle2);
+    objects.push_back(debugTriangle2);
 }
 
 void Engine::handleEvent(const SDL_Event& event)
@@ -231,8 +230,7 @@ void Engine::renderFrame(Texture& _tex)
     //////// Raster ////////
     for (int j = 0; j < vCount; j += 3)
     {
-        int currentIndex = 0;
-        Triangle currentTriangle = { vBuffer[currentIndex], vBuffer[currentIndex + 1], vBuffer[currentIndex + 2] };
+        Triangle currentTriangle = { vBuffer[j], vBuffer[j + 1], vBuffer[j + 2] };
         glm::vec4 box = GetBoundingBox(currentTriangle);
         box.x = fmax(box.x, 0);
         box.y = fmax(box.y, 0);
