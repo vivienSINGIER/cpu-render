@@ -7,67 +7,162 @@
 #include "stb_image.h"
 #include <vector>
 #include <glm/mat4x4.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 
+/* Doom fire variables and color palette */
+#define FIRE_W WIDTH
+#define FIRE_H HEIGHT
 
-struct PixelData {
-    int width, height;
-    std::vector<uint32_t> imageData;
-};
+#define FIRE_PALETTE_SIZE 37
 
-static PixelData doomFace;
+#define NEAR 0.1f
+#define FAR 100.0f
+
 
 void Engine::init()
 {
-    printf("Init engine \n");
-    static int nbrChannel;
-    unsigned char* data = stbi_load("Assets/doomguy.png", &doomFace.width, &doomFace.height, &nbrChannel, 4);
-    
-    doomFace.imageData.resize(doomFace.width * doomFace.height);
+    mainCam = Camera();
+    mainCam.transform = glm::identity<glm::mat4x4>();
 
-    //We copy the texture data in a format we can use
-    for (int i = 0; i < doomFace.width; ++i)
-    {
-        for (int j = 0; j < doomFace.height; ++j)
-        {
-            uint32_t colorValue = 0;
-            int linearized2D = i + j * doomFace.width;
-            colorValue = colorValue | (uint32_t(data[0 +  linearized2D * nbrChannel]) << 16);//First channel is Red, highest weight bits
-            colorValue = colorValue | (uint32_t(data[1 +  linearized2D * nbrChannel]) << 8); //Then green
-            colorValue = colorValue | (uint32_t(data[2 +  linearized2D * nbrChannel]) << 0); //Finally blue
-            doomFace.imageData[linearized2D] = colorValue;
-        }
-    }
-    free(data);
+    std::shared_ptr<Object> debugTriangle = std::make_shared<Object>();
+    std::shared_ptr<Object> debugTriangle2 = std::make_shared<Object>();
+    std::shared_ptr<Object> debugTriangle3 = std::make_shared<Object>();
+
+    float red[3] = { 255, 0, 0 };
+    float green[3] = { 0, 255, 0 };
+    float blue[3] = { 0, 0, 255 };
+    float white[3] = { 255, 255, 255 };
+
+    Triangle t1;
+    t1.v1 = {glm::vec3(1.0f, 0.0f, 0.0f), { 0, 0, 255 } };
+    t1.v2 = {glm::vec3(0.0f, 1.0f, 0.0f), { 0, 255, 0 } };
+    t1.v3 = {glm::vec3(-1.0f, 0.0f, 0.0f), { 255, 0, 0 } };
+
+    debugTriangle->mesh.triangles.push_back(t1);
+    debugTriangle->transform = { 1, 0, 0, 0,
+                                0, 1, 0, 0,
+                                0, 0, 1, 0,
+                                0, 0, 2, 1 };
+
+    debugTriangle2->mesh.triangles.push_back(t1);
+    debugTriangle2->transform = { 1, 0, 0, 0,
+                                0, 1, 0, 0,
+                                0, 0, 1, 0,
+                                0.5, 0, 2, 1 };
+
+    objects.push_back(debugTriangle);
+    objects.push_back(debugTriangle2);
 }
 
 void Engine::handleEvent(const SDL_Event& event)
 {
     if (event.type == SDL_EVENT_KEY_DOWN)
     {
+        if (event.key.key == SDLK_SPACE)
+        {
+            mainCam.Translate({ 0, 1.0f, 0 });
+        }
+        if (event.key.key == SDLK_LCTRL)
+        {
+            mainCam.Translate({ 0, -1.0f, 0 });
+        }
+        if (event.key.key == SDLK_S)
+        {
+            mainCam.Translate({ 0, 0, -1.0f });
+        }
+        if (event.key.key == SDLK_Z)
+        {
+            mainCam.Translate({ 0, 0, 1.0f});
+        }
+        if (event.key.key == SDLK_Q)
+        {
+            mainCam.Translate({ 1.0f, 0, 0 });
+        }
+        if (event.key.key == SDLK_D)
+        {
+            mainCam.Translate({ -1.0f, 0, 0 });
+        }
+        if (event.key.key == SDLK_A)
+        {
+            mainCam.RotateYaw(3.1415f / 4.0f);
+        }
+        if (event.key.key == SDLK_E)
+        {
+            mainCam.RotateYaw(-3.1415f / 4.0f);
+        }
     }
 }
 
 void Engine::renderFrame(Texture& _tex)
 {
-    Texture doomGuy;
-    doomGuy.Load("Assets/doomguy.png");
-    
-    _tex.Clear(Color::BLACK);
+    frameBufferOut.clear(0 | (0 << 8) | (0 << 16) | (0 << 24));
 
-    //draws the doomguy face texture at the center of the screen
-    for (uint32 y = 0; y < doomGuy.Height(); y++)
+    objects[0]->transform = glm::rotate(objects[0]->transform, 3.1415f * 4.0f / (float)target_frame, {0, 1, 0});
+
+    // Create Depth Buffer
+    size_t pixelCount = sizeof(frameBufferOut.colorData) / sizeof(uint32_t);
+    std::vector<float> depthBuffer = std::vector<float>(pixelCount);
+    std::fill(depthBuffer.begin(), depthBuffer.end(), FAR);
+
+    glm::mat4x4 proj = glm::perspectiveFov(M_PI/2.0f, 320.0f, 240.0f, NEAR, FAR);
+
+    glm::mat4x4 view = glm::inverse(mainCam.transform);
+    glm::vec4 viewport = glm::vec4(0, 0, 320, 240);
+
+    size_t objCount = objects.size();
+    for (int i = 0; i < objCount; i++)
     {
-        for (uint32 x = 0; x < doomGuy.Width(); x++) 
+        glm::mat4x4 modelView = view * objects[i]->transform;
+
+        size_t triCount = objects[i]->mesh.triangles.size();
+        for (int j = 0; j < triCount; j++)
         {
-            uint32 posX = (WIDTH / 2 - doomGuy.Width() / 2) + x;
-            uint32 posY = (HEIGHT / 2 - doomGuy.Height() / 2) + y;
-            _tex.SetPixelColor(posX, posY, doomGuy.GetPixelColor(x, y));
+            // To screen
+            Triangle screenSpace = objects[i]->mesh.triangles[j];
+            screenSpace.v1.pos = glm::project(screenSpace.v1.pos, modelView, proj, viewport);
+            screenSpace.v2.pos = glm::project(screenSpace.v2.pos, modelView, proj, viewport);
+            screenSpace.v3.pos = glm::project(screenSpace.v3.pos, modelView, proj, viewport);
+
+            if (screenSpace.IsFront() == false) continue; // For now, Clockwise
+
+            glm::vec4 box = screenSpace.GetBoundingBox();
+
+            for (uint32_t x = box.x; x < box.z; x++) {
+                for (uint32_t y = box.y; y < box.w; y++) {
+                    uint32_t color = 0;
+                    if (screenSpace.IsInTriangle({ x, y }))
+                    {
+                        glm::vec3 bary = screenSpace.BarycentricWeight({ x, y });
+
+                        float pixelDepth = 0;
+                        pixelDepth = glm::dot(bary, { screenSpace.v1.pos.z, screenSpace.v2.pos.z, screenSpace.v3.pos.z });
+                       //pixelDepth += bary.x * screenSpace.v1.pos.z;
+                       //pixelDepth += bary.y * screenSpace.v2.pos.z;
+                       //pixelDepth += bary.z * screenSpace.v3.pos.z;
+                        
+                        if (pixelDepth > depthBuffer[x + FIRE_W * y])
+                        {
+                            continue;
+                        }
+
+                        //if (pixelDepth > 1)
+                        //{
+                        //    //std::cout << "Behind near" << std::endl;
+                        //    continue;
+                        //}
+
+                        depthBuffer[x + FIRE_W * y] = pixelDepth;
+                        color = screenSpace.GetPointColor({ x, y });
+                        frameBufferOut.put_pixel(x, y, color);
+                    }
+                }
+            }
         }
     }
+    
 }
 
 void Engine::destroy()
 {
-    doomFace.imageData = std::vector<uint32_t>();
     printf("Killing engine \n");
 }

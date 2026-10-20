@@ -141,6 +141,7 @@
   <ItemGroup>
     <ClCompile Include="AABB.cpp" />
     <ClCompile Include="Color.cpp" />
+    <ClCompile Include="Camera.cpp" />
     <ClCompile Include="engine.cpp" />
     <ClCompile Include="Frustum.cpp" />
     <ClCompile Include="main.cpp" />
@@ -148,10 +149,14 @@
     <ClCompile Include="Ray.cpp" />
     <ClCompile Include="Texture.cpp" />
     <ClCompile Include="Transform.cpp" />
+    <ClCompile Include="Mesh.cpp" />
+    <ClCompile Include="Object.cpp" />
+    <ClCompile Include="Triangle.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AABB.h" />
     <ClInclude Include="Color.h" />
+    <ClInclude Include="Camera.h" />
     <ClInclude Include="engine.h" />
     <ClInclude Include="Frustum.h" />
     <ClInclude Include="main.h" />
@@ -162,6 +167,10 @@
     <ClInclude Include="Texture.h" />
     <ClInclude Include="Texture.inl" />
     <ClInclude Include="Transform.h" />
+    <ClInclude Include="Mesh.h" />
+    <ClInclude Include="Object.h" />
+    <ClInclude Include="stb_image.h" />
+    <ClInclude Include="Triangle.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
