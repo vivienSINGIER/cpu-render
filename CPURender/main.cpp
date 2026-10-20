@@ -74,7 +74,7 @@ int main(void) {
     engine.init();
     bool isRunning = true;
     uint32_t frame = 1;
-    Texture frameBuffer(256, 256, Texture::LINEAR);
+    Texture frameBuffer(WIDTH, HEIGHT, Texture::LINEAR);
 
     /* Frame loop */
     while (isRunning) {

@@ -91,17 +91,17 @@ void Engine::renderFrame(Texture& _tex)
 {
     _tex.Clear(Color::BLACK);
 
-    objects[0]->transform.AddYPR(glm::vec3(0, 0.016f, 0)); //::rotate(objects[0]->transform, 3.1415f * 4.0f / (float)target_frame, { 0, 1, 0 });
+    objects[0]->transform.AddYPR(glm::vec3(0, (float)target_frame, 0)); //::rotate(objects[0]->transform, 3.1415f * 4.0f / (float)target_frame, { 0, 1, 0 });
 
     // Create Depth Buffer
     size_t pixelCount = _tex.Size();
     std::vector<float> depthBuffer = std::vector<float>(pixelCount);
     std::fill(depthBuffer.begin(), depthBuffer.end(), FAR);
 
-    glm::mat4x4 proj = glm::perspectiveFov(M_PI/2.f, 320.0f, 240.0f, NEAR, FAR);
+    glm::mat4x4 proj = glm::perspectiveFov(M_PI/2.f, (float)WIDTH, (float)HEIGHT, NEAR, FAR);
 
     glm::mat4x4 view = glm::inverse(mainCam.transform);
-    glm::vec4 viewport = glm::vec4(0, 0, 320, 240);
+    glm::vec4 viewport = glm::vec4(0, 0, WIDTH, HEIGHT);
 
     size_t objCount = objects.size();
     for (int i = 0; i < objCount; i++)
@@ -120,6 +120,10 @@ void Engine::renderFrame(Texture& _tex)
             if (screenSpace.IsFront() == false) continue; // For now, Clockwise
 
             glm::vec4 box = screenSpace.GetBoundingBox();
+            box.x = fmax(box.x, 0);
+            box.y = fmax(box.y, 0);
+            box.z = fmin(box.z, WIDTH);
+            box.w = fmin(box.w, HEIGHT);
 
             for (uint32_t x = box.x; x < box.z; x++) {
                 for (uint32_t y = box.y; y < box.w; y++) {
