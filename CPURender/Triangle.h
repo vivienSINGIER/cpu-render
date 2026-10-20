@@ -4,12 +4,12 @@
 struct Vertex_IN
 {
 	glm::vec3 pos;
-	float color[3];
+	Color color;
 };
 struct Vertex_OUT
 {
 	glm::vec3 pos;
-	float color[3];
+	Color color;
 };
 
 struct Triangle

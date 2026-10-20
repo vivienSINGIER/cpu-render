@@ -36,16 +36,10 @@ void Engine::init()
 
     debugTriangle->mesh = triangleMesh;
 
-    debugTriangle->transform = { 1, 0, 0, 0,
-                                0, 1, 0, 0,
-                                0, 0, 1, 0,
-                                0, 0, 2, 1 };
+    debugTriangle->transform.SetPosition(glm::vec3(0, 0, 2));
 
     debugTriangle2->mesh = triangleMesh;
-    debugTriangle2->transform = { 1, 0, 0, 0,
-                                0, 1, 0, 0,
-                                0, 0, 1, 0,
-                                0.5, 0, 2, 1 };
+    debugTriangle2->transform.SetPosition(glm::vec3(0.5f, 0, 2));
 
     objects.push_back(debugTriangle);
     //objects.push_back(debugTriangle2);
@@ -90,30 +84,28 @@ void Engine::handleEvent(const SDL_Event& event)
     }
 }
 
-void Engine::renderFrame(FinalFrameBuffer& frameBufferOut)
+void Engine::renderFrame(Texture& _tex)
 {
-    frameBufferOut.clear(0 | (0 << 8) | (0 << 16) | (0 << 24));
+    _tex.Clear(Color::BLACK);
 
-    //objects[0]->transform = glm::rotate(objects[0]->transform, 3.1415f * 4.0f / (float)target_frame, {0, 1, 0});
+    //objects[0]->transform.AddYPR(glm::vec3(0, (float)target_frame, 0)); //::rotate(objects[0]->transform, 3.1415f * 4.0f / (float)target_frame, { 0, 1, 0 });
 
     // Create Depth Buffer
-    size_t pixelCount = sizeof(frameBufferOut.colorData) / sizeof(uint32_t);
+    size_t pixelCount = _tex.Size();
     std::vector<float> depthBuffer = std::vector<float>(pixelCount);
     std::fill(depthBuffer.begin(), depthBuffer.end(), FAR);
 
-    glm::mat4x4 proj = glm::perspectiveFov(M_PI/2.0f, 320.0f, 240.0f, NEAR, FAR);
+    glm::mat4x4 proj = glm::perspectiveFov(M_PI/2.f, (float)WIDTH, (float)HEIGHT, NEAR, FAR);
 
     //glm::mat4x4 view = glm::inverse(mainCam.transform);
     glm::mat4x4 view = glm::lookAt(glm::vec3(mainCam.transform[3]), glm::vec3(mainCam.transform[2]) + glm::vec3(mainCam.transform[3]), {0, 1, 0});
-    
-
     std::vector<Vertex_OUT> vBuffer;
 
     size_t objCount = objects.size();
     // VERTEX //
     for (int i = 0; i < objCount; i++)
     {
-        glm::mat4x4 modelView = view * objects[i]->transform;
+        glm::mat4x4 modelView = view * objects[i]->transform.GetMatrix();
 
         size_t meshVCount = objects[i]->mesh.vertice.size();
         if (meshVCount % 3 != 0)
@@ -263,16 +255,8 @@ void Engine::renderFrame(FinalFrameBuffer& frameBufferOut)
                         
                     //////// PS ////////
 
-                    if (pixelDepth > depthBuffer[x + WIDTH * y])
-                    {
-                        continue;
-                    }
-
-                    if (pixelDepth > 1)
-                    {
-                        //std::cout << "Behind near" << std::endl;
-                        continue;
-                    }
+                    if (pixelDepth > depthBuffer[x + WIDTH * y]) continue;
+                    if (pixelDepth > 1) continue;
 
                     depthBuffer[x + WIDTH * y] = pixelDepth;
 

@@ -1,6 +1,8 @@
 #pragma once
 
 #include "main.h"
+#include "Texture.h"
+//Students can change whetever they want in this file
 #include "Camera.h"
 #include "Object.h"
 #include <iostream>
@@ -22,7 +24,7 @@ struct Engine {
 
 	void handleEvent(const SDL_Event& event);
 
-	void renderFrame(FinalFrameBuffer& frameBufferOut);
+	void renderFrame(Texture& frameBufferOut);
 
 	Vertex_OUT VS(Vertex_IN _v, glm::mat4x4 _modelView, glm::mat4x4 _proj);
 
