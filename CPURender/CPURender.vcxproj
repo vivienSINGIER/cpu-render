@@ -139,17 +139,25 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="AABB.cpp" />
     <ClCompile Include="Color.cpp" />
     <ClCompile Include="engine.cpp" />
+    <ClCompile Include="Frustum.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="Plane.cpp" />
+    <ClCompile Include="Ray.cpp" />
     <ClCompile Include="Texture.cpp" />
     <ClCompile Include="Transform.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="AABB.h" />
     <ClInclude Include="Color.h" />
     <ClInclude Include="engine.h" />
+    <ClInclude Include="Frustum.h" />
     <ClInclude Include="main.h" />
     <ClInclude Include="Morton.hpp" />
+    <ClInclude Include="Plane.h" />
+    <ClInclude Include="Ray.h" />
     <ClInclude Include="stb_image.h" />
     <ClInclude Include="Texture.h" />
     <ClInclude Include="Texture.inl" />
