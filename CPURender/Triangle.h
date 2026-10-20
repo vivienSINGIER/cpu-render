@@ -1,5 +1,6 @@
 #pragma once
 #include <glm/glm.hpp>
+#include "Color.h"
 
 struct Vertex_IN
 {
@@ -22,5 +23,5 @@ struct Triangle
 bool IsFront(const Triangle& _tri, bool _clockwise = false);
 bool IsInTriangle(glm::vec2 _point, const Triangle& _tri);
 glm::vec3 BarycentricWeight(glm::vec2 _point, const Triangle& _tri);
-uint32_t GetPointColor(glm::vec2 _point, const Triangle& _tri);
+Color GetPointColor(glm::vec2 _point, const Triangle& _tri);
 glm::vec4 GetBoundingBox(const Triangle& _tri);

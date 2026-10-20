@@ -24,15 +24,10 @@ void Engine::init()
     std::shared_ptr<Object> debugTriangle2 = std::make_shared<Object>();
     std::shared_ptr<Object> debugTriangle3 = std::make_shared<Object>();
 
-    float red[3] = { 255, 0, 0 };
-    float green[3] = { 0, 255, 0 };
-    float blue[3] = { 0, 0, 255 };
-    float white[3] = { 255, 255, 255 };
-
     Mesh triangleMesh;
-    triangleMesh.vertice.push_back({ glm::vec3(1.0f, 0.0f, 0.0f), { 0, 0, 255 } });
-    triangleMesh.vertice.push_back({ glm::vec3(0.0f, 1.0f, 0.0f), { 0, 255, 0 } });
-    triangleMesh.vertice.push_back({ glm::vec3(-1.0f, 0.0f, 0.0f), { 255, 0, 0 } });
+    triangleMesh.vertice.push_back({ glm::vec3(1.0f, 0.0f, 0.0f), Color::BLUE });
+    triangleMesh.vertice.push_back({ glm::vec3(0.0f, 1.0f, 0.0f), Color::GREEN });
+    triangleMesh.vertice.push_back({ glm::vec3(-1.0f, 0.0f, 0.0f), Color::RED });
 
     debugTriangle->mesh = triangleMesh;
 
@@ -246,7 +241,7 @@ void Engine::renderFrame(Texture& _tex)
     
         for (int32_t x = box.x; x < box.z; x++) {
             for (int32_t y = box.y; y < box.w; y++) {
-                uint32_t color = 0;
+                Color color;
                 if (IsInTriangle({ x, y }, currentTriangle))
                 {
                     glm::vec3 bary = BarycentricWeight({ x, y }, currentTriangle);
@@ -261,7 +256,7 @@ void Engine::renderFrame(Texture& _tex)
                     depthBuffer[x + WIDTH * y] = pixelDepth;
 
                     color = GetPointColor({ x, y }, currentTriangle);
-                    frameBufferOut.put_pixel(x, HEIGHT - y - 1, color);
+                    _tex.SetPixelColor(x, HEIGHT - y - 1, color);
                 }
             }
         }
@@ -272,7 +267,7 @@ void Engine::renderFrame(Texture& _tex)
 Vertex_OUT Engine::VS(Vertex_IN _v, glm::mat4x4 _modelView, glm::mat4x4 _proj)
 {
     Vertex_OUT vOut;
-    memcpy(vOut.color, _v.color, 3*sizeof(float));
+    vOut.color = _v.color;
     vOut.pos = glm::project(_v.pos, _modelView, _proj, viewport);
     return vOut;
 }

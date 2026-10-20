@@ -30,9 +30,9 @@ glm::vec3 BarycentricWeight(glm::vec2 _point, const Triangle& _tri)
     return weights;
 }
 
-Color Triangle::GetPointColor(glm::vec2 _point, const Triangle& _tri)
+Color GetPointColor(glm::vec2 _point, const Triangle& _tri)
 {
-    glm::vec3 bary = BarycentricWeight(_point);
+    glm::vec3 bary = BarycentricWeight(_point, _tri);
     
     Color color = Color::BLACK;
 
