@@ -141,12 +141,18 @@
   <ItemGroup>
     <ClCompile Include="Color.cpp" />
     <ClCompile Include="engine.cpp" />
+    <ClCompile Include="Heaps\ConstantBufferHeap.cpp" />
+    <ClCompile Include="Heaps\Heap.inl" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Texture.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Color.h" />
     <ClInclude Include="engine.h" />
+    <ClInclude Include="Heaps\ConstantBufferHeap.h" />
+    <ClInclude Include="Heaps\ConstantBufferHeap.inl" />
+    <ClInclude Include="Heaps\Handle.hpp" />
+    <ClInclude Include="Heaps\Heap.h" />
     <ClInclude Include="main.h" />
     <ClInclude Include="Morton.hpp" />
     <ClInclude Include="stb_image.h" />
