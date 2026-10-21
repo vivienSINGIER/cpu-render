@@ -140,21 +140,30 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Color.cpp" />
+    <ClCompile Include="Core\GraphicsContext.cpp" />
     <ClCompile Include="engine.cpp" />
+    <ClCompile Include="Heaps\BufferHeap.inl" />
     <ClCompile Include="Heaps\ConstantBufferHeap.cpp" />
     <ClCompile Include="Heaps\Heap.inl" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="Shaders\ShaderBase\Shader.cpp" />
+    <ClCompile Include="Shaders\ShaderBase\ShaderGroup.cpp" />
     <ClCompile Include="Texture.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Color.h" />
+    <ClInclude Include="Core\GraphicsContext.h" />
     <ClInclude Include="engine.h" />
+    <ClInclude Include="Heaps\BufferHeap.h" />
     <ClInclude Include="Heaps\ConstantBufferHeap.h" />
     <ClInclude Include="Heaps\ConstantBufferHeap.inl" />
     <ClInclude Include="Heaps\Handle.hpp" />
     <ClInclude Include="Heaps\Heap.h" />
+    <ClInclude Include="Heaps\Heaps.h" />
     <ClInclude Include="main.h" />
     <ClInclude Include="Morton.hpp" />
+    <ClInclude Include="Shaders\ShaderBase\Shader.h" />
+    <ClInclude Include="Shaders\ShaderBase\ShaderGroup.h" />
     <ClInclude Include="stb_image.h" />
     <ClInclude Include="Texture.h" />
     <ClInclude Include="Texture.inl" />

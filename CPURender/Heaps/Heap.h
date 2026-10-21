@@ -18,13 +18,14 @@ public:
     
     void Delete(Handle _h);
     
-protected:
-    Heap(uint16_t _heapId, GraphicsContext* _ctx);
-    
 private:
     std::vector<std::unique_ptr<Base>> m_items;
     uint16_t m_heapId;
     GraphicsContext* m_ctx;
+    
+    Heap(uint16_t _heapId, GraphicsContext* _ctx);
+    
+    friend class GraphicsContext;
 };
 
 #include "Heap.inl"

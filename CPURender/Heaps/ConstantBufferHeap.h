@@ -21,13 +21,14 @@ public:
     
     void Delete(Handle _h);
     
-protected:
-    ConstantBufferHeap(uint16_t _heapId, GraphicsContext* _ctx);
-    
 private:
     std::vector<uint8_t> m_data;
     uint16_t m_heapId;
     GraphicsContext* m_ctx;
+    
+    ConstantBufferHeap(uint16_t _heapId, GraphicsContext* _ctx);
+    
+    friend class GraphicsContext;
 };
 
 #include "ConstantBufferHeap.inl"

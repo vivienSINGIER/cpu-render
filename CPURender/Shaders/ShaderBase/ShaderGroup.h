@@ -1,0 +1,10 @@
+﻿#ifndef SHADERS_SHADER_BASE_SHADER_GROUP_H_DEFINED
+#define SHADERS_SHADER_BASE_SHADER_GROUP_H_DEFINED
+
+class ShaderGroup
+{
+public:
+    
+};
+
+#endif

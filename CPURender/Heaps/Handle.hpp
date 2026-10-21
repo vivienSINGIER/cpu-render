@@ -24,11 +24,13 @@ public:
         return res;
     }
     
-    uint32_t HeapId() { return m_heapId; }
+    uint16_t HeapId() { return m_heapId; }
     uint16_t Size() { return m_size; }
-    uint16_t Offset() { return m_heapOffset; }
+    uint32_t Offset() { return m_heapOffset; }
     
 private:
+    Handle() : m_heapId(0), m_heapOffset(0), m_size(0) {}
+    
     uint32_t m_heapOffset;
     uint16_t m_size;
     uint16_t m_heapId;

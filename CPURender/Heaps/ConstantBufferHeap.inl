@@ -1,4 +1,7 @@
-﻿#include "ConstantBufferHeap.h"
+﻿#ifndef HEAPS_CONSTANT_BUFFER_HEAP_INL_DEFINED
+#define HEAPS_CONSTANT_BUFFER_HEAP_INL_DEFINED
+
+#include "ConstantBufferHeap.h"
 
 template <typename T>
 void ConstantBufferHeap::Write(Handle _h, T const& _data)
@@ -14,3 +17,5 @@ T const& ConstantBufferHeap::Read(Handle _h)
     static_assert(_h.Size() == sizeof(T));
     return *reinterpret_cast<const T*>(m_data.data() + _h.Offset());
 }
+
+#endif
