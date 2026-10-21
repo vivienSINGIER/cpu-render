@@ -11,7 +11,7 @@
 
 //TODO Replace
 struct Camera;
-struct GraphicsContext;
+class GraphicsContext;
 struct DrawCommand;
 struct Mesh;
 struct Material;
@@ -31,14 +31,14 @@ public:
 	void SetMainCamera(Camera* _c);
 
 private:
-	Handle m_renderTarget = {};
-	Handle m_depthBuffer = {};
+	Handle m_renderTarget;
+	Handle m_depthBuffer;
 
-	glm::vec4 m_viewport = {};
-	Camera* m_mainCam = nullptr;
-	Color m_clearColor = {};
-	Handle m_defaultConstBuffer = {};
-	std::vector<DrawCommand> m_pendingDraws = {};
+	glm::vec4 m_viewport;
+	Camera* m_mainCam ;
+	Color m_clearColor;
+	Handle m_defaultConstBuffer;
+	std::vector<DrawCommand> m_pendingDraws;
 };
 
 #endif

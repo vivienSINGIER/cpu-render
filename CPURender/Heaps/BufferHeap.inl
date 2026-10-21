@@ -1,4 +1,5 @@
-﻿#ifndef BUFFERH
+﻿#ifndef HEAPS_BUFFERHEAP_INL_DEFINED
+#define HEAPS_BUFFERHEAP_INL_DEFINED
 
 #include "BufferHeap.h"
 
@@ -36,4 +37,6 @@ BufferHeap<T>::BufferHeap(uint16_t _heapId, GraphicsContext* _ctx)
     m_heapId = _heapId;
     m_ctx = _ctx;
 }
+
+#endif
 
