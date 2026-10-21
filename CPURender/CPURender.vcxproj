@@ -42,7 +42,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v145</PlatformToolset>
+    <PlatformToolset>v143</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
@@ -113,6 +113,7 @@
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalOptions>/openmp:llvm %(AdditionalOptions)</AdditionalOptions>
+      <LanguageStandard>Default</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -139,8 +140,14 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Camera.cpp" />
     <ClCompile Include="Color.cpp" />
     <ClCompile Include="Core\GraphicsContext.cpp" />
+    <ClCompile Include="Datas\Mesh.cpp" />
+    <ClCompile Include="Datas\Object.cpp" />
+    <ClCompile Include="Datas\Triangle.cpp" />
+    <ClCompile Include="Device.cpp" />
+    <ClCompile Include="DrawCommand.cpp" />
     <ClCompile Include="engine.cpp" />
     <ClCompile Include="Heaps\BufferHeap.inl" />
     <ClCompile Include="Heaps\ConstantBufferHeap.cpp" />
@@ -148,11 +155,22 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Shaders\ShaderBase\Shader.cpp" />
     <ClCompile Include="Shaders\ShaderBase\ShaderGroup.cpp" />
+    <ClCompile Include="Maths\AABB.cpp" />
+    <ClCompile Include="Maths\Frustum.cpp" />
+    <ClCompile Include="Maths\Plane.cpp" />
+    <ClCompile Include="Maths\Ray.cpp" />
+    <ClCompile Include="Maths\Transform.cpp" />
     <ClCompile Include="Texture.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Camera.h" />
     <ClInclude Include="Color.h" />
     <ClInclude Include="Core\GraphicsContext.h" />
+    <ClInclude Include="Datas\Mesh.h" />
+    <ClInclude Include="Datas\Object.h" />
+    <ClInclude Include="Datas\Triangle.h" />
+    <ClInclude Include="Device.h" />
+    <ClInclude Include="DrawCommand.h" />
     <ClInclude Include="engine.h" />
     <ClInclude Include="Heaps\BufferHeap.h" />
     <ClInclude Include="Heaps\ConstantBufferHeap.h" />
@@ -161,6 +179,11 @@
     <ClInclude Include="Heaps\Heap.h" />
     <ClInclude Include="Heaps\Heaps.h" />
     <ClInclude Include="main.h" />
+    <ClInclude Include="Maths\AABB.h" />
+    <ClInclude Include="Maths\Frustum.h" />
+    <ClInclude Include="Maths\Plane.h" />
+    <ClInclude Include="Maths\Ray.h" />
+    <ClInclude Include="Maths\Transform.h" />
     <ClInclude Include="Morton.hpp" />
     <ClInclude Include="Shaders\ShaderBase\Shader.h" />
     <ClInclude Include="Shaders\ShaderBase\ShaderGroup.h" />

@@ -38,4 +38,3 @@ Heap<Base>::Heap(uint16_t _heapId, GraphicsContext* _ctx)
 }
 
 #endif
-
