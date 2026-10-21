@@ -140,17 +140,30 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Camera.cpp" />
     <ClCompile Include="Color.cpp" />
+    <ClCompile Include="Datas\Mesh.cpp" />
+    <ClCompile Include="Datas\Object.cpp" />
+    <ClCompile Include="Datas\Triangle.cpp" />
     <ClCompile Include="Device.cpp" />
     <ClCompile Include="DrawCommand.cpp" />
     <ClCompile Include="engine.cpp" />
     <ClCompile Include="Heaps\ConstantBufferHeap.cpp" />
     <ClCompile Include="Heaps\Heap.inl" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="Maths\AABB.cpp" />
+    <ClCompile Include="Maths\Frustum.cpp" />
+    <ClCompile Include="Maths\Plane.cpp" />
+    <ClCompile Include="Maths\Ray.cpp" />
+    <ClCompile Include="Maths\Transform.cpp" />
     <ClCompile Include="Texture.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Camera.h" />
     <ClInclude Include="Color.h" />
+    <ClInclude Include="Datas\Mesh.h" />
+    <ClInclude Include="Datas\Object.h" />
+    <ClInclude Include="Datas\Triangle.h" />
     <ClInclude Include="Device.h" />
     <ClInclude Include="DrawCommand.h" />
     <ClInclude Include="engine.h" />
@@ -159,6 +172,11 @@
     <ClInclude Include="Heaps\Handle.hpp" />
     <ClInclude Include="Heaps\Heap.h" />
     <ClInclude Include="main.h" />
+    <ClInclude Include="Maths\AABB.h" />
+    <ClInclude Include="Maths\Frustum.h" />
+    <ClInclude Include="Maths\Plane.h" />
+    <ClInclude Include="Maths\Ray.h" />
+    <ClInclude Include="Maths\Transform.h" />
     <ClInclude Include="Morton.hpp" />
     <ClInclude Include="stb_image.h" />
     <ClInclude Include="Texture.h" />
