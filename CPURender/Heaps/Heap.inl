@@ -1,4 +1,6 @@
-﻿#include "Heap.h"
+﻿#ifndef HEAPS_HEAP_INL_DEFINED
+#define HEAPS_HEAP_INL_DEFINED
+#include "Heap.h"
 
 template <typename Base>
 template <typename Derived, typename ... Args>
@@ -33,3 +35,5 @@ Heap<Base>::Heap(uint16_t _heapId, GraphicsContext* _ctx)
     m_heapId = _heapId;
     m_ctx = _ctx;
 }
+
+#endif

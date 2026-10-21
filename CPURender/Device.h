@@ -1,4 +1,6 @@
-#pragma once
+#ifndef DEVICE_H_DEFINED
+#define DEVICE_H_DEFINED
+
 #include <glm/matrix.hpp>
 #include <vector>
 
@@ -39,3 +41,4 @@ private:
 	std::vector<DrawCommand> m_pendingDraws = {};
 };
 
+#endif
