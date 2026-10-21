@@ -18,6 +18,9 @@ struct Engine {
 	std::vector<std::shared_ptr<Object>> objects;
 	glm::vec4 viewport;
 
+	int camDirection = 0;
+	bool keyDown = false;
+
 	const double target_frame = 1.0 / 60.0;
 
 	void init();

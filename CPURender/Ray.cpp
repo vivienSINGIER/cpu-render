@@ -6,14 +6,14 @@
 Ray::Ray(glm::vec3 _origin, glm::vec3 _direction, float _length)
 {
     origin = _origin;
-    direction = glm::normalize(_direction);
+    camDirection = glm::normalize(_direction);
     length = _length;
 }
 
 Ray::Ray(glm::vec3 _origin, glm::vec3 _direction)
 {
     origin = _origin;
-    direction = glm::normalize(_direction);
+    camDirection = glm::normalize(_direction);
     length = -1.0f;
 }
 
@@ -24,7 +24,7 @@ bool Ray::Contains(glm::vec3 const& _p) const
     glm::vec3 diff = _p - origin;
     glm::vec3 dir = glm::normalize(diff);
 
-    if (glm::dot(direction, dir) != 1.0f ) return false;
+    if (glm::dot(camDirection, dir) != 1.0f ) return false;
     if ( length < 0.0f ) return true;
 
     float dist = glm::length(diff);
@@ -36,10 +36,10 @@ bool Ray::Intersects(Ray const& _ray, glm::vec3* _p) const
 {
     glm::vec3 w = glm::normalize(origin - _ray.origin);
 
-    float a = glm::dot(w, direction);
+    float a = glm::dot(w, camDirection);
     float b = 1.0f; // Assumes normalized dir1
-    float c = glm::dot(direction, _ray.direction);
-    float d = glm::dot(_ray.direction, w);
+    float c = glm::dot(camDirection, _ray.camDirection);
+    float d = glm::dot(_ray.camDirection, w);
     float e = 1.0f; // Assumes normalized dir2
     float denom = 1.0f - c*c;
 
@@ -66,7 +66,7 @@ bool Ray::Intersects(Ray const& _ray, glm::vec3* _p) const
     if (valid1 && valid2)
     {
         if (_p != nullptr)
-            *_p = origin + t * direction;
+            *_p = origin + t * camDirection;
         
         return true;
     }
@@ -76,7 +76,7 @@ bool Ray::Intersects(Ray const& _ray, glm::vec3* _p) const
 
 bool Ray::Intersects(Plane const& _plane, glm::vec3* _p) const
 {
-    float denom = glm::dot(_plane.normal, direction);
+    float denom = glm::dot(_plane.normal, camDirection);
     bool isParallel = std::abs(denom) <= glm::epsilon<float>();
 
     if (isParallel) return false;
@@ -93,7 +93,7 @@ bool Ray::Intersects(Plane const& _plane, glm::vec3* _p) const
         return false;
 
     if (_p != nullptr)
-        *_p = origin + t * direction;
+        *_p = origin + t * camDirection;
 
     return true;
 }
@@ -109,7 +109,7 @@ bool Ray::Intersects(AABB const& _aabb, glm::vec3* _p) const
     for (int i = 0; i < 3; i++)
     {
         float o = origin[i];
-        float d = direction[i];
+        float d = camDirection[i];
         float bMin = min[i];
         float bMax = max[i];
 
@@ -147,9 +147,9 @@ bool Ray::Intersects(AABB const& _aabb, glm::vec3* _p) const
     if (_p != nullptr)
     {
         if (tNear >= 0.0f)
-            *_p = origin + tNear * direction;
+            *_p = origin + tNear * camDirection;
         else
-            *_p = origin + tFar * direction;
+            *_p = origin + tFar * camDirection;
     }
     
     return true;

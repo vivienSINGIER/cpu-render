@@ -11,7 +11,7 @@ class Ray
 {
 public:
     glm::vec3 origin;
-    glm::vec3 direction;
+    glm::vec3 camDirection;
     float length;
 
     Ray(glm::vec3 _origin, glm::vec3 _direction, float _length);
