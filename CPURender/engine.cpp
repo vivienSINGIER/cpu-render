@@ -8,6 +8,8 @@
 #include <vector>
 #include <glm/mat4x4.hpp>
 
+#include "Datas/Texture.h"
+
 
 struct PixelData {
     int width, height;

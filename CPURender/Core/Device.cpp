@@ -1,7 +1,7 @@
 #include "Device.h"
 
-#include "Heaps/Heap.h"
-#include "DrawCommand.h"
+#include "../Heaps/Heap.h"
+#include "../Datas/DrawCommand.h"
 
 Device::Device()
 {

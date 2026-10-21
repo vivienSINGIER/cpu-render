@@ -1,7 +1,7 @@
 #pragma once
 
 #include "main.h"
-#include "Texture.h"
+#include "Datas/Texture.h"
 //Students can change whetever they want in this file
 
 union SDL_Event;

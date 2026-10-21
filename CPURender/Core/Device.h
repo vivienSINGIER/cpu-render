@@ -4,10 +4,10 @@
 #include <glm/matrix.hpp>
 #include <vector>
 
-#include "Heaps/Handle.hpp"
-#include "Color.h"
+#include "../Heaps/Handle.hpp"
+#include "../Datas/Color.h"
 
-#include "Texture.h"
+#include "../Datas/Texture.h"
 
 //TODO Replace
 struct Camera;

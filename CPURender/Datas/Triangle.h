@@ -1,6 +1,6 @@
 #pragma once
 #include <glm/glm.hpp>
-#include "../Color.h"
+#include "../Datas/Color.h"
 
 struct Vertex_IN
 {
