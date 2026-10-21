@@ -6,11 +6,8 @@
 #include "../Shaders/ShaderBase/Shader.h"
 #include "../Shaders/ShaderBase/ShaderGroup.h"
 
-#include "../Texture.h"
-
-//TODO REMOVE & Add includes
-class Vertex;
-using Index = uint32_t;
+#include "../Datas/Texture.h"
+#include "../Datas/Mesh.h"
 
 class GraphicsContext
 {
@@ -29,6 +26,8 @@ public:
     
 private:
     GraphicsContext();
+    
+    friend class Device;
 };
 
 #endif

@@ -8,11 +8,12 @@
 #include "../Datas/Color.h"
 
 #include "../Datas/Texture.h"
+#include "../Datas/DrawCommand.h"
+
+#include "GraphicsContext.h"
 
 //TODO Replace
 struct Camera;
-class GraphicsContext;
-struct DrawCommand;
 struct Mesh;
 struct Material;
 
@@ -23,22 +24,31 @@ public:
 
 	void Clear();
 	void BeginDraw();
-	void Draw(Mesh const& _m, glm::mat4x4 _world, Material const& _mat);
+	void RegisterCommand(Mesh const& _m, glm::mat4x4 _world, Material const& _mat);
+	void Draw();
 	void EndDraw();
 
-	void ExecCommand();
+	void ExecCommand(DrawCommand const& _cmd);
 
 	void SetMainCamera(Camera* _c);
+	void SetRenderTarget(Texture* _tex);
 
 private:
-	Handle m_renderTarget;
+	Handle m_frameBuffer;
 	Handle m_depthBuffer;
 
+	Handle m_perPassCB;
+	Handle m_perObjectCB;
+	
+	Texture* m_renderTarget;
+	
 	glm::vec4 m_viewport;
-	Camera* m_mainCam ;
 	Color m_clearColor;
-	Handle m_defaultConstBuffer;
+	Camera* m_mainCam;
+	
 	std::vector<DrawCommand> m_pendingDraws;
+	
+	GraphicsContext m_ctx;
 };
 
 #endif

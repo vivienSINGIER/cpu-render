@@ -2,7 +2,7 @@
 
 Color Color::WHITE  = {255, 255, 255, 255};
 Color Color::BLACK  = {255, 0, 0, 0};
-Color Color::RED    = {255, 0, 0, 255};
+Color Color::RED    = {255, 255, 0, 0};
 Color Color::GREEN  = {255, 0, 255, 0};
 Color Color::BLUE   = {255, 0, 0, 255};
 

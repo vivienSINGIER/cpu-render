@@ -2,15 +2,13 @@
 #define DRAW_COMMAND_H_DEFINED
 
 #include <glm/mat4x4.hpp>
-
-struct Mesh;
-struct Material;
+#include "Mesh.h"
 
 struct DrawCommand
 {
-	Mesh const& mesh;
+	Mesh mesh;
 	glm::mat4x4 world;
-	Material const& mat;
+	// Material mat;
 };
 
 #endif

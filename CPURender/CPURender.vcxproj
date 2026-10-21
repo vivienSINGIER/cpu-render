@@ -454,10 +454,12 @@
     </ClCompile>
     <ClCompile Include="Datas\Triangle.cpp" />
     <ClCompile Include="engine.cpp" />
+    <ClCompile Include="Factories\GeometryFactory.cpp" />
     <ClCompile Include="Heaps\BufferHeap.inl" />
     <ClCompile Include="Heaps\ConstantBufferHeap.cpp" />
     <ClCompile Include="Heaps\Heap.inl" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="Maths\PerlinNoise.cpp" />
     <ClCompile Include="Shaders\ShaderBase\Shader.cpp" />
     <ClCompile Include="Shaders\ShaderBase\ShaderGroup.cpp" />
     <ClCompile Include="Maths\AABB.cpp" />
@@ -471,6 +473,7 @@
     <ClInclude Include="Core\Device.h" />
     <ClInclude Include="Core\GraphicsContext.h" />
     <ClInclude Include="Datas\Color.h" />
+    <ClInclude Include="Datas\ConstantBuffers.hpp" />
     <ClInclude Include="Datas\DrawCommand.h" />
     <ClInclude Include="Datas\Mesh.h" />
     <ClInclude Include="Datas\Morton.hpp" />
@@ -479,6 +482,7 @@
     <ClInclude Include="Datas\Texture.inl" />
     <ClInclude Include="Datas\Triangle.h" />
     <ClInclude Include="engine.h" />
+    <ClInclude Include="Factories\GeometryFactory.h" />
     <ClInclude Include="Heaps\BufferHeap.h" />
     <ClInclude Include="Heaps\ConstantBufferHeap.h" />
     <ClInclude Include="Heaps\ConstantBufferHeap.inl" />
@@ -488,6 +492,7 @@
     <ClInclude Include="main.h" />
     <ClInclude Include="Maths\AABB.h" />
     <ClInclude Include="Maths\Frustum.h" />
+    <ClInclude Include="Maths\PerlinNoise.h" />
     <ClInclude Include="Maths\Plane.h" />
     <ClInclude Include="Maths\Ray.h" />
     <ClInclude Include="Maths\Transform.h" />

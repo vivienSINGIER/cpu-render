@@ -7,6 +7,7 @@
 #include <ostream>
 
 #include "engine.h"
+#include "Core/Device.h"
 //Students cannot change anything in this file
 
 
@@ -73,10 +74,10 @@ int main(void) {
     }
 
     Engine engine;
-    engine.init();
+    Texture frameBuffer(256, 256, Texture::LINEAR);
+    engine.init(&frameBuffer);
     bool isRunning = true;
     uint32_t frame = 1;
-    Texture frameBuffer(256, 256, Texture::LINEAR);
 
     /* Frame loop */
     while (isRunning) {
@@ -90,7 +91,7 @@ int main(void) {
             engine.handleEvent(event);
         }
 
-        engine.renderFrame(frameBuffer);
+        engine.renderFrame();
 
         /* Copy contents of the framebuffer to our SDL texture */
         SDL_UpdateTexture(

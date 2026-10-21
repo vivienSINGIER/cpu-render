@@ -2,16 +2,7 @@
 #include <glm/glm.hpp>
 #include "../Datas/Color.h"
 
-struct Vertex_IN
-{
-	glm::vec3 pos;
-	Color color;
-};
-struct Vertex_OUT
-{
-	glm::vec3 pos;
-	Color color;
-};
+#include "../Datas/Mesh.h"
 
 struct Triangle
 {
