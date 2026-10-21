@@ -6,7 +6,7 @@
 #include "../Shaders/ShaderBase/Shader.h"
 #include "../Shaders/ShaderBase/ShaderGroup.h"
 
-#include "../Texture.h"
+#include "../Datas/Texture.h"
 
 //TODO REMOVE & Add includes
 class Vertex;
