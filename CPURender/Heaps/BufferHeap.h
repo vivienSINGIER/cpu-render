@@ -3,6 +3,7 @@
 #include <vector>
 
 #include "Handle.hpp"
+#include "HeapUtils.hpp"
 
 class GraphicsContext;
 
@@ -20,6 +21,8 @@ private:
     std::vector<uint8_t> m_data;
     uint32_t m_heapId;
     GraphicsContext* m_ctx;
+    
+    std::vector<FreeRange> m_free;
     
     BufferHeap(uint16_t _heapId, GraphicsContext* _ctx);
     

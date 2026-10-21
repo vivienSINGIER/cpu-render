@@ -489,6 +489,7 @@
     <ClInclude Include="Heaps\Handle.hpp" />
     <ClInclude Include="Heaps\Heap.h" />
     <ClInclude Include="Heaps\Heaps.h" />
+    <ClInclude Include="Heaps\HeapUtils.hpp" />
     <ClInclude Include="main.h" />
     <ClInclude Include="Maths\AABB.h" />
     <ClInclude Include="Maths\Frustum.h" />

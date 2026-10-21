@@ -21,6 +21,7 @@ public:
     
 private:
     std::vector<std::unique_ptr<Base>> m_items;
+    std::vector<size_t> m_free;
     uint16_t m_heapId;
     GraphicsContext* m_ctx;
     
