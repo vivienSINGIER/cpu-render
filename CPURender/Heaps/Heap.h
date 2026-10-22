@@ -14,7 +14,11 @@ class Heap
 public:
     template <typename Derived, typename... Args>
     Handle Create(Args&&... args);
-    
+
+    // takes ownership of an already built item, for types whose constructor isn't public
+    template <typename Derived>
+    Handle Insert(std::unique_ptr<Derived> _item);
+
     Base* Get(Handle _h);
     
     void Delete(Handle _h);

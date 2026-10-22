@@ -1,6 +1,8 @@
 ﻿#include "Morton.hpp"
 #include "Texture.h"
 
+#include <glm/common.hpp>
+
 #include "../stb_image.h"
 
 namespace
@@ -56,7 +58,21 @@ void Texture::SetSize(uint32 _width, uint32 _height)
     m_data.resize(m_size);
 }
 
-Texture Texture::ToLinear()
+Color Texture::SampleNP(glm::vec2 uv) const
+{
+    uv.x = glm::clamp(uv.x, 0.0f, 1.0f);
+    uv.y = glm::clamp(uv.y, 0.0f, 1.0f);
+
+    uint32_t x = static_cast<uint32_t>(glm::floor(uv.x * (float)m_width));
+    uint32_t y = static_cast<uint32_t>(glm::floor(uv.y * (float)m_height));
+    
+    if (x >= m_width)  x = m_width - 1;
+    if (y >= m_height) y = m_height - 1;
+
+    return GetPixelColor(x, y);
+}
+
+Texture Texture::ToLinear() const
 {
     Texture t(m_width, m_height, LINEAR);
     
@@ -111,7 +127,7 @@ void Texture::SetPixelColor(uint32 _x, uint32 _y, Color _color)
     m_data[i] = _color;
 }
 
-Color Texture::GetPixelColor(uint32 _x, uint32 _y)
+Color Texture::GetPixelColor(uint32 _x, uint32 _y) const
 {
     uint32 i = GetIndex(_x, _y);
     return m_data[i];
@@ -122,7 +138,7 @@ Color* Texture::GetData()
     return m_data.data();
 }
 
-uint32 Texture::GetIndex(uint32 _x, uint32 _y)
+uint32 Texture::GetIndex(uint32 _x, uint32 _y) const
 {
     switch (m_encoding)
     {

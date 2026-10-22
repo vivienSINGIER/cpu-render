@@ -2,6 +2,7 @@
 #define HEAPS_BUFFERHEAP_INL_DEFINED
 
 #include "BufferHeap.h"
+#include <cassert>
 #include <cstring>
 
 template <typename T>
@@ -57,7 +58,7 @@ void BufferHeap<T>::Delete(Handle _h)
     auto it = m_free.begin();
     while (it != m_free.end())
     {
-        static_assert(r.size != it->size || r.offset != it->offset, "can't delete a free handle" );
+        assert((r.size != it->size || r.offset != it->offset) && "can't delete a free handle");
         if (r.offset < it->offset)
             break;
         ++it;        

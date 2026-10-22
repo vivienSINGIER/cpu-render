@@ -1,6 +1,7 @@
 ﻿#include "GraphicsContext.h"
 
 #include "../Factories/GeometryFactory.h"
+#include "../Factories/ShaderFactory.h"
 
 GraphicsContext::GraphicsContext() :
     vertexBufferHeap(0, this), indexBufferHeap(1, this),
@@ -9,4 +10,5 @@ GraphicsContext::GraphicsContext() :
     frameBufferHeap(6, this), constantBufferHeap(7, this)
 {
     GeometryFactory::Init(this);
+    ShaderFactory::Init(this);
 }

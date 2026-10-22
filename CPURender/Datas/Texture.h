@@ -20,7 +20,7 @@ public:
     Texture(uint32 _width = 256, uint32 _height = 256, Encoding _enc = MORTON, Color _color = Color::BLACK);
     ~Texture() = default;
 
-    Texture ToLinear();
+    Texture ToLinear() const;
     
     void Load(std::string const& _filePath);
     void Clear(Color _color = Color::BLACK);
@@ -31,8 +31,10 @@ public:
     uint32 GetSize(uint32& _width, uint32& _height) const;
     void SetSize(uint32 _width, uint32 _height);
     
+    Color SampleNP(glm::vec2 uv) const;
+    
     void SetPixelColor(uint32 _x, uint32 _y, Color _color);
-    Color GetPixelColor(uint32 _x, uint32 _y);
+    Color GetPixelColor(uint32 _x, uint32 _y)  const;
     
     template <typename T>
     T GetPixelData(uint32 _x, uint32 _y);
@@ -49,7 +51,7 @@ private:
     
     Encoding m_encoding;
     
-    uint32 GetIndex(uint32 _x, uint32 _y);
+    uint32 GetIndex(uint32 _x, uint32 _y) const;
 };
 
 #include "Texture.inl"
