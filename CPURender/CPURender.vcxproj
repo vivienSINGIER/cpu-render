@@ -207,6 +207,7 @@
     <ClInclude Include="Shaders\ShaderBase\Shader.h" />
     <ClInclude Include="Shaders\ShaderBase\Shader.inl" />
     <ClInclude Include="Shaders\ShaderBase\ShaderGroup.h" />
+    <ClInclude Include="Shaders\Shaders.h" />
     <ClInclude Include="Shaders\Shaders\UnlitC.hpp" />
     <ClInclude Include="stb_image.h" />
   </ItemGroup>

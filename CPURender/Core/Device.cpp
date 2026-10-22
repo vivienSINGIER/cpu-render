@@ -6,6 +6,7 @@
 #include "../Datas/ConstantBuffers.hpp"
 #include "../Datas/Triangle.h"
 #include "../Clipping.h"
+#include "../Shaders/ShaderBase/Material.h"
 
 Device::Device() : m_ctx()
 {
@@ -44,9 +45,9 @@ void Device::BeginDraw()
 }
 
 // TODO Add materials
-void Device::RegisterCommand(Mesh const& _m, glm::mat4x4 _world)
+void Device::RegisterCommand(Mesh const& _m, glm::mat4x4 _world, MaterialData const* _mat)
 {
-	DrawCommand d = { _m, _world };
+	DrawCommand d = { _m, _world, _mat };
 	m_pendingDraws.push_back(d);
 }
 
@@ -83,12 +84,19 @@ void Device::ExecCommand(DrawCommand const& _cmd)
 	
 	m_ctx.constantBufferHeap.Write<PerObjectCB>(m_perObjectCB, cb);
 	
+	ShaderResources res;
+	_cmd.material->Resolve(res);
+	res.cbs[CB_PER_PASS] = m_ctx.constantBufferHeap.GetRaw(m_perPassCB);
+	res.cbs[CB_PER_OBJECT] = m_ctx.constantBufferHeap.GetRaw(m_perObjectCB);
+	
+	ShaderStages stages = m_ctx.shaderGroupHeap.Get(_cmd.material->ShaderGroupHandle())->Resolve();
+	
 	std::vector<Vertex_OUT> vBuffer;
 	
-	VertexShaderStep(_cmd.mesh, vBuffer);
+	VertexShaderStep(_cmd.mesh, res, stages, vBuffer);
 	ClippingStep(vBuffer);
 	ClipToScreen(vBuffer);
-	RasterStep(vBuffer);
+	RasterStep(vBuffer, res, stages);
 }
 
 void Device::SetMainCamera(Camera* _c)
@@ -101,7 +109,7 @@ void Device::SetRenderTarget(Texture* _tex)
 	m_renderTarget = _tex;
 }
 
-void Device::VertexShaderStep(Mesh const& _mesh, std::vector<Vertex_OUT>& _out)
+void Device::VertexShaderStep(Mesh const& _mesh, ShaderResources const& _r, ShaderStages _s, std::vector<Vertex_OUT>& _out)
 {
 	uint32_t vertexCount = _mesh.vertexCount;
 	uint32_t indexCount = _mesh.indexCount;
@@ -121,7 +129,7 @@ void Device::VertexShaderStep(Mesh const& _mesh, std::vector<Vertex_OUT>& _out)
 #pragma omp for
 	for (uint32_t v = 0; v < vertexCount; v++)
 	{
-		transformed[v] = VS(vBuffer[v], pCB, oCB);
+		transformed[v] = _s.vs->Execute(_r, vBuffer[v]);
 	}
 
 	size_t triCount = indexCount / 3;
@@ -162,16 +170,6 @@ void Device::VertexShaderStep(Mesh const& _mesh, std::vector<Vertex_OUT>& _out)
 		_out.push_back(transformed[i1]);
 		_out.push_back(transformed[i2]);
 	}
-}
-
-Vertex_OUT Device::VS(Vertex _in, PerPassCB const& _pCB, PerObjectCB const& _oCB)
-{
-	Vertex_OUT v;
-	v.color = _in.color;
-	v.positionH = glm::vec4({ _in.position, 1 });
-	v.positionH = _pCB.proj * _pCB.view * _oCB.model * v.positionH;
-
-	return v;
 }
 
 void Device::ClippingStep(std::vector<Vertex_OUT>& _inOut)
@@ -268,7 +266,7 @@ void Device::ClipToScreen(std::vector<Vertex_OUT>& _inOut)
 	}
 }
 
-void Device::RasterStep(std::vector<Vertex_OUT> const& _vBuffer)
+void Device::RasterStep(std::vector<Vertex_OUT> const& _vBuffer, ShaderResources const& _r, ShaderStages _s)
 {
 	Texture* fb = m_ctx.frameBufferHeap.Get(m_frameBuffer);
 	Texture* db = m_ctx.frameBufferHeap.Get(m_depthBuffer);
@@ -299,14 +297,9 @@ void Device::RasterStep(std::vector<Vertex_OUT> const& _vBuffer)
 
 					db->SetPixelData<float>(x, y, px.positionH.z);
 
-					fb->SetPixelColor(x, y, PS(px));
+					fb->SetPixelColor(x, y, _s.ps->Execute(_r, px));
 				}
 			}
 		}
 	}
-}
-
-Color Device::PS(Vertex_OUT _in)
-{
-	return _in.color;
 }

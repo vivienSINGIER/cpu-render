@@ -5,6 +5,7 @@
 #include "Core/Device.h"
 #include "Datas/Texture.h"
 #include "Maths/Transform.h"
+#include "Shaders/ShaderBase/Material.h"
 
 union SDL_Event;
 
@@ -32,4 +33,5 @@ private:
 	
 	Mesh m_mesh;
 	Transform m_meshTransform;
+	Material m_material;
 };

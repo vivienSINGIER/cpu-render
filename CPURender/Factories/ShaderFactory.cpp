@@ -4,6 +4,7 @@
 #include <memory>
 
 #include "../Core/GraphicsContext.h"
+#include "../Shaders/Shaders.h"
 
 void ShaderFactory::Init(GraphicsContext* _ctx)
 {
@@ -60,5 +61,5 @@ bool ShaderFactory::HasGroup(std::string const& _name) const
 
 void ShaderFactory::RegisterPrebuilts()
 {
-    // e.g. RegisterGroup<UnlitVS, UnlitPS>("Unlit");
+    RegisterGroup<UnlitVS, UnlitPS>("UnlitC");
 }

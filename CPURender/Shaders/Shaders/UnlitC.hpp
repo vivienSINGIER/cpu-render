@@ -18,8 +18,27 @@ public:
         
         Vertex_OUT v;
         v.color = _in.color;
-        // v.position = glm::project(_in.position, pCB.view * oCB.model, pCB.proj, {0.0f, 0.0f, pCB.renderTargetSize});
+        v.positionH = glm::vec4({ _in.position, 1 });
+        v.positionH = pCB.proj * pCB.view * oCB.model * v.positionH;
         return v;
+    }
+};
+
+class UnlitPS : public PixelShader
+{
+public:
+    struct UnlitColor
+    {
+        Color color;
+    };
+    
+    UnlitPS(GraphicsContext* _ctx) : PixelShader(_ctx) { AddConstantBuffer<UnlitColor>(CB_CUSTOM); }
+    
+    Color Execute(ShaderResources const& _r, Vertex_OUT const& _in) const override
+    {
+        UnlitColor const& cb = CB<UnlitColor>(_r, 2);
+        
+        return cb.color;
     }
 };
 

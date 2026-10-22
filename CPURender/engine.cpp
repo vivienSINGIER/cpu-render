@@ -17,6 +17,8 @@
 
 #include "Datas/Texture.h"
 #include "Factories/GeometryFactory.h"
+#include "Shaders/Shaders.h"
+#include "Factories/ShaderFactory.h"
 
 namespace
 {
@@ -77,6 +79,9 @@ void Engine::init(Texture* _frameBuffer)
     m_camTransform.SetPosition(glm::vec3(0.0f, 0.0f, -5.0f));
     
     m_mesh = GeometryFactory::Instance()->BuildCube();
+    
+    m_material = ShaderFactory::Instance()->CreateMaterial("UnlitC");
+    m_material->SetParams<UnlitPS::UnlitColor>(CB_CUSTOM, { Color::RED });
 }
 
 void Engine::handleEvent(const SDL_Event& event)
@@ -102,7 +107,7 @@ void Engine::renderFrame()
     
     m_device.BeginDraw();
     
-    m_device.RegisterCommand(m_mesh, m_meshTransform.GetMatrix());
+    m_device.RegisterCommand(m_mesh, m_meshTransform.GetMatrix(), m_material.get());
     m_device.Draw();
     
     m_device.EndDraw();
