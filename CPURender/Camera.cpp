@@ -1,27 +1,135 @@
+
 #include "Camera.h"
-#include <glm/gtc/matrix_transform.hpp>
 
-void Camera::Translate(glm::vec3 _translation)
+glm::mat4x4 MakePerspective(float _fov, float _aspectRatio, float _near, float _far)
 {
-	transform = glm::translate(transform, _translation);
+    float _00 = 1.0f / (_aspectRatio * std::tanf(_fov / 2));
+    float _11 = 1.0f / std::tanf(_fov / 2);
+    float _22 = -(_near + _far) / (_near - _far);
+    float _23 = 1.0f;
+    float _32 = -(2.0f * _far * _near) / (_far - _near);
+
+    return {
+        { _00, 0, 0, 0 },
+        { 0, _11, 0, 0 },
+        { 0, 0, _22, _23 },
+        { 0, 0, _32, 0 },
+    };
 }
 
-void Camera::RotateYaw(float _angle)
+glm::mat4x4 MakeOrthographic(float _left, float _right, float _bottom, float _top, float _near, float _far)
 {
-	transform = glm::rotate(transform, _angle, glm::vec3(0, 1, 0));
+    float _00 = 2.0f / (_right - _left);
+    float _11 = 2.0f / (_top - _bottom);
+    float _22 = -2.0f / (_far - _near);
+
+    float _03 = -(_right + _left) / (_right - _left);
+    float _13 = -(_top + _bottom) / (_top - _bottom);
+    float _23 = -(_near + _far) / (_far - _near);
+    float _33 = 1.0f;
+
+    return {
+        { _00, 0, 0, _03 },
+        { 0, _11, 0, _13 },
+        { 0, 0, _22, _23 },
+        { 0, 0, 0, _33 }
+    };
 }
 
-void Camera::RotatePitch(float _angle)
+Camera::Camera()
 {
-	transform = glm::rotate(transform, _angle, glm::vec3(1, 0, 0));
+    m_world = glm::identity<glm::mat4x4>();
+    m_view = glm::identity<glm::mat4x4>();
+    m_proj = glm::identity<glm::mat4x4>();
+    m_viewProj = glm::identity<glm::mat4x4>();
 }
 
-void Camera::RotateRoll(float _angle)
+Camera::~Camera()
 {
-	transform = glm::rotate(transform, _angle, glm::vec3(0, 0, 1));
+
 }
 
-glm::vec3 Camera::GetPosition()
+void Camera::SetWorld(glm::mat4x4 const& _world)
 {
-	return { transform[3][0], transform[3][1], transform[3][2] };
+    m_world = _world;
+    UpdateMatrices();
+}
+
+void Camera::SetFov(float _fov)
+{
+    m_fov = _fov;
+    m_proj = MakePerspective(m_fov, m_aspectRatio, m_nearPlane, m_farPlane);
+    UpdateMatrices();
+}
+
+void Camera::SetNearDistance(float _nearPlane)
+{
+    m_nearPlane = _nearPlane;
+    m_proj = MakePerspective(m_fov, m_aspectRatio, m_nearPlane, m_farPlane);
+    UpdateMatrices();
+}
+
+void Camera::SetFarDistance(float _farPlane)
+{
+    m_farPlane = _farPlane;
+    m_proj = MakePerspective(m_fov, m_aspectRatio, m_nearPlane, m_farPlane);
+    UpdateMatrices();
+}
+
+void Camera::SetAspectRatio(float _aspectRatio)
+{
+    m_aspectRatio = _aspectRatio;
+    m_proj = MakePerspective(m_fov, m_aspectRatio, m_nearPlane, m_farPlane);
+    UpdateMatrices();
+}
+
+float Camera::GetFov() const
+{
+    return m_fov;
+}
+
+float Camera::GetNearDistance() const
+{
+    return m_nearPlane;
+}
+
+float Camera::GetFarDistance() const
+{
+    return m_farPlane;
+}
+
+float Camera::GetAspectRatio() const
+{
+    return m_aspectRatio;
+}
+
+void Camera::UpdateMatrices()
+{
+    m_view = glm::inverse(m_world);
+
+    m_viewProj = m_view * m_proj;
+    m_frustum = Frustum(m_viewProj, true);
+    m_viewProj = glm::transpose(m_viewProj); //hlsl
+
+    m_pos = glm::vec3(m_world[3][0], m_world[3][1], m_world[3][2]);
+}
+
+Frustum const& Camera::GetFrustum()
+{
+    return m_frustum;
+}
+
+void Camera::FillData(PassData* _passData)
+{
+    // TODO avoid redundant recomputation of the matrices (inverse)
+    _passData->viewProj = m_viewProj;
+    _passData->view = m_view;
+    _passData->proj = m_proj;
+
+    _passData->invViewProj = glm::inverse(m_viewProj);
+
+    _passData->eyePosW = m_pos;
+
+    _passData->nearZ = m_nearPlane;
+    _passData->farZ = m_farPlane;
 }

@@ -13,6 +13,7 @@ class BufferHeap
 public:
     Handle Create(T* _data, uint16_t _count);
     
+    T const* GetData(Handle _h);
     T const* GetData(Handle _h, uint16_t& _count);
     
     void Delete(Handle _h);

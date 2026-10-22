@@ -1,6 +1,9 @@
 #pragma once
 #include <vector>
-#include "Triangle.h"
+#include <cstdint>
+#include <glm/glm.hpp>
+
+#include "Color.h"
 
 #include "../Heaps/Handle.hpp"
 

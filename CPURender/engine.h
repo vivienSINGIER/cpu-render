@@ -4,7 +4,7 @@
 #include "main.h"
 #include "Core/Device.h"
 #include "Datas/Texture.h"
-//Students can change whetever they want in this file
+#include "Maths/Transform.h"
 
 union SDL_Event;
 
@@ -19,6 +19,17 @@ public:
 	void destroy();
 
 private:
-	Device m_device;	
+	void UpdateCamera(float _dt);
+	void RotateCamera(float _yaw, float _pitch);
+
+	float m_camYaw = 0.0f;
+	float m_camPitch = 0.0f;
+	uint64_t m_lastTime = 0;
+	
+	Device m_device;
 	Camera m_camera;
+	Transform m_camTransform;
+	
+	Mesh m_mesh;
+	Transform m_meshTransform;
 };

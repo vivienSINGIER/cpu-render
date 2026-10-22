@@ -7,6 +7,7 @@
 #include <cstring>
 #include <unordered_map>
 
+#include <glm/common.hpp>
 #include <glm/geometric.hpp>
 #include <glm/gtc/constants.hpp>
 
@@ -86,6 +87,7 @@ Mesh GeometryFactory::BuildPyramid()
 	};
 
 	vertices = CalculateNormalsAndTangents(vertices, indices);
+	ApplyPaletteColors(vertices);
 
 	return CreateMesh(vertices, indices);
 }
@@ -148,6 +150,7 @@ Mesh GeometryFactory::BuildCube()
    };
 
 	vertices = CalculateNormalsAndTangents(vertices, indices);
+	ApplyPaletteColors(vertices);
 
 	return CreateMesh(vertices, indices);
 }
@@ -169,6 +172,7 @@ Mesh GeometryFactory::BuildTriangle()
 	indices = { 0, 2, 1 };
 
 	vertices = CalculateNormalsAndTangents(vertices, indices);
+	ApplyPaletteColors(vertices);
 
 	return CreateMesh(vertices, indices);
 }
@@ -281,6 +285,7 @@ Mesh GeometryFactory::BuildIcosphere(int _subdivisions)
 	}
 
 	vertices = CalculateNormalsAndTangentsSeamless(vertices, indices);
+	ApplyGradientColors(vertices);
 
 	return CreateMesh(vertices, indices);
 }
@@ -360,6 +365,7 @@ Mesh GeometryFactory::BuildUVSphere(uint8_t _sliceCount, uint8_t _stackCount)
     }
 
     vertices = CalculateNormalsAndTangentsSeamless(vertices, indices);
+	ApplyGradientColors(vertices);
 
 	return CreateMesh(vertices, indices);
 }
@@ -379,6 +385,7 @@ Mesh GeometryFactory::BuildCircle(int _stackCount, float _posY, bool _isTop)
 		std::reverse(indices.begin(), indices.end());
 
 	vertices = CalculateNormalsAndTangentsSeamless(vertices, indices);
+	ApplyGradientColors(vertices);
 
 	return CreateMesh(vertices, indices);
 }
@@ -421,6 +428,7 @@ Mesh GeometryFactory::BuildCylinder(int _stackCount)
 	}
 
 	vertices = CalculateNormalsAndTangents(vertices, indices);
+	ApplyGradientColors(vertices);
 
 	return CreateMesh(vertices, indices);
 }
@@ -474,6 +482,7 @@ Mesh GeometryFactory::BuildDonut(float _majorRadius, float _minorRadius, uint32_
 	}
 
 	vertices = CalculateNormalsAndTangentsSeamless(vertices, indices);
+	ApplyGradientColors(vertices);
 
 	return CreateMesh(vertices, indices);
 }
@@ -556,6 +565,46 @@ Mesh GeometryFactory::LoadMesh(std::string const& _path)
 #pragma endregion
 
 #pragma region HELPERS
+
+void GeometryFactory::ApplyPaletteColors(std::vector<Vertex>& _vertices)
+{
+	Color const palette[] = {
+		Color::RED, Color::GREEN, Color::BLUE, Color::YELLOW,
+		Color::CYAN, Color::MAGENTA, Color::ORANGE, Color::PURPLE,
+		Color::LIME, Color::PINK, Color::TEAL, Color::BROWN,
+	};
+	constexpr size_t paletteSize = sizeof(palette) / sizeof(palette[0]);
+
+	for (size_t i = 0; i < _vertices.size(); i++)
+		_vertices[i].color = palette[i % paletteSize];
+}
+
+void GeometryFactory::ApplyGradientColors(std::vector<Vertex>& _vertices)
+{
+	if (_vertices.empty())
+		return;
+
+	glm::vec3 min = _vertices[0].position;
+	glm::vec3 max = _vertices[0].position;
+	for (Vertex const& v : _vertices)
+	{
+		min = glm::min(min, v.position);
+		max = glm::max(max, v.position);
+	}
+
+	glm::vec3 extent = max - min;
+	for (Vertex& v : _vertices)
+	{
+		glm::vec3 t;
+		for (int k = 0; k < 3; k++)
+			t[k] = extent[k] > 1e-6f ? (v.position[k] - min[k]) / extent[k] : 0.5f;
+		
+		v.color = Color(255,
+			static_cast<glm::uint8>(55.0f + t.x * 200.0f),
+			static_cast<glm::uint8>(55.0f + t.y * 200.0f),
+			static_cast<glm::uint8>(55.0f + t.z * 200.0f));
+	}
+}
 
 std::vector<Vertex> GeometryFactory::CalculateNormalsAndTangentsSeamless(std::vector<Vertex>& _vertices,
     std::vector<Index>& _indices)
@@ -763,7 +812,7 @@ void GeometryFactory::Circle(std::vector<Vertex>& vertices, std::vector<uint32_t
 	);
 
 	int indexCenter = (int)vertices.size() - 1;
-	float angle = MathUtils::PI / (float)_stackCount * 2.0f;
+	float angle = glm::pi<float>() / (float)_stackCount * 2.0f;
     	
 	for (int i = 0; i < _stackCount + 1; ++i)
 	{

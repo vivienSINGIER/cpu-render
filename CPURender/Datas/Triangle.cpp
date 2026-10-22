@@ -2,7 +2,7 @@
 
 bool IsFront(const Triangle& _tri, bool _clockwise)
 {
-    glm::vec3 normal = glm::cross(_tri.v3.pos - _tri.v1.pos, _tri.v2.pos - _tri.v1.pos);
+    glm::vec3 normal = glm::cross(_tri.v3.position - _tri.v1.position, _tri.v2.position - _tri.v1.position);
 
     if(_clockwise) return normal.z < 0;
     return normal.z > 0;
@@ -17,9 +17,9 @@ bool IsInTriangle(glm::vec2 _point, const Triangle& _tri)
 glm::vec3 BarycentricWeight(glm::vec2 _point, const Triangle& _tri)
 {
     glm::vec3 weights = { 0.0f, 0.0f, 0.0f };
-    glm::vec3 shiftedV2 = _tri.v2.pos - _tri.v1.pos;
-    glm::vec3 shiftedV3 = _tri.v3.pos - _tri.v1.pos;
-    glm::vec3 shiftedPoint = { _point.x - _tri.v1.pos.x, _point.y - _tri.v1.pos.y, 0.0f };
+    glm::vec3 shiftedV2 = _tri.v2.position - _tri.v1.position;
+    glm::vec3 shiftedV3 = _tri.v3.position - _tri.v1.position;
+    glm::vec3 shiftedPoint = { _point.x - _tri.v1.position.x, _point.y - _tri.v1.position.y, 0.0f };
 
     float d = shiftedV2.x * shiftedV3.y - shiftedV3.x * shiftedV2.y;
     
@@ -28,6 +28,16 @@ glm::vec3 BarycentricWeight(glm::vec2 _point, const Triangle& _tri)
     weights.z = (shiftedPoint.y * shiftedV2.x - shiftedPoint.x * shiftedV2.y) / d;
 
     return weights;
+}
+
+Vertex_OUT InterpolateVertex(glm::vec2 _point, const Triangle& _tri)
+{
+    glm::vec3 bary = BarycentricWeight(_point, _tri);
+    Vertex_OUT vert;
+
+    vert.position = { _point, glm::dot(bary, { _tri.v1.position.z, _tri.v2.position.z, _tri.v3.position.z }) };
+    vert.color = _tri.v1.color * bary.x + _tri.v2.color * bary.y + _tri.v3.color * bary.z;
+    return vert;
 }
 
 Color GetPointColor(glm::vec2 _point, const Triangle& _tri)
@@ -56,22 +66,22 @@ Color GetPointColor(glm::vec2 _point, const Triangle& _tri)
 
 glm::vec4 GetBoundingBox(const Triangle& _tri)
 {
-    float minX = _tri.v1.pos.x;
-    float maxX = _tri.v1.pos.x;
-    float minY = _tri.v1.pos.y;
-    float maxY = _tri.v1.pos.y;
+    float minX = _tri.v1.position.x;
+    float maxX = _tri.v1.position.x;
+    float minY = _tri.v1.position.y;
+    float maxY = _tri.v1.position.y;
 
-    minX = _tri.v2.pos.x < minX ? _tri.v2.pos.x : minX;
-    minX = _tri.v3.pos.x < minX ? _tri.v3.pos.x : minX;
+    minX = _tri.v2.position.x < minX ? _tri.v2.position.x : minX;
+    minX = _tri.v3.position.x < minX ? _tri.v3.position.x : minX;
 
-    maxX = _tri.v2.pos.x > maxX ? _tri.v2.pos.x : maxX;
-    maxX = _tri.v3.pos.x > maxX ? _tri.v3.pos.x : maxX;
+    maxX = _tri.v2.position.x > maxX ? _tri.v2.position.x : maxX;
+    maxX = _tri.v3.position.x > maxX ? _tri.v3.position.x : maxX;
 
-    minY = _tri.v2.pos.y < minY ? _tri.v2.pos.y : minY;
-    minY = _tri.v3.pos.y < minY ? _tri.v3.pos.y : minY;
+    minY = _tri.v2.position.y < minY ? _tri.v2.position.y : minY;
+    minY = _tri.v3.position.y < minY ? _tri.v3.position.y : minY;
 
-    maxY = _tri.v2.pos.y > maxY ? _tri.v2.pos.y : maxY;
-    maxY = _tri.v3.pos.y > maxY ? _tri.v3.pos.y : maxY;
+    maxY = _tri.v2.position.y > maxY ? _tri.v2.position.y : maxY;
+    maxY = _tri.v3.position.y > maxY ? _tri.v3.position.y : maxY;
 
     return glm::vec4(floor(minX), floor(minY), ceil(maxX), ceil(maxY));
 }

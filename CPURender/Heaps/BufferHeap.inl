@@ -34,6 +34,12 @@ Handle BufferHeap<T>::Create(T* _data, uint16_t _count)
 }
 
 template <typename T>
+T const* BufferHeap<T>::GetData(Handle _h)
+{
+    return reinterpret_cast<T const*>(m_data.data() + _h.Offset());
+}
+
+template <typename T>
 T const* BufferHeap<T>::GetData(Handle _h, uint16_t& _count)
 {
     _count = _h.Size();

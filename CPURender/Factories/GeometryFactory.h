@@ -36,6 +36,9 @@ private:
 	static std::vector<Vertex> CalculateNormalsAndTangentsSeamless(std::vector<Vertex>& _vertices, std::vector<Index>& _indices);
 
 	static std::vector<Vertex> CalculateNormalsAndTangents(std::vector<Vertex>& _vertices, const std::vector<uint32_t>& _indices);
+	
+	static void ApplyPaletteColors(std::vector<Vertex>& _vertices);
+	static void ApplyGradientColors(std::vector<Vertex>& _vertices);
 
 	static Vertex MidPoint(Vertex const& v0, Vertex const& v1);
 

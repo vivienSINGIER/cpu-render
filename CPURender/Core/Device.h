@@ -11,11 +11,11 @@
 #include "../Datas/DrawCommand.h"
 
 #include "GraphicsContext.h"
+#include "../Datas/ConstantBuffers.hpp"
 
 //TODO Replace
-struct Camera;
+class Camera;
 struct Mesh;
-struct Material;
 
 class Device
 {
@@ -24,7 +24,7 @@ public:
 
 	void Clear();
 	void BeginDraw();
-	void RegisterCommand(Mesh const& _m, glm::mat4x4 _world, Material const& _mat);
+	void RegisterCommand(Mesh const& _m, glm::mat4x4 _world);
 	void Draw();
 	void EndDraw();
 
@@ -49,6 +49,15 @@ private:
 	std::vector<DrawCommand> m_pendingDraws;
 	
 	GraphicsContext m_ctx;
+	
+	void VertexShaderStep(Mesh const& _mesh, std::vector<Vertex_OUT>& _out);
+	Vertex_OUT VS(Vertex _in, PerPassCB const& _pCB, PerObjectCB const& _oCB);
+	
+	void ClippingStep(DrawCommand const& _cmd) {}
+	
+	void RasterStep(std::vector<Vertex_OUT> const& _vBuffer);
+	Color PS(Vertex_OUT _in);
+	
 };
 
 #endif
