@@ -1,29 +1,11 @@
 #ifndef CAMERA_H_DEFINED
 #define CAMERA_H_DEFINED
 
-#define PI 3.14159265f
 #include <glm/matrix.hpp>
 #include <glm/gtc/quaternion.hpp>
+
+#include "Datas/ConstantBuffers.hpp"
 #include "Maths/Frustum.h"
-
-struct PassData
-{
-    glm::mat4x4 viewProj;
-    glm::mat4x4 view;
-    glm::mat4x4 proj;
-    glm::mat4x4 invViewProj;
-
-    glm::vec3 eyePosW;
-    float nearZ;
-          
-    float farZ;
-    float totalTime;
-    float deltaTime;
-    float pad0;
-
-    glm::vec2 renderTargetSize;
-    glm::vec2 invRenderTargetSize;
-};
 
 class Camera
 {
@@ -53,14 +35,14 @@ private:
 
     glm::vec3 m_pos = { 0.0f, 0.0f, 0.0f };
 
-    float m_fov = 0.25f * PI;
+    float m_fov = 0.25f * glm::pi<float>();
     float m_nearPlane = 1.0f;
     float m_farPlane = 1000.0f;
     float m_aspectRatio = 0.0f;
 
     Frustum m_frustum;
 
-    void FillData(PassData* _passData);
+    void FillData(PerPassCB* _passData);
 
     friend class Device;
 };

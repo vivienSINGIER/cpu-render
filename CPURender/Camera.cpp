@@ -119,7 +119,7 @@ Frustum const& Camera::GetFrustum()
     return m_frustum;
 }
 
-void Camera::FillData(PassData* _passData)
+void Camera::FillData(PerPassCB* _passData)
 {
     // TODO avoid redundant recomputation of the matrices (inverse)
     _passData->viewProj = m_viewProj;
@@ -128,7 +128,7 @@ void Camera::FillData(PassData* _passData)
 
     _passData->invViewProj = glm::inverse(m_viewProj);
 
-    _passData->eyePosW = m_pos;
+    _passData->eyePos = m_pos;
 
     _passData->nearZ = m_nearPlane;
     _passData->farZ = m_farPlane;

@@ -37,10 +37,7 @@ void Device::BeginDraw()
 	assert(m_mainCam != nullptr && "Can't draw on uninitialized main camera");
 	PerPassCB perPassCB;
 	perPassCB.deltaTime = 0.066f;
-	perPassCB.eyePos = m_mainCam->m_pos;
-	perPassCB.proj = m_mainCam->m_proj;
-	perPassCB.view = m_mainCam->m_view;
-	perPassCB.viewProj = m_mainCam->m_viewProj;
+	m_mainCam->FillData(&perPassCB);
 	
 	m_ctx.constantBufferHeap.Write<PerPassCB>(m_perPassCB, perPassCB);
 }

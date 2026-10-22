@@ -5,12 +5,21 @@
 
 struct PerPassCB
 {
+    glm::mat4x4 viewProj;
     glm::mat4x4 view;
     glm::mat4x4 proj;
-    glm::mat4x4 viewProj;
-    
+    glm::mat4x4 invViewProj;
+
     glm::vec3 eyePos;
+    float nearZ;
+          
+    float farZ;
+    float totalTime;
     float deltaTime;
+    float pad0;
+
+    glm::vec2 renderTargetSize;
+    glm::vec2 invRenderTargetSize;
 };
 
 struct PerObjectCB
