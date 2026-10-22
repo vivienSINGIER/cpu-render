@@ -2,10 +2,13 @@
 
 bool IsFront(const Triangle& _tri, bool _clockwise)
 {
-    glm::vec3 normal = glm::cross((glm::vec3)_tri.v3.positionH - (glm::vec3)_tri.v1.positionH, (glm::vec3)_tri.v2.positionH - (glm::vec3)_tri.v1.positionH);
+    glm::mat3x3 mat = { glm::vec3({ _tri.v1.positionH.x, _tri.v1.positionH.y, _tri.v1.positionH.w }), 
+        glm::vec3({ _tri.v2.positionH.x, _tri.v2.positionH.y, _tri.v2.positionH.w }), 
+        glm::vec3({ _tri.v3.positionH.x, _tri.v3.positionH.y, _tri.v3.positionH.w }) };
+    float value = glm::determinant(mat);
 
-    if(_clockwise) return normal.z < 0;
-    return normal.z > 0;
+    if(_clockwise) return value > 0;
+    return value < 0;
 }
 
 bool IsInTriangle(glm::vec2 _point, const Triangle& _tri)
@@ -23,11 +26,31 @@ glm::vec3 BarycentricWeight(glm::vec2 _point, const Triangle& _tri)
 
     float d = shiftedV2.x * shiftedV3.y - shiftedV3.x * shiftedV2.y;
     
-    weights.x = (shiftedPoint.x * (shiftedV2.y - shiftedV3.y) + shiftedPoint.y * (shiftedV3.x - shiftedV2.x) + shiftedV2.x * shiftedV3.y - shiftedV3.x * shiftedV2.y) / d;
     weights.y = (shiftedPoint.x * shiftedV3.y - shiftedPoint.y * shiftedV3.x) / d;
     weights.z = (shiftedPoint.y * shiftedV2.x - shiftedPoint.x * shiftedV2.y) / d;
+    weights.x = 1 - weights.y - weights.z;
 
     return weights;
+}
+
+glm::vec3 BarycentricWeight(glm::vec3 _point, const Triangle& _tri)
+{
+    glm::vec3 a = _tri.v1.positionH;
+    glm::vec3 b = _tri.v2.positionH;
+    glm::vec3 c = _tri.v3.positionH;
+
+    glm::vec3 u = b - a;
+    glm::vec3 v = c - a;
+    glm::vec3 n = glm::cross(u, v);
+
+    glm::vec3 nA = glm::cross(c - b, _point - b);
+    glm::vec3 nB = glm::cross(a - c, _point - c);
+
+    float dA = glm::dot(nA, n) / glm::dot(n, n);
+    float dB = glm::dot(nB, n) / glm::dot(n, n);
+    float dC = 1 - dA - dB;
+
+    return glm::vec3(dA, dB, dC);
 }
 
 Vertex_OUT InterpolateVertex(glm::vec2 _point, const Triangle& _tri)
@@ -35,7 +58,21 @@ Vertex_OUT InterpolateVertex(glm::vec2 _point, const Triangle& _tri)
     glm::vec3 bary = BarycentricWeight(_point, _tri);
     Vertex_OUT vert;
 
-    vert.positionH = { _point, glm::dot(bary, { _tri.v1.positionH.z, _tri.v2.positionH.z, _tri.v3.positionH.z }), 1 };
+    vert.positionH = { _point,
+        glm::dot(bary, { _tri.v1.positionH.z, _tri.v2.positionH.z, _tri.v3.positionH.z }), 
+        glm::dot(bary, { _tri.v1.positionH.w, _tri.v2.positionH.w, _tri.v3.positionH.w }) };
+
+    vert.color = _tri.v1.color * bary.x + _tri.v2.color * bary.y + _tri.v3.color * bary.z;
+    return vert;
+}
+
+Vertex_OUT InterpolateVertex(glm::vec3 _point, const Triangle& _tri)
+{
+    glm::vec3 bary = BarycentricWeight(_point, _tri);
+    Vertex_OUT vert;
+
+    vert.positionH = { _point, glm::dot(bary, { _tri.v1.positionH.w, _tri.v2.positionH.w, _tri.v3.positionH.w }) };
+
     vert.color = _tri.v1.color * bary.x + _tri.v2.color * bary.y + _tri.v3.color * bary.z;
     return vert;
 }
