@@ -85,6 +85,8 @@ void Device::ExecCommand(DrawCommand const& _cmd)
 	std::vector<Vertex_OUT> vBuffer;
 	
 	VertexShaderStep(_cmd.mesh, vBuffer);
+	ClippingStep(vBuffer);
+	ClipToScreen(vBuffer);
 	RasterStep(vBuffer);
 }
 
@@ -165,8 +167,35 @@ Vertex_OUT Device::VS(Vertex _in, PerPassCB const& _pCB, PerObjectCB const& _oCB
 {
 	Vertex_OUT v;
 	v.color = _in.color;
-	v.position = glm::project(_in.position, _pCB.view * _oCB.model, _pCB.proj, m_viewport);
+	v.positionH = glm::vec4({ _in.position, 1 });
+	v.positionH = _pCB.proj * _pCB.view * _oCB.model * v.positionH;
+
 	return v;
+}
+
+void Device::ClippingStep(std::vector<Vertex_OUT>& _inOut)
+{
+	//for (uint32_t v = 0; v < _inOut.size(); v += 3)
+	//{
+	//	_inOut[v];
+
+	//}
+}
+
+void Device::ClipToScreen(std::vector<Vertex_OUT>& _inOut)
+{
+	for (uint32_t v = 0; v < _inOut.size(); v++)
+	{
+		// Perspective Divide
+		_inOut[v].positionH /= _inOut[v].positionH.w;
+
+		// Ndc
+		_inOut[v].positionH = _inOut[v].positionH * 0.5f + 0.5f; 
+
+		// To Screen
+		_inOut[v].positionH[0] = _inOut[v].positionH[0] * m_viewport[2] + m_viewport[0];
+		_inOut[v].positionH[1] = _inOut[v].positionH[1] * m_viewport[3] + m_viewport[1];
+	}
 }
 
 void Device::RasterStep(std::vector<Vertex_OUT> const& _vBuffer)
@@ -191,14 +220,14 @@ void Device::RasterStep(std::vector<Vertex_OUT> const& _vBuffer)
 				if (IsInTriangle({ x + 0.5f, y + 0.5f }, currentTriangle))
 				{
 					Vertex_OUT px = InterpolateVertex({ x + 0.5f, y + 0.5f }, currentTriangle);
-					float pixelDepth = px.position.z;
+					float pixelDepth = px.positionH.z;
 					
 					if (pixelDepth > 1.0f || pixelDepth < 0.0f)
 						continue;
 					if (pixelDepth > db->GetPixelData<float>(x, y))
 						continue;
 
-					db->SetPixelData<float>(x, y, px.position.z);
+					db->SetPixelData<float>(x, y, px.positionH.z);
 
 					fb->SetPixelColor(x, y, PS(px));
 				}
