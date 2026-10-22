@@ -48,7 +48,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v145</PlatformToolset>
+    <PlatformToolset>v143</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
@@ -144,13 +144,14 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Camera.cpp" />
-    <ClCompile Include="Core\Device.cpp"/>
+    <ClCompile Include="Clipping.cpp" />
+    <ClCompile Include="Core\Device.cpp" />
     <ClCompile Include="Core\GraphicsContext.cpp" />
-    <ClCompile Include="Datas\Color.cpp"/>
-    <ClCompile Include="Datas\DrawCommand.cpp"/>
+    <ClCompile Include="Datas\Color.cpp" />
+    <ClCompile Include="Datas\DrawCommand.cpp" />
     <ClCompile Include="Datas\Mesh.cpp" />
     <ClCompile Include="Datas\Object.cpp" />
-    <ClCompile Include="Datas\Texture.cpp"/>
+    <ClCompile Include="Datas\Texture.cpp" />
     <ClCompile Include="Datas\Triangle.cpp" />
     <ClCompile Include="engine.cpp" />
     <ClCompile Include="Factories\GeometryFactory.cpp" />
@@ -171,6 +172,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Camera.h" />
+    <ClInclude Include="Clipping.h" />
     <ClInclude Include="Core\Device.h" />
     <ClInclude Include="Core\GraphicsContext.h" />
     <ClInclude Include="Datas\Color.h" />

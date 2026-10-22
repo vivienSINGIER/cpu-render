@@ -5,6 +5,7 @@
 #include "../Datas/DrawCommand.h"
 #include "../Datas/ConstantBuffers.hpp"
 #include "../Datas/Triangle.h"
+#include "../Clipping.h"
 
 Device::Device() : m_ctx()
 {
@@ -85,6 +86,8 @@ void Device::ExecCommand(DrawCommand const& _cmd)
 	std::vector<Vertex_OUT> vBuffer;
 	
 	VertexShaderStep(_cmd.mesh, vBuffer);
+	ClippingStep(vBuffer);
+	ClipToScreen(vBuffer);
 	RasterStep(vBuffer);
 }
 
@@ -110,9 +113,9 @@ void Device::VertexShaderStep(Mesh const& _mesh, std::vector<Vertex_OUT>& _out)
 	
 	Vertex const* vBuffer = m_ctx.vertexBufferHeap.GetData(_mesh.vertexBuffer);
 	Index const* iBuffer = m_ctx.indexBufferHeap.GetData(_mesh.indexBuffer);
-	
+
 	std::vector<Vertex_OUT> transformed(vertexCount);
-	
+
 	// Per vertex stage
 #pragma omp parallel
 #pragma omp for
@@ -120,41 +123,41 @@ void Device::VertexShaderStep(Mesh const& _mesh, std::vector<Vertex_OUT>& _out)
 	{
 		transformed[v] = VS(vBuffer[v], pCB, oCB);
 	}
-	
+
 	size_t triCount = indexCount / 3;
 	std::vector<uint8_t> visible(triCount);
-	
+
 	// Per triangle stage - backface culling
 #pragma omp parallel
 #pragma omp for
 	for (size_t t = 0; t < triCount; t++)
 	{
-		Index i0 = iBuffer[3*t];
-		Index i1 = iBuffer[3*t+1];
-		Index i2 = iBuffer[3*t+2];
-		
+		Index i0 = iBuffer[3 * t];
+		Index i1 = iBuffer[3 * t + 1];
+		Index i2 = iBuffer[3 * t + 2];
+
 		assert(i0 < vertexCount && "index out of bounds");
 		assert(i1 < vertexCount && "index out of bounds");
 		assert(i2 < vertexCount && "index out of bounds");
-		
+
 		Triangle currentTriangle = { transformed[i0], transformed[i1], transformed[i2] };
-		
+
 		visible[t] = IsFront(currentTriangle);
 	}
-	
+
 	// Compaction stage
 	_out.clear();
 	_out.reserve(indexCount);
-	
+
 	for (size_t t = 0; t < triCount; t++)
 	{
 		if (visible[t] == false)
 			continue;
-		
-		Index i0 = iBuffer[3*t];
-		Index i1 = iBuffer[3*t+1];
-		Index i2 = iBuffer[3*t+2];
-		
+
+		Index i0 = iBuffer[3 * t];
+		Index i1 = iBuffer[3 * t + 1];
+		Index i2 = iBuffer[3 * t + 2];
+
 		_out.push_back(transformed[i0]);
 		_out.push_back(transformed[i1]);
 		_out.push_back(transformed[i2]);
@@ -165,8 +168,104 @@ Vertex_OUT Device::VS(Vertex _in, PerPassCB const& _pCB, PerObjectCB const& _oCB
 {
 	Vertex_OUT v;
 	v.color = _in.color;
-	v.position = glm::project(_in.position, _pCB.view * _oCB.model, _pCB.proj, m_viewport);
+	v.positionH = glm::vec4({ _in.position, 1 });
+	v.positionH = _pCB.proj * _pCB.view * _oCB.model * v.positionH;
+
 	return v;
+}
+
+void Device::ClippingStep(std::vector<Vertex_OUT>& _inOut)
+{
+	std::vector<Vertex_OUT> clippedVertexBuffer;
+
+	for (uint32_t v = 0; v < _inOut.size(); v += 3)
+	{
+		std::vector<Vertex_OUT> subVBuffer;
+
+		////clipMask = (IsInVP(currentTriangle.v1->pos) == false) | ((IsInVP(currentTriangle.v2->pos) == false) << 1) | ((IsInVP(currentTriangle.v3->pos) == false) << 2);
+
+		std::array<Vertex_OUT*, 3> triangleVertice;
+		triangleVertice[0] = &_inOut[v];
+		triangleVertice[1] = &_inOut[v + 1];
+		triangleVertice[2] = &_inOut[v + 2];
+		Triangle currentTriangle = { *triangleVertice[0], *triangleVertice[1], *triangleVertice[2] };
+
+		std::array<uint8_t, 3> frustumBitmasks;
+		frustumBitmasks[0] = Clipping::GetFrustumBitmask(*triangleVertice[0]);
+		frustumBitmasks[1] = Clipping::GetFrustumBitmask(*triangleVertice[1]);
+		frustumBitmasks[2] = Clipping::GetFrustumBitmask(*triangleVertice[2]);
+
+		// Edge cases
+		if ((frustumBitmasks[0] | frustumBitmasks[1] | frustumBitmasks[2]) == 0)
+			subVBuffer.insert(subVBuffer.end(), _inOut.begin() + v, _inOut.begin() + v + 3);
+		if ((frustumBitmasks[0] & frustumBitmasks[1] & frustumBitmasks[2]) != 0)
+			continue;
+
+		for (int i = 0; i < 6; i++)
+		{
+			for (int j = 0; j < 3; j++)
+			{
+				bool v1InFrustum = (frustumBitmasks[j] >> i) & 1;
+				bool v2InFrustum = (frustumBitmasks[(j + 1) % 3] >> i) & 1;
+
+				if (v1InFrustum == true)
+				{
+					if (v2InFrustum == false)
+					{
+						float t = Clipping::GetPlaneIntersection(*triangleVertice[j], *triangleVertice[(j + 1) % 3], Clipping::FrustumPlane(i));
+						glm::vec3 a = glm::vec3(triangleVertice[j]->positionH);
+						glm::vec3 b = glm::vec3(triangleVertice[(j + 1) % 3]->positionH);
+						subVBuffer.push_back(InterpolateVertex(a + (b - a) * t, currentTriangle));
+					}
+				}
+
+				else
+				{
+					subVBuffer.push_back(*triangleVertice[j]);
+
+					if (v2InFrustum == true)
+					{
+						float t = Clipping::GetPlaneIntersection(*triangleVertice[j], *triangleVertice[(j + 1) % 3], Clipping::FrustumPlane(i));
+						glm::vec3 a = glm::vec3(triangleVertice[j]->positionH);
+						glm::vec3 b = glm::vec3(triangleVertice[(j + 1) % 3]->positionH);
+						subVBuffer.push_back(InterpolateVertex(a + (b-a)*t, currentTriangle));
+					}
+				}
+			}
+		}
+
+		// trianguler
+		std::vector<Vertex_OUT> triangulatedSubVBuffer;
+
+		size_t vCount = subVBuffer.size();
+		if (vCount < 3) continue;
+		for (int i = 0; i < vCount - 2; i++)
+		{
+			triangulatedSubVBuffer.push_back(subVBuffer[0]);
+			triangulatedSubVBuffer.push_back(subVBuffer[i + 1]);
+			triangulatedSubVBuffer.push_back(subVBuffer[i + 2]);
+		}
+
+		clippedVertexBuffer.insert(clippedVertexBuffer.end(), triangulatedSubVBuffer.begin(), triangulatedSubVBuffer.end());
+	}
+
+	_inOut = clippedVertexBuffer;
+}
+
+void Device::ClipToScreen(std::vector<Vertex_OUT>& _inOut)
+{
+	for (uint32_t v = 0; v < _inOut.size(); v++)
+	{
+		// Perspective Divide
+		_inOut[v].positionH /= _inOut[v].positionH.w;
+
+		// Ndc
+		_inOut[v].positionH = _inOut[v].positionH * 0.5f + 0.5f; 
+
+		// To Screen
+		_inOut[v].positionH[0] = _inOut[v].positionH[0] * m_viewport[2] + m_viewport[0];
+		_inOut[v].positionH[1] = _inOut[v].positionH[1] * m_viewport[3] + m_viewport[1];
+	}
 }
 
 void Device::RasterStep(std::vector<Vertex_OUT> const& _vBuffer)
@@ -191,14 +290,14 @@ void Device::RasterStep(std::vector<Vertex_OUT> const& _vBuffer)
 				if (IsInTriangle({ x + 0.5f, y + 0.5f }, currentTriangle))
 				{
 					Vertex_OUT px = InterpolateVertex({ x + 0.5f, y + 0.5f }, currentTriangle);
-					float pixelDepth = px.position.z;
+					float pixelDepth = px.positionH.z;
 					
 					if (pixelDepth > 1.0f || pixelDepth < 0.0f)
 						continue;
 					if (pixelDepth > db->GetPixelData<float>(x, y))
 						continue;
 
-					db->SetPixelData<float>(x, y, px.position.z);
+					db->SetPixelData<float>(x, y, px.positionH.z);
 
 					fb->SetPixelColor(x, y, PS(px));
 				}

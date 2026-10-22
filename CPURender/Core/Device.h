@@ -53,7 +53,8 @@ private:
 	void VertexShaderStep(Mesh const& _mesh, std::vector<Vertex_OUT>& _out);
 	Vertex_OUT VS(Vertex _in, PerPassCB const& _pCB, PerObjectCB const& _oCB);
 	
-	void ClippingStep(DrawCommand const& _cmd) {}
+	void ClippingStep(std::vector<Vertex_OUT>& _inOut);
+	void ClipToScreen(std::vector<Vertex_OUT>& _inOut);
 	
 	void RasterStep(std::vector<Vertex_OUT> const& _vBuffer);
 	Color PS(Vertex_OUT _in);
