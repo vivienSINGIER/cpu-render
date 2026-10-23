@@ -19,7 +19,7 @@ int main(void) {
     SDL_Texture *texture;
     SDL_Event event;
 
-    const double target_frame = 1.0 / 60.0;
+    const double target_frame = 1.0 / 144.0;
 
     if (!SDL_Init(SDL_INIT_VIDEO)) {
         fprintf(stderr, "SDL_Init failed: %s\n", SDL_GetError());

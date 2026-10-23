@@ -17,7 +17,7 @@ public:
     
     Heap<VertexShader> vertexShaderHeap;
     Heap<PixelShader> pixelShaderHeap;
-    Heap<Shader> shaderGroupHeap;
+    Heap<ShaderGroup> shaderGroupHeap;
     
     Heap<Texture> textureHeap;
     Heap<Texture> frameBufferHeap;

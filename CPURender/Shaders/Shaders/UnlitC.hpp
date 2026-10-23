@@ -1,0 +1,45 @@
+﻿#ifndef SHADERS_UNLIT_C_HPP_DEFINED
+#define SHADERS_UNLIT_C_HPP_DEFINED
+
+#include <glm/ext/matrix_projection.hpp>
+
+#include "../../Datas/ConstantBuffers.hpp"
+#include "../ShaderBase/Shader.h"
+
+class UnlitVS : public VertexShader
+{
+public:
+    UnlitVS(GraphicsContext* _ctx) : VertexShader(_ctx) {}  
+    
+    Vertex_OUT Execute(ShaderResources const& _r, Vertex const& _in) const override
+    {
+        PerPassCB const& pCB = CB<PerPassCB>(_r, 0);
+        PerObjectCB const& oCB = CB<PerObjectCB>(_r, 1);
+        
+        Vertex_OUT v;
+        v.color = _in.color;
+        v.positionH = glm::vec4({ _in.position, 1 });
+        v.positionH = pCB.proj * pCB.view * oCB.model * v.positionH;
+        return v;
+    }
+};
+
+class UnlitPS : public PixelShader
+{
+public:
+    struct UnlitColor
+    {
+        Color color;
+    };
+    
+    UnlitPS(GraphicsContext* _ctx) : PixelShader(_ctx) { AddConstantBuffer<UnlitColor>(CB_CUSTOM); }
+    
+    Color Execute(ShaderResources const& _r, Vertex_OUT const& _in) const override
+    {
+        UnlitColor const& cb = CB<UnlitColor>(_r, 2);
+        
+        return cb.color;
+    }
+};
+
+#endif

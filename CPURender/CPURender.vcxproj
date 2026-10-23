@@ -148,18 +148,19 @@
     <ClCompile Include="Core\Device.cpp" />
     <ClCompile Include="Core\GraphicsContext.cpp" />
     <ClCompile Include="Datas\Color.cpp" />
-    <ClCompile Include="Datas\DrawCommand.cpp" />
     <ClCompile Include="Datas\Mesh.cpp" />
     <ClCompile Include="Datas\Object.cpp" />
     <ClCompile Include="Datas\Texture.cpp" />
     <ClCompile Include="Datas\Triangle.cpp" />
     <ClCompile Include="engine.cpp" />
     <ClCompile Include="Factories\GeometryFactory.cpp" />
+    <ClCompile Include="Factories\ShaderFactory.cpp" />
     <ClCompile Include="Heaps\BufferHeap.inl" />
     <ClCompile Include="Heaps\ConstantBufferHeap.cpp" />
     <ClCompile Include="Heaps\Heap.inl" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Maths\PerlinNoise.cpp" />
+    <ClCompile Include="Shaders\ShaderBase\Material.cpp" />
     <ClCompile Include="Shaders\ShaderBase\Shader.cpp" />
     <ClCompile Include="Shaders\ShaderBase\ShaderGroup.cpp" />
     <ClCompile Include="Maths\AABB.cpp" />
@@ -184,6 +185,8 @@
     <ClInclude Include="Datas\Triangle.h" />
     <ClInclude Include="engine.h" />
     <ClInclude Include="Factories\GeometryFactory.h" />
+    <ClInclude Include="Factories\ShaderFactory.h" />
+    <ClInclude Include="Factories\ShaderFactory.inl" />
     <ClInclude Include="Heaps\BufferHeap.h" />
     <ClInclude Include="Heaps\ConstantBufferHeap.h" />
     <ClInclude Include="Heaps\ConstantBufferHeap.inl" />
@@ -198,8 +201,13 @@
     <ClInclude Include="Maths\Plane.h" />
     <ClInclude Include="Maths\Ray.h" />
     <ClInclude Include="Maths\Transform.h" />
+    <ClInclude Include="Shaders\ShaderBase\Material.h" />
+    <ClInclude Include="Shaders\ShaderBase\Material.inl" />
     <ClInclude Include="Shaders\ShaderBase\Shader.h" />
+    <ClInclude Include="Shaders\ShaderBase\Shader.inl" />
     <ClInclude Include="Shaders\ShaderBase\ShaderGroup.h" />
+    <ClInclude Include="Shaders\Shaders.h" />
+    <ClInclude Include="Shaders\Shaders\UnlitC.hpp" />
     <ClInclude Include="stb_image.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

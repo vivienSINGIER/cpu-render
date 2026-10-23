@@ -7,22 +7,29 @@ template <typename Base>
 template <typename Derived, typename ... Args>
 Handle Heap<Base>::Create(Args&&... args)
 {
+    return Insert<Derived>(std::make_unique<Derived>(std::forward<Args>(args)...));
+}
+
+template <typename Base>
+template <typename Derived>
+Handle Heap<Base>::Insert(std::unique_ptr<Derived> _item)
+{
     static_assert(std::is_base_of<Base, Derived>::value, "Derived class must be derived from Base");
-    
+
     size_t index;
-        
+
     if (m_free.empty())
     {
         index = m_items.size();
-        m_items.push_back(std::make_unique<Derived>(std::forward<Args>(args)...));
+        m_items.push_back(std::move(_item));
     }
     else
     {
         index = m_free.back();
         m_free.pop_back();
-        m_items[index] = std::make_unique<Derived>(std::forward<Args>(args)...);
+        m_items[index] = std::move(_item);
     }
-    
+
     return Handle::Make(m_heapId, sizeof(Derived), (uint32_t)index);
 }
 

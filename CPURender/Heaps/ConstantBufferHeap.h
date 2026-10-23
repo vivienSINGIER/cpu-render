@@ -5,6 +5,7 @@
 #include <cstddef>
 
 #include "Handle.hpp"
+#include "HeapUtils.hpp"
 
 class GraphicsContext;
 
@@ -18,6 +19,7 @@ public:
     
     template <typename T>
     T const& Read(Handle _h);
+    uint8_t const* GetRaw(Handle _h) const;
     
     void Delete(Handle _h);
     
@@ -25,7 +27,9 @@ private:
     std::vector<uint8_t> m_data;
     uint16_t m_heapId;
     GraphicsContext* m_ctx;
-    
+
+    std::vector<FreeRange> m_free;
+
     ConstantBufferHeap(uint16_t _heapId, GraphicsContext* _ctx);
     
     friend class GraphicsContext;

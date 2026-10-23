@@ -19,21 +19,21 @@ public:
         return h;
     }
     
-    uint64_t Raw()
+    uint64_t Raw() const
     {
         uint64_t res;
         memcpy(&res, this, sizeof(res));
         return res;
     }
     
-    bool IsValid()
+    bool IsValid() const
     {
         return m_heapId != 0 || m_heapOffset != 0 || m_size != 0;
     }
     
-    uint16_t HeapId() { return m_heapId; }
-    uint16_t Size() { return m_size; }
-    uint32_t Offset() { return m_heapOffset; }
+    uint16_t HeapId() const { return m_heapId; }
+    uint16_t Size() const { return m_size; }
+    uint32_t Offset() const { return m_heapOffset; }
     
 private:
     
