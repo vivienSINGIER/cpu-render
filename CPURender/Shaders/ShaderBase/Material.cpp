@@ -13,6 +13,14 @@ void MaterialData::SetTexture(int _slot, Handle _h)
     m_tex[_slot] = _h;
 }
 
+void MaterialData::RemoveTexture(int _slot)
+{
+    assert(_slot >= 0 && _slot < MAX_TEX && "Texture slot index out of bounds");
+    assert(m_texLayout[_slot].isDeclared && "cannot unbind texture to undeclared slot");
+    
+    m_tex[_slot] = Handle();
+}
+
 bool MaterialData::CheckIntegrity() const
 {
     if (m_ctx->shaderGroupHeap.Get(m_shaderGroup) == nullptr)
@@ -34,7 +42,9 @@ bool MaterialData::CheckIntegrity() const
     {
         if (m_texLayout[i].isDeclared == false)
             continue;
-
+        if (m_texLayout[i].isOptional && m_tex[i].IsValid() == false)
+            continue;
+        
         if (m_ctx->textureHeap.Get(m_tex[i]) == nullptr)
             return false;
     }

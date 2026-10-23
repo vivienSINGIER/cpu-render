@@ -11,16 +11,13 @@ class UnlitT_VS : public VertexShader
 public:
     UnlitT_VS(GraphicsContext* _ctx) : VertexShader(_ctx) {}  
     
-    Vertex_OUT Execute(ShaderResources const& _r, Vertex const& _in) const override
+    Vertex_OUT Execute(Vertex const& _in) const override
     {
-        PerPassCB const& pCB = CB<PerPassCB>(_r, CB_PER_PASS);
-        PerObjectCB const& oCB = CB<PerObjectCB>(_r, CB_PER_OBJECT);
-        
         Vertex_OUT v;
         v.color = _in.color;
-        v.positionModel = oCB.model * glm::vec4({ _in.position, 1 });
-        v.positionH = pCB.proj * pCB.view * v.positionModel;
-        v.normal = glm::mat3x3(oCB.model) * _in.normal;
+        v.positionModel = Object().model * glm::vec4({ _in.position, 1 });
+        v.positionH = Pass().proj * Pass().view * v.positionModel;
+        v.normal = glm::mat3x3(Object().model) * _in.normal;
         v.uv = _in.uv;
         return v;
     }
@@ -29,11 +26,13 @@ public:
 class UnlitT_PS : public PixelShader
 {
 public:
-    UnlitT_PS(GraphicsContext* _ctx) : PixelShader(_ctx) { AddTexture(0); }
-    
-    Color Execute(ShaderResources const& _r, Vertex_OUT const& _in) const override
+    SHADER_TEX(albedo, 0)
+
+    UnlitT_PS(GraphicsContext* _ctx) : PixelShader(_ctx) {}
+
+    Color Execute(Vertex_OUT const& _in) const override
     {
-        return Sample(_r, 0, _in.uv );
+        return albedo(_in.uv);
     }
 };
 

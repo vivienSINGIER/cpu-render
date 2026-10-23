@@ -32,8 +32,19 @@ void ShaderGroup::Build()
         TexSlotDesc& d = m_texLayout[i];
         d.isVS = s.vs->m_tex[i].isDeclared;
         d.isPS = s.ps->m_tex[i].isDeclared;
-        
         d.isDeclared = d.isVS || d.isPS;
+        
+        if (d.isDeclared == false)
+            continue;
+        
+        bool bothDeclared = d.isVS && d.isPS;
+        if (bothDeclared)
+            d.isOptional = s.vs->m_tex[i].isOptional && s.ps->m_tex[i].isOptional;
+        else if (d.isVS)
+            d.isOptional = s.vs->m_tex[i].isOptional;
+        else
+            d.isOptional = s.ps->m_tex[i].isOptional;
+            
     }
 }
 

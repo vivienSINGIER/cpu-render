@@ -87,18 +87,28 @@ void Engine::init(Texture* _frameBuffer)
     m_camera.SetAspectRatio((float)WIDTH / (float)HEIGHT);
     m_camTransform.SetPosition(glm::vec3(0.0f, 0.0f, -5.0f));
     
-    m_mesh = GeometryFactory::Instance()->BuildDonut(1.0f, 0.3f, 32, 32);
+    m_mesh = GeometryFactory::Instance()->BuildCube();
+    // m_mesh = GeometryFactory::Instance()->BuildDonut(1.0f, 0.3f, 32, 32);
     
-    Handle t = TextureFactory::Instance()->CreateTexture("doomGuy", "Assets/doomguy.png");
+    Handle diff = TextureFactory::Instance()->CreateTexture("dark_rock_diffuse", "Assets/Textures/DarkRock/diffuse.png");
+    Handle ambient = TextureFactory::Instance()->CreateTexture("dark_rock_ambient", "Assets/Textures/DarkRock/ambient.png");
+    Handle normal = TextureFactory::Instance()->CreateTexture("dark_rock_normal", "Assets/Textures/DarkRock/normal.png");
+    Handle roughness = TextureFactory::Instance()->CreateTexture("dark_rock_roughness", "Assets/Textures/DarkRock/roughness.png");
+    Handle displacement = TextureFactory::Instance()->CreateTexture("dark_rock_displacement", "Assets/Textures/DarkRock/displacement.png");
     
-    LitC_BP_PS::MaterialCB cb = {
-        {0.3f, 0.2f, 0.0f, 1.0f}, 
-            Lighting::g_fresnelR0Templates[GOLD], 
-                0.2f
+    LitT_BP_PS::MaterialCB cb = {
+        {1.0f, 1.0f, 1.0f, 1.0f}, 
+            Lighting::g_fresnelR0Templates[PLASTIC], 
+                0.2f, 0.08f
     };
     
-    m_material = ShaderFactory::Instance()->CreateMaterial("UnlitT");
-    m_material->SetTexture(0, t);
+    m_material = ShaderFactory::Instance()->CreateMaterial("LitT_BP");
+    m_material->SetParams<LitT_BP_PS::MaterialCB>(LitT_BP_PS::CB_SLOT_mat, cb);
+    m_material->SetTexture(LitT_BP_PS::TEX_SLOT_diffuse, diff);
+    m_material->SetTexture(LitT_BP_PS::TEX_SLOT_ambient, ambient);
+    m_material->SetTexture(LitT_BP_PS::TEX_SLOT_normal, normal);
+    m_material->SetTexture(LitT_BP_PS::TEX_SLOT_roughness, roughness);
+    m_material->SetTexture(LitT_BP_PS::TEX_SLOT_displacement,displacement );
 }
 
 void Engine::handleEvent(const SDL_Event& event)

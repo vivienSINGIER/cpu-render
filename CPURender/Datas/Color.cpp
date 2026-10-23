@@ -41,3 +41,13 @@ Color Color::FromVec4(glm::vec4 _vec)
 {
     return Color((uint8_t)(_vec.w * 255.0f), (uint8_t)(_vec.x * 255.0f), (uint8_t)(_vec.y * 255.0f), (uint8_t)(_vec.z * 255.0f));
 }
+
+glm::vec3 Color::ToVec3(Color _c)
+{
+    return glm::vec3((float)_c.r / 255.0f, (float)_c.g / 255.0f, (float)_c.b / 255.0f);
+}
+
+Color Color::FromVec3(glm::vec3 _vec)
+{
+    return Color(255, (uint8_t)(_vec.x * 255.0f), (uint8_t)(_vec.y * 255.0f), (uint8_t)(_vec.z * 255.0f));
+}

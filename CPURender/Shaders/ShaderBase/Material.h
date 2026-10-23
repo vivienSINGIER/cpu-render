@@ -17,6 +17,7 @@ public:
     template <typename T>
     void SetParams(int _slot, T const& _value);
     void SetTexture(int _slot, Handle _h);
+    void RemoveTexture(int _slot);
     
     bool CheckIntegrity() const;
     

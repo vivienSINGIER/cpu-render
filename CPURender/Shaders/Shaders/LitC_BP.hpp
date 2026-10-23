@@ -15,16 +15,13 @@ class LitC_BP_VS : public VertexShader
 public:
     LitC_BP_VS(GraphicsContext* _ctx) : VertexShader(_ctx) {}
 
-    inline Vertex_OUT Execute(ShaderResources const& _r, Vertex const& _in) const override
+    inline Vertex_OUT Execute(Vertex const& _in) const override
     {
-        PerPassCB const& pCB = CB<PerPassCB>(_r, CB_PER_PASS);
-        PerObjectCB const& oCB = CB<PerObjectCB>(_r, CB_PER_OBJECT);
-
         Vertex_OUT v;
         v.color = _in.color;
-        v.positionModel = oCB.model * glm::vec4({ _in.position, 1 });
-        v.positionH = pCB.proj * pCB.view * v.positionModel;
-        v.normal = glm::mat3x3(oCB.normalMatrix) * _in.normal;
+        v.positionModel = Object().model * glm::vec4({ _in.position, 1 });
+        v.positionH = Pass().proj * Pass().view * v.positionModel;
+        v.normal = glm::mat3x3(Object().normalMatrix) * _in.normal;
         v.uv = _in.uv;
         return v;
     }
@@ -40,26 +37,24 @@ public:
         float roughness;
     };
     
-    LitC_BP_PS(GraphicsContext* _ctx) : PixelShader(_ctx) { AddConstantBuffer<MaterialCB>(CB_CUSTOM); }
+    SHADER_CB(MaterialCB, mat, CB_CUSTOM)
 
-    inline Color Execute(ShaderResources const& _r, Vertex_OUT const& _in) const override
+    LitC_BP_PS(GraphicsContext* _ctx) : PixelShader(_ctx) {}
+
+    inline Color Execute(Vertex_OUT const& _in) const override
     {
-        PerPassCB const& pCB = CB<PerPassCB>(_r, CB_PER_PASS);
-        LightPassCB const& lCB = CB<LightPassCB>(_r, CB_LIGHT_PASS);
-        MaterialCB const& cb = CB<MaterialCB>(_r, CB_CUSTOM);
-
         glm::vec3 normalW = glm::normalize(_in.normal);
-        
-        glm::vec3 toEye = glm::normalize(pCB.eyePos - glm::vec3(_in.positionModel));
-        glm::vec4 ambient = lCB.ambientLight * cb.diffuseAlbedo;
-        
-        float shininess = 1.0f - cb.roughness;
-        BlinnPhongData d = { cb.diffuseAlbedo, cb.fresnelR0, shininess};
+
+        glm::vec3 toEye = glm::normalize(Pass().eyePos - glm::vec3(_in.positionModel));
+        glm::vec4 ambient = Light().ambientLight * mat().diffuseAlbedo;
+
+        float shininess = 1.0f - mat().roughness;
+        BlinnPhongData d = { mat().diffuseAlbedo, mat().fresnelR0, shininess};
         glm::vec3 shadowFactor = glm::vec3(1.0f, 1.0f, 1.0f);
-        glm::vec4 directLight = ComputeLighting(lCB, d, _in.positionModel, normalW, toEye, shadowFactor);
-        
+        glm::vec4 directLight = ComputeLighting(Light(), d, _in.positionModel, normalW, toEye, shadowFactor);
+
         Color litColor = Color::FromVec4(glm::clamp(ambient + directLight, 0.0f, 1.0f));
-        litColor.a = (uint8_t)(cb.diffuseAlbedo.a * 255.0f);
+        litColor.a = (uint8_t)(mat().diffuseAlbedo.a * 255.0f);
 
         return litColor;
     }

@@ -5,6 +5,7 @@
 
 #include "../Core/GraphicsContext.h"
 #include "../Shaders/Shaders.h"
+#include "../Shaders/Shaders/LitT_BP.hpp"
 
 void ShaderFactory::Init(GraphicsContext* _ctx)
 {
@@ -65,4 +66,5 @@ void ShaderFactory::RegisterPrebuilts()
     RegisterGroup<UnlitT_VS, UnlitT_PS>("UnlitT");
     RegisterGroup<LitC_VS, LitC_PS>("LitC");
     RegisterGroup<LitC_BP_VS, LitC_BP_PS>("LitC_BP");
+    RegisterGroup<LitT_BP_VS, LitT_BP_PS>("LitT_BP");
 }

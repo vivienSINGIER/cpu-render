@@ -99,10 +99,11 @@ void Device::ExecCommand(DrawCommand const& _cmd)
 	std::vector<Vertex_OUT> vBuffer;
 	std::vector<size_t> iBuffer;
 	
-	VertexShaderStep(_cmd.mesh, res, stages, vBuffer);
+	ShaderBindScope bind(stages, res);
+	VertexShaderStep(_cmd.mesh, stages, vBuffer);
 	ClippingStep(vBuffer);
 	ClipToScreen(vBuffer);
-	RasterStep(vBuffer, res, stages);
+	RasterStep(vBuffer, stages);
 }
 
 void Device::SetMainCamera(Camera* _c)
@@ -122,7 +123,7 @@ void Device::SetLightData(LightData const& _ld)
 	m_ctx.constantBufferHeap.Write<LightPassCB>(m_lightCB, l);
 }
 
-void Device::VertexShaderStep(Mesh const& _mesh, ShaderResources const& _r, ShaderStages _s, std::vector<Vertex_OUT>& _out)
+void Device::VertexShaderStep(Mesh const& _mesh, ShaderStages _s, std::vector<Vertex_OUT>& _out)
 {
 	uint32_t vertexCount = _mesh.vertexCount;
 	uint32_t indexCount = _mesh.indexCount;
@@ -142,7 +143,7 @@ void Device::VertexShaderStep(Mesh const& _mesh, ShaderResources const& _r, Shad
 #pragma omp for
 	for (uint32_t v = 0; v < vertexCount; v++)
 	{
-		transformed[v] = _s.vs->Execute(_r, vBuffer[v]);
+		transformed[v] = _s.vs->Execute(vBuffer[v]);
 	}
 
 	size_t triCount = indexCount / 3;
@@ -286,7 +287,7 @@ void Device::ClipToScreen(std::vector<Vertex_OUT>& _inOut)
 	}
 }
 
-void Device::RasterStep(std::vector<Vertex_OUT> const& _vBuffer, ShaderResources const& _r, ShaderStages _s)
+void Device::RasterStep(std::vector<Vertex_OUT> const& _vBuffer, ShaderStages _s)
 {
 	Texture* fb = m_ctx.frameBufferHeap.Get(m_frameBuffer);
 	Texture* db = m_ctx.frameBufferHeap.Get(m_depthBuffer);
@@ -317,7 +318,7 @@ void Device::RasterStep(std::vector<Vertex_OUT> const& _vBuffer, ShaderResources
 
 					db->SetPixelData<float>(x, y, px.positionH.z);
 
-					fb->SetPixelColor(x, y, _s.ps->Execute(_r, px));
+					fb->SetPixelColor(x, y, _s.ps->Execute(px));
 				}
 			}
 		}

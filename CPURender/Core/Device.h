@@ -53,12 +53,12 @@ private:
 	
 	GraphicsContext m_ctx;
 	
-	void VertexShaderStep(Mesh const& _mesh, ShaderResources const& _r, ShaderStages _s, std::vector<Vertex_OUT>& _out);
+	void VertexShaderStep(Mesh const& _mesh, ShaderStages _s, std::vector<Vertex_OUT>& _out);
 	
 	void ClippingStep(std::vector<Vertex_OUT>& _inOut);
 	void ClipToScreen(std::vector<Vertex_OUT>& _inOut);
 	
-	void RasterStep(std::vector<Vertex_OUT> const& _vBuffer, ShaderResources const& _r, ShaderStages _s);
+	void RasterStep(std::vector<Vertex_OUT> const& _vBuffer, ShaderStages _s);
 };
 
 #endif

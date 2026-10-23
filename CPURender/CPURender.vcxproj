@@ -213,6 +213,7 @@
     <ClInclude Include="Shaders\Shaders.h" />
     <ClInclude Include="Shaders\Shaders\LitC.hpp" />
     <ClInclude Include="Shaders\Shaders\LitC_BP.hpp" />
+    <ClInclude Include="Shaders\Shaders\LitT_BP.hpp" />
     <ClInclude Include="Shaders\Shaders\UnlitC.hpp" />
     <ClInclude Include="Shaders\Shaders\UnlitT.hpp" />
     <ClInclude Include="stb_image.h" />

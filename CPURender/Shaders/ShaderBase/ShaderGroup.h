@@ -6,13 +6,7 @@
 #include "Shader.h"
 
 struct CBSlotDesc {uint16_t size; bool isDeclared; bool isVS; bool isPS; };
-struct TexSlotDesc {bool isDeclared; bool isVS; bool isPS; };
-
-struct ShaderStages
-{
-    VertexShader* vs;
-    PixelShader* ps;
-};
+struct TexSlotDesc {bool isDeclared; bool isOptional; bool isVS; bool isPS; };
 
 class ShaderGroup
 {

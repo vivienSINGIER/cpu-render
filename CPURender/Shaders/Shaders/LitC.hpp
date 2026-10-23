@@ -7,21 +7,21 @@
 #include "../ShaderBase/Shader.h"
 #include <iostream>
 
+#include "../../Datas/Lights/LightData.hpp"
+
 class LitC_VS : public VertexShader
 {
 public:
     LitC_VS(GraphicsContext* _ctx) : VertexShader(_ctx) {}
 
-    inline Vertex_OUT Execute(ShaderResources const& _r, Vertex const& _in) const override
+    inline Vertex_OUT Execute(Vertex const& _in) const override
     {
-        PerPassCB const& pCB = CB<PerPassCB>(_r, CB_PER_PASS);
-        PerObjectCB const& oCB = CB<PerObjectCB>(_r, CB_PER_OBJECT);
-
         Vertex_OUT v;
         v.normal = _in.normal;
         v.color = _in.color;
         v.positionH = glm::vec4({ _in.position, 1 });
-        v.positionH = pCB.proj * pCB.view * oCB.model * v.positionH;
+        v.positionH = Pass().proj * Pass().view * Object().model * v.positionH;
+        v.wPreDiv = 1.0f;
         return v;
     }
 };
@@ -34,21 +34,20 @@ public:
         Color color;
     };
 
-    LitC_PS(GraphicsContext* _ctx) : PixelShader(_ctx) { AddConstantBuffer<MaterialData>(CB_CUSTOM); }
+    SHADER_CB(MaterialData, mat, CB_CUSTOM)
 
-    inline Color Execute(ShaderResources const& _r, Vertex_OUT const& _in) const override
+    LitC_PS(GraphicsContext* _ctx) : PixelShader(_ctx) {}
+
+    inline Color Execute(Vertex_OUT const& _in) const override
     {
-        PerPassCB const& pCB = CB<PerPassCB>(_r, CB_PER_PASS);
-        MaterialData const& cb = CB<MaterialData>(_r, CB_CUSTOM);
-
         float ambientFactors[3] = { 0.1f, 0.1f, 0.15f };
         Color ambientColor = { 255,
-            (uint8_t)(cb.color.r * ambientFactors[0]) ,
-            (uint8_t)(cb.color.g * ambientFactors[1]) ,
-            (uint8_t)(cb.color.b * ambientFactors[2]) };
+            (uint8_t)((float)mat().color.r * ambientFactors[0]) ,
+            (uint8_t)((float)mat().color.g * ambientFactors[1]) ,
+            (uint8_t)((float)mat().color.b * ambientFactors[2]) };
 
-        float dot = glm::dot(pCB.lightDirection, _in.normal);
-        return cb.color * -((dot + 1) / 2.0f) * pCB.lightIntensity + ambientColor;
+        float dot = glm::dot(Pass().lightDirection, _in.normal);
+        return mat().color * -((dot + 1) / 2.0f) * Pass().lightIntensity + ambientColor;
     }
 };
 

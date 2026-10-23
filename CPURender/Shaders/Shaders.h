@@ -6,5 +6,6 @@
 
 #include "Shaders/LitC.hpp"
 #include "Shaders/LitC_BP.hpp"
+#include "Shaders/LitT_BP.hpp"
 
 #endif

@@ -3,6 +3,7 @@
 
 #include <glm/ext/scalar_uint_sized.hpp>
 #include <bit>
+#include <glm/vec3.hpp>
 #include <glm/vec4.hpp>
 
 struct Color
@@ -35,6 +36,8 @@ struct Color
     static Color FromUint32(glm::uint32 _uint32);
     static glm::vec4 ToVec4(Color _c);
     static Color FromVec4(glm::vec4 _vec);
+    static glm::vec3 ToVec3(Color _c);
+    static Color FromVec3(glm::vec3 _vec);
     
     Color(glm::uint8 _a, glm::uint8 _r, glm::uint8 _g, glm::uint8 _b) : a(_a), r(_r), g(_g), b(_b) {};
     Color() : a(0), r(0), g(0), b(0) {};

@@ -15,10 +15,15 @@ void Shader::AddConstantBuffer(int _slot)
 }
 
 template <typename T>
-T const& Shader::CB(ShaderResources const& _r, int _slot) const
+T const& Shader::CB(int _slot) const
 {
-    assert(_r.cbs[_slot] != nullptr && sizeof(T) == m_cb[_slot].size && "Can't access constant buffer data");
-    return *reinterpret_cast<T const*>(_r.cbs[_slot]);
+    assert(m_r && "shader executed without bound ressources");
+    assert(m_r->cbs[_slot] != nullptr && sizeof(T) == m_cb[_slot].size && "Can't access constant buffer data");
+    return *reinterpret_cast<T const*>(m_r->cbs[_slot]);
 }
+
+inline PerPassCB const& Shader::Pass() const { return CB<PerPassCB>(CB_PER_PASS); }
+inline LightPassCB const& Shader::Light() const { return CB<LightPassCB>(CB_LIGHT_PASS); }
+inline PerObjectCB const& Shader::Object() const { return CB<PerObjectCB>(CB_PER_OBJECT); }
 
 #endif
