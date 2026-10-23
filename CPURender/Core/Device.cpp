@@ -84,6 +84,7 @@ void Device::ExecCommand(DrawCommand const& _cmd)
 	m_ctx.constantBufferHeap.Write<PerObjectCB>(m_perObjectCB, cb);
 	
 	std::vector<Vertex_OUT> vBuffer;
+	std::vector<size_t> iBuffer;
 	
 	VertexShaderStep(_cmd.mesh, vBuffer);
 	ClippingStep(vBuffer);
@@ -182,56 +183,65 @@ void Device::ClippingStep(std::vector<Vertex_OUT>& _inOut)
 	{
 		std::vector<Vertex_OUT> subVBuffer;
 
-		////clipMask = (IsInVP(currentTriangle.v1->pos) == false) | ((IsInVP(currentTriangle.v2->pos) == false) << 1) | ((IsInVP(currentTriangle.v3->pos) == false) << 2);
+		subVBuffer.push_back(_inOut[v]);
+		subVBuffer.push_back(_inOut[v + 1]);
+		subVBuffer.push_back(_inOut[v + 2]);
+		Triangle currentTriangle = { subVBuffer[0], subVBuffer[1], subVBuffer[2] };
 
-		std::array<Vertex_OUT*, 3> triangleVertice;
-		triangleVertice[0] = &_inOut[v];
-		triangleVertice[1] = &_inOut[v + 1];
-		triangleVertice[2] = &_inOut[v + 2];
-		Triangle currentTriangle = { *triangleVertice[0], *triangleVertice[1], *triangleVertice[2] };
-
-		std::array<uint8_t, 3> frustumBitmasks;
-		frustumBitmasks[0] = Clipping::GetFrustumBitmask(*triangleVertice[0]);
-		frustumBitmasks[1] = Clipping::GetFrustumBitmask(*triangleVertice[1]);
-		frustumBitmasks[2] = Clipping::GetFrustumBitmask(*triangleVertice[2]);
+		std::vector<uint8_t> frustumBitmasks = Clipping::GetBufferFrustumBitmask(subVBuffer);
 
 		// Edge cases
-		if ((frustumBitmasks[0] | frustumBitmasks[1] | frustumBitmasks[2]) == 0)
-			subVBuffer.insert(subVBuffer.end(), _inOut.begin() + v, _inOut.begin() + v + 3);
+		uint8_t frustumBitmasksOr = Clipping::GetBufferFrustumBitmaskOr(frustumBitmasks);
+		if (frustumBitmasksOr == 0)
+		{
+			clippedVertexBuffer.insert(clippedVertexBuffer.end(), _inOut.begin() + v, _inOut.begin() + v + 3);
+			continue;
+		}
 		if ((frustumBitmasks[0] & frustumBitmasks[1] & frustumBitmasks[2]) != 0)
 			continue;
 
+		
 		for (int i = 0; i < 6; i++)
 		{
-			for (int j = 0; j < 3; j++)
-			{
-				bool v1InFrustum = (frustumBitmasks[j] >> i) & 1;
-				bool v2InFrustum = (frustumBitmasks[(j + 1) % 3] >> i) & 1;
+			std::vector<Vertex_OUT> planeSubVB;
+			frustumBitmasks = Clipping::GetBufferFrustumBitmask(subVBuffer);
+			frustumBitmasksOr = Clipping::GetBufferFrustumBitmaskOr(frustumBitmasks);
+			if (((frustumBitmasksOr >> i) & 1) == 0) continue;
 
-				if (v1InFrustum == true)
+			size_t vertexCount = subVBuffer.size();
+			for (int j = 0; j < vertexCount; j++)
+			{
+
+				bool v1InFrustum = ((frustumBitmasks[j] << Clipping::FrustumPlane(i)) & 1) == 0;
+				bool v2InFrustum = ((frustumBitmasks[(j + 1) % vertexCount] << Clipping::FrustumPlane(i)) & 1) == 0;
+
+				if (v1InFrustum == false)
 				{
-					if (v2InFrustum == false)
+					if (v2InFrustum == true)
 					{
-						float t = Clipping::GetPlaneIntersection(*triangleVertice[j], *triangleVertice[(j + 1) % 3], Clipping::FrustumPlane(i));
-						glm::vec3 a = glm::vec3(triangleVertice[j]->positionH);
-						glm::vec3 b = glm::vec3(triangleVertice[(j + 1) % 3]->positionH);
-						subVBuffer.push_back(InterpolateVertex(a + (b - a) * t, currentTriangle));
+						float t = Clipping::GetPlaneIntersection(subVBuffer[j], subVBuffer[(j + 1) % vertexCount], Clipping::FrustumPlane(i));
+						glm::vec3 a = glm::vec3(subVBuffer[j].positionH);
+						glm::vec3 b = glm::vec3(subVBuffer[(j + 1) % vertexCount].positionH);
+						planeSubVB.push_back(InterpolateVertex(a + (b - a) * t, currentTriangle));
 					}
 				}
 
 				else
 				{
-					subVBuffer.push_back(*triangleVertice[j]);
+					planeSubVB.push_back(subVBuffer[j]);
 
-					if (v2InFrustum == true)
+					if (v2InFrustum == false)
 					{
-						float t = Clipping::GetPlaneIntersection(*triangleVertice[j], *triangleVertice[(j + 1) % 3], Clipping::FrustumPlane(i));
-						glm::vec3 a = glm::vec3(triangleVertice[j]->positionH);
-						glm::vec3 b = glm::vec3(triangleVertice[(j + 1) % 3]->positionH);
-						subVBuffer.push_back(InterpolateVertex(a + (b-a)*t, currentTriangle));
+						float t = Clipping::GetPlaneIntersection(subVBuffer[j], subVBuffer[(j + 1) % vertexCount], Clipping::FrustumPlane(i));
+						glm::vec3 a = glm::vec3(subVBuffer[j].positionH);
+						glm::vec3 b = glm::vec3(subVBuffer[(j + 1) % vertexCount].positionH);
+						planeSubVB.push_back(InterpolateVertex(a + (b-a)*t, currentTriangle));
 					}
 				}
+
 			}
+
+			subVBuffer = planeSubVB;
 		}
 
 		// trianguler
