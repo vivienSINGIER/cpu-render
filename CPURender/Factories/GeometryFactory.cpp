@@ -427,7 +427,7 @@ Mesh GeometryFactory::BuildCylinder(int _stackCount)
 		indices.push_back(b + 2);
 	}
 
-	vertices = CalculateNormalsAndTangents(vertices, indices);
+	vertices = CalculateNormalsAndTangentsSeamless(vertices, indices);
 	ApplyGradientColors(vertices);
 
 	return CreateMesh(vertices, indices);

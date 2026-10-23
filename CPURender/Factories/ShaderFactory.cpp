@@ -61,5 +61,6 @@ bool ShaderFactory::HasGroup(std::string const& _name) const
 
 void ShaderFactory::RegisterPrebuilts()
 {
-    RegisterGroup<UnlitVS, UnlitPS>("UnlitC");
+    RegisterGroup<UnlitC_VS, UnlitC_PS>("UnlitC");
+    RegisterGroup<LitC_VS, LitC_PS>("LitC");
 }

@@ -62,6 +62,13 @@ Vertex_OUT InterpolateVertex(glm::vec2 _point, const Triangle& _tri)
         glm::dot(bary, { _tri.v1.positionH.z, _tri.v2.positionH.z, _tri.v3.positionH.z }), 
         glm::dot(bary, { _tri.v1.positionH.w, _tri.v2.positionH.w, _tri.v3.positionH.w }) };
 
+    vert.uv = { glm::dot(bary, { _tri.v1.uv.x, _tri.v2.uv.x, _tri.v3.uv.x }),
+                glm::dot(bary, { _tri.v1.uv.y, _tri.v2.uv.y, _tri.v3.uv.y }) };
+
+    vert.normal = { glm::dot(bary, { _tri.v1.normal.x, _tri.v2.normal.x, _tri.v3.normal.x }),
+                    glm::dot(bary, { _tri.v1.normal.y, _tri.v2.normal.y, _tri.v3.normal.y }),
+                    glm::dot(bary, { _tri.v1.normal.z, _tri.v2.normal.z, _tri.v3.normal.z }) };
+
     vert.color = _tri.v1.color * bary.x + _tri.v2.color * bary.y + _tri.v3.color * bary.z;
     return vert;
 }
@@ -72,6 +79,13 @@ Vertex_OUT InterpolateVertex(glm::vec3 _point, const Triangle& _tri)
     Vertex_OUT vert;
 
     vert.positionH = { _point, glm::dot(bary, { _tri.v1.positionH.w, _tri.v2.positionH.w, _tri.v3.positionH.w }) };
+
+    vert.uv = { glm::dot(bary, { _tri.v1.uv.x, _tri.v2.uv.x, _tri.v3.uv.x }),
+                glm::dot(bary, { _tri.v1.uv.y, _tri.v2.uv.y, _tri.v3.uv.y }) };
+
+    vert.normal = { glm::dot(bary, { _tri.v1.normal.x, _tri.v2.normal.x, _tri.v3.normal.x }),
+                    glm::dot(bary, { _tri.v1.normal.y, _tri.v2.normal.y, _tri.v3.normal.y }),
+                    glm::dot(bary, { _tri.v1.normal.z, _tri.v2.normal.z, _tri.v3.normal.z }) };
 
     vert.color = _tri.v1.color * bary.x + _tri.v2.color * bary.y + _tri.v3.color * bary.z;
     return vert;

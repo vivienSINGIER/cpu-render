@@ -20,6 +20,9 @@ struct PerPassCB
 
     glm::vec2 renderTargetSize;
     glm::vec2 invRenderTargetSize;
+
+    glm::vec3 lightDirection;
+    float lightIntensity;
 };
 
 struct PerObjectCB
