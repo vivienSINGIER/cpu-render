@@ -1,4 +1,5 @@
 #include "Triangle.h"
+#include <iostream>
 
 bool IsFront(const Triangle& _tri, bool _clockwise)
 {
@@ -13,14 +14,49 @@ bool IsFront(const Triangle& _tri, bool _clockwise)
 
 bool IsInTriangle(glm::vec2 _point, const Triangle& _tri)
 {
-    glm::vec3 bar = BarycentricWeight(_point, _tri);
+    glm::vec3 shiftedV2 = _tri.v2.positionH - _tri.v1.positionH;
+    glm::vec3 shiftedV3 = _tri.v3.positionH - _tri.v1.positionH;
+    glm::vec3 shiftedPoint = { _point.x - _tri.v1.positionH.x, _point.y - _tri.v1.positionH.y, 0.0f };
+
+    float d = shiftedV2.x * shiftedV3.y - shiftedV3.x * shiftedV2.y;
+
+    glm::vec3 bar;
+
+    bar.y = (shiftedPoint.x * shiftedV3.y - shiftedPoint.y * shiftedV3.x) / d;
+    bar.z = (shiftedPoint.y * shiftedV2.x - shiftedPoint.x * shiftedV2.y) / d;
+    bar.x = 1 - bar.y - bar.z;
+
+    //glm::vec3 bar = BarycentricWeight(_point, _tri);
     return (bar.x <= 1.0f && bar.x >= 0.0f) && (bar.y <= 1.0f && bar.y >= 0.0f) && (bar.z <= 1.0f && bar.z >= 0.0f);
+}
+
+float GetArea(glm::vec2 a, glm::vec2 b, glm::vec2 c)
+{
+    //glm::mat2x2 mat;
+    //mat[0][0] = b.x - a.x;
+    //mat[1][0] = c.x - a.x;
+    //mat[0][1] = b.y - a.y;
+    //mat[1][1] = c.y - a.y;
+
+    //return abs(glm::determinant(mat) / 2.0f);
+    return abs(glm::determinant(glm::mat2x2({b - a, c - a})) / 2.0f);
+
+    //return abs(glm::determinant(glm::mat2x2({ a, b }) + glm::determinant(glm::mat2x2({ b, c }) + glm::determinant(glm::mat2x2({ c, a })))) / 2.0f);
 }
 
 glm::vec3 BarycentricWeight(glm::vec2 _point, const Triangle& _tri)
 {
-    glm::vec3 weights = { 0.0f, 0.0f, 0.0f };
-    glm::vec3 shiftedV2 = _tri.v2.positionH - _tri.v1.positionH;
+    // TECH 1  
+    float areaABC = GetArea(glm::vec2(_tri.v1.positionH), glm::vec2(_tri.v2.positionH), glm::vec2(_tri.v3.positionH));
+
+    glm::vec3 weights = { GetArea(_point, glm::vec2(_tri.v2.positionH), glm::vec2(_tri.v3.positionH)) / areaABC,
+                            GetArea(glm::vec2(_tri.v1.positionH), _point, glm::vec2(_tri.v3.positionH)) / areaABC,
+                            GetArea(glm::vec2(_tri.v1.positionH), glm::vec2(_tri.v2.positionH), _point) / areaABC};
+
+    //if (weights.x + weights.y + weights.z > 1.0f + 0.001f) std::cout << "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
+
+    // TECH 2
+    /*glm::vec3 shiftedV2 = _tri.v2.positionH - _tri.v1.positionH;
     glm::vec3 shiftedV3 = _tri.v3.positionH - _tri.v1.positionH;
     glm::vec3 shiftedPoint = { _point.x - _tri.v1.positionH.x, _point.y - _tri.v1.positionH.y, 0.0f };
 
@@ -28,15 +64,28 @@ glm::vec3 BarycentricWeight(glm::vec2 _point, const Triangle& _tri)
     
     weights.y = (shiftedPoint.x * shiftedV3.y - shiftedPoint.y * shiftedV3.x) / d;
     weights.z = (shiftedPoint.y * shiftedV2.x - shiftedPoint.x * shiftedV2.y) / d;
-    weights.x = 1 - weights.y - weights.z;
-    
-    // float alpha = weights.x / _tri.v1.positionH.z + weights.y / _tri.v2.positionH.z + weights.z / _tri.v3.positionH.z;
-    //
-    // glm::vec3 correctedW = {    weights.x / alpha * _tri.v1.positionH.z, 
-    //                             weights.y / alpha * _tri.v2.positionH.z, 
-    //                             weights.z / alpha * _tri.v3.positionH.z };
+    weights.x = 1 - weights.y - weights.z;*/
 
-    return weights;
+    // TECH 3 
+    //glm::vec2 v1 = _tri.v1.positionH;
+    //glm::vec2 v2 = _tri.v2.positionH;
+    //glm::vec2 v3 = _tri.v3.positionH;
+
+    //glm::mat3x3 mat;
+    //glm::vec3 pointH = { 1, _point };
+    //mat[0] = { v2.x*v3.y - v3.x*v2.y, v2.y - v3.t, v3.x - v2.x };
+    //mat[1] = { v3.x*v1.y - v1.x*v3.y, v3.y - v1.y, v1.x - v3.x};
+    //mat[2] = { v1.x*v2.y - v2.x*v1.y, v1.y - v2.y, v2.x - v1.x };
+    //
+    //pointH = mat * pointH;
+    //pointH / 
+
+    float gamma = weights.x / _tri.v1.positionH.z + weights.y / _tri.v2.positionH.z + weights.z / _tri.v3.positionH.z;
+    glm::vec3 weightsCorrected = { weights.x / (gamma * _tri.v1.positionH.z), 
+        weights.y / (gamma * _tri.v2.positionH.z), 
+        weights.z / (gamma * _tri.v3.positionH.z) };
+
+    return weightsCorrected;
 }
 
 glm::vec3 BarycentricWeight(glm::vec3 _point, const Triangle& _tri)
