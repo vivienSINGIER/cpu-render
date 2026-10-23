@@ -37,6 +37,7 @@ struct Color
     Color() : a(0), r(0), g(0), b(0) {};
     Color operator*(const float &_scal) const { return Color(static_cast<uint8_t>(a * _scal), static_cast<uint8_t>(r * _scal), static_cast<uint8_t>(g * _scal), static_cast<uint8_t>(b * _scal)); }
     Color operator+(const Color &_other) const { return { static_cast<uint8_t>(a+_other.a), static_cast<uint8_t>(r+_other.r), static_cast<uint8_t>(g+_other.g), static_cast<uint8_t>(b+_other.b) }; }
+    Color operator-(const Color &_other) const { return { static_cast<uint8_t>(a-_other.a), static_cast<uint8_t>(r-_other.r), static_cast<uint8_t>(g-_other.g), static_cast<uint8_t>(b-_other.b) }; }
 };
 
 #endif

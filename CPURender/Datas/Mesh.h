@@ -24,6 +24,7 @@ struct Vertex_OUT
 	glm::vec3 normal { 0.0f, 1.0f, 0.0f };
 	glm::vec3 tangent { 1.0f, 0.0f, 0.0f };
 	Color color = Color::WHITE;
+	float wPreDiv;
 };
 
 using Index = uint32_t;

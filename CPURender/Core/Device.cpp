@@ -218,9 +218,7 @@ void Device::ClippingStep(std::vector<Vertex_OUT>& _inOut)
 					if (v2InFrustum == true)
 					{
 						float t = Clipping::GetPlaneIntersection(subVBuffer[j], subVBuffer[(j + 1) % vertexCount], Clipping::FrustumPlane(i));
-						glm::vec3 a = glm::vec3(subVBuffer[j].positionH);
-						glm::vec3 b = glm::vec3(subVBuffer[(j + 1) % vertexCount].positionH);
-						planeSubVB.push_back(InterpolateVertex(a + (b - a) * t, currentTriangle));
+						planeSubVB.push_back(InterpolateVertex(subVBuffer[j], subVBuffer[(j + 1) % vertexCount], t));
 					}
 				}
 
@@ -231,9 +229,7 @@ void Device::ClippingStep(std::vector<Vertex_OUT>& _inOut)
 					if (v2InFrustum == false)
 					{
 						float t = Clipping::GetPlaneIntersection(subVBuffer[j], subVBuffer[(j + 1) % vertexCount], Clipping::FrustumPlane(i));
-						glm::vec3 a = glm::vec3(subVBuffer[j].positionH);
-						glm::vec3 b = glm::vec3(subVBuffer[(j + 1) % vertexCount].positionH);
-						planeSubVB.push_back(InterpolateVertex(a + (b-a)*t, currentTriangle));
+						planeSubVB.push_back(InterpolateVertex(subVBuffer[j], subVBuffer[(j + 1) % vertexCount], t));
 					}
 				}
 
@@ -264,6 +260,8 @@ void Device::ClipToScreen(std::vector<Vertex_OUT>& _inOut)
 {
 	for (uint32_t v = 0; v < _inOut.size(); v++)
 	{
+		_inOut[v].wPreDiv = _inOut[v].positionH.w;
+
 		// Perspective Divide
 		_inOut[v].positionH /= _inOut[v].positionH.w;
 
@@ -297,7 +295,7 @@ void Device::RasterStep(std::vector<Vertex_OUT> const& _vBuffer, ShaderResources
 			{
 				if (IsInTriangle({ x + 0.5f, y + 0.5f }, currentTriangle))
 				{
-					Vertex_OUT px = InterpolateVertex({ x + 0.5f, y + 0.5f }, currentTriangle);
+					Vertex_OUT px = InterpolateVertex(glm::vec2({ x + 0.5f, y + 0.5f }), currentTriangle);
 					float pixelDepth = px.positionH.z;
 					
 					if (pixelDepth > 1.0f || pixelDepth < 0.0f)
