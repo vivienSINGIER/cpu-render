@@ -18,8 +18,10 @@ public:
         
         Vertex_OUT v;
         v.color = _in.color;
-        v.positionH = glm::vec4({ _in.position, 1 });
-        v.positionH = pCB.proj * pCB.view * oCB.model * v.positionH;
+        v.positionModel = oCB.model * glm::vec4({ _in.position, 1 });
+        v.positionH = pCB.proj * pCB.view * v.positionModel;
+        v.normal = glm::mat3x3(oCB.model) * _in.normal;
+        v.uv = _in.uv;
         return v;
     }
 };

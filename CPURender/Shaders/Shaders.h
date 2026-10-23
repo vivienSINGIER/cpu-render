@@ -2,5 +2,6 @@
 #define SHADERS_SHADERS_H_DEFINED
 
 #include "Shaders/UnlitC.hpp"
+#include "Shaders/UnlitT.hpp"
 
 #endif

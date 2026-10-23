@@ -19,6 +19,7 @@
 #include "Factories/GeometryFactory.h"
 #include "Shaders/Shaders.h"
 #include "Factories/ShaderFactory.h"
+#include "Factories/TextureFactory.h"
 
 namespace
 {
@@ -80,8 +81,10 @@ void Engine::init(Texture* _frameBuffer)
     
     m_mesh = GeometryFactory::Instance()->BuildCube();
     
-    m_material = ShaderFactory::Instance()->CreateMaterial("UnlitC");
-    m_material->SetParams<UnlitPS::UnlitColor>(CB_CUSTOM, { Color::GREEN });
+    Handle t = TextureFactory::Instance()->CreateTexture("doomGuy", "Assets/doomguy.png");
+    
+    m_material = ShaderFactory::Instance()->CreateMaterial("UnlitT");
+    m_material->SetTexture(0, t);
 }
 
 void Engine::handleEvent(const SDL_Event& event)

@@ -2,6 +2,7 @@
 
 #include "../Factories/GeometryFactory.h"
 #include "../Factories/ShaderFactory.h"
+#include "../Factories/TextureFactory.h"
 
 GraphicsContext::GraphicsContext() :
     vertexBufferHeap(0, this), indexBufferHeap(1, this),
@@ -11,4 +12,5 @@ GraphicsContext::GraphicsContext() :
 {
     GeometryFactory::Init(this);
     ShaderFactory::Init(this);
+    TextureFactory::Init(this);
 }
