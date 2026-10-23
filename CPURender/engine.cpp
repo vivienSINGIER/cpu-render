@@ -81,7 +81,7 @@ void Engine::init(Texture* _frameBuffer)
     m_mesh = GeometryFactory::Instance()->BuildCube();
     
     m_material = ShaderFactory::Instance()->CreateMaterial("UnlitC");
-    m_material->SetParams<UnlitPS::UnlitColor>(CB_CUSTOM, { Color::RED });
+    m_material->SetParams<UnlitPS::UnlitColor>(CB_CUSTOM, { Color::GREEN });
 }
 
 void Engine::handleEvent(const SDL_Event& event)
