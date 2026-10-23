@@ -97,8 +97,8 @@ void Engine::init(Texture* _frameBuffer)
                 0.2f
     };
     
-    m_material = ShaderFactory::Instance()->CreateMaterial("LitC_BP");
-    m_material->SetParams<LitC_BP_PS::MaterialCB>(CB_CUSTOM, cb);
+    m_material = ShaderFactory::Instance()->CreateMaterial("UnlitT");
+    m_material->SetTexture(0, t);
 }
 
 void Engine::handleEvent(const SDL_Event& event)

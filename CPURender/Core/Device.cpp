@@ -12,7 +12,7 @@
 Device::Device() : m_ctx()
 {
 	m_viewport = { 0.0f, 0.0f, WIDTH, HEIGHT };
-	m_clearColor = Color::WHITE;
+	m_clearColor = Color(255, 20, 20, 20);
 	
 	m_mainCam = nullptr;
 	m_renderTarget = nullptr;
