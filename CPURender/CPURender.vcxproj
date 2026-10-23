@@ -178,6 +178,8 @@
     <ClInclude Include="Datas\Color.h" />
     <ClInclude Include="Datas\ConstantBuffers.hpp" />
     <ClInclude Include="Datas\DrawCommand.h" />
+    <ClInclude Include="Datas\Lights\LightData.hpp" />
+    <ClInclude Include="Datas\Lights\LightHelpers.hpp" />
     <ClInclude Include="Datas\Mesh.h" />
     <ClInclude Include="Datas\Morton.hpp" />
     <ClInclude Include="Datas\Object.h" />

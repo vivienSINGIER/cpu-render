@@ -113,6 +113,11 @@ void Device::SetRenderTarget(Texture* _tex)
 	m_renderTarget = _tex;
 }
 
+void Device::SetLightData(LightData const& _ld)
+{
+	
+}
+
 void Device::VertexShaderStep(Mesh const& _mesh, ShaderResources const& _r, ShaderStages _s, std::vector<Vertex_OUT>& _out)
 {
 	uint32_t vertexCount = _mesh.vertexCount;

@@ -4,6 +4,7 @@
 
 #include "../../Core/GraphicsContext.h"
 #include "../../Datas/ConstantBuffers.hpp"
+#include "../../Datas/LightData.hpp"
 
 void Shader::AddTexture(int _slot)
 {
@@ -19,6 +20,7 @@ Shader::Shader(GraphicsContext* _ctx) : m_cb(), m_tex()
 
     // reserved slots, AddConstantBuffer refuses them
     m_cb[CB_PER_PASS] = CBRegister{ sizeof(PerPassCB), true };
+    m_cb[CB_LIGHT_PASS] = CBRegister{ sizeof(LightPassCB), true };
     m_cb[CB_PER_OBJECT] = CBRegister{ sizeof(PerObjectCB), true };
 }
 

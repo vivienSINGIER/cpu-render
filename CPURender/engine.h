@@ -4,6 +4,7 @@
 #include "main.h"
 #include "Core/Device.h"
 #include "Datas/Texture.h"
+#include "Datas/Lights/LightData.hpp"
 #include "Maths/Transform.h"
 #include "Shaders/ShaderBase/Material.h"
 
@@ -34,4 +35,8 @@ private:
 	Mesh m_mesh;
 	Transform m_meshTransform;
 	Material m_material;
+	
+	LightData m_lightData;
+	
+	void InitLightScene();
 };

@@ -13,6 +13,7 @@
 #include "GraphicsContext.h"
 #include "../Datas/ConstantBuffers.hpp"
 
+struct LightData;
 //TODO Replace
 class Camera;
 struct Mesh;
@@ -32,12 +33,14 @@ public:
 
 	void SetMainCamera(Camera* _c);
 	void SetRenderTarget(Texture* _tex);
+	void SetLightData(LightData const& _ld);
 
 private:
 	Handle m_frameBuffer;
 	Handle m_depthBuffer;
 
 	Handle m_perPassCB;
+	Handle m_lightCB;
 	Handle m_perObjectCB;
 	
 	Texture* m_renderTarget;

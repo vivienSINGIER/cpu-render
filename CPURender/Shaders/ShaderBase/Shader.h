@@ -13,8 +13,9 @@
 
 // registers declared by every shader
 #define CB_PER_PASS 0
-#define CB_PER_OBJECT 1
-#define CB_CUSTOM 2
+#define CB_LIGHT_PASS 1
+#define CB_PER_OBJECT 2
+#define CB_CUSTOM 3
 
 class Texture;
 class GraphicsContext;

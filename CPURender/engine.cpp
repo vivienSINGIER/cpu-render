@@ -43,6 +43,11 @@ void Engine::RotateCamera(float _yaw, float _pitch)
     m_camTransform.SetRotationQuaternion(glm::normalize(yaw * pitch));
 }
 
+void Engine::InitLightScene()
+{
+    m_lightData.lights[0] = MakeDirectionalLight({1.0f, 1.0f, 1.0f}, 0.8f);
+}
+
 void Engine::UpdateCamera(float _dt)
 {
     bool const* keys = SDL_GetKeyboardState(nullptr);

@@ -31,3 +31,8 @@ Color Color::FromUint32(glm::uint32 _uint32)
 {
     return std::_Bit_cast<Color>(_uint32);
 }
+
+glm::vec4 Color::ToVec4(Color _c)
+{
+    return glm::vec4((float)_c.a / 255.0f, (float)_c.r / 255.0f, (float)_c.g / 255.0f, (float)_c.b / 255.0f);
+}
