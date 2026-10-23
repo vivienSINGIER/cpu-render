@@ -20,6 +20,8 @@
 #include "Shaders/Shaders.h"
 #include "Factories/ShaderFactory.h"
 
+#include "Octree.h"
+
 namespace
 {
     constexpr float CAM_MOVE_SPEED = 3.0f;          // world units per second
@@ -70,6 +72,12 @@ void Engine::UpdateCamera(float _dt)
 
 void Engine::init(Texture* _frameBuffer)
 {
+    srand(time(nullptr));
+    Octree o(100.f);
+    o.Update();
+
+    exit(0);
+
     printf("Init engine \n");
     
     m_device.SetRenderTarget(_frameBuffer);
