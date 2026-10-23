@@ -79,10 +79,8 @@ void Engine::init(Texture* _frameBuffer)
     m_camTransform.SetPosition(glm::vec3(0.0f, 0.0f, -5.0f));
     
     m_mesh = GeometryFactory::Instance()->BuildCylinder(32);
-    //m_mesh = GeometryFactory::Instance()->BuildDonut(1.0f, 0.3f, 32, 32);
     
     m_material = ShaderFactory::Instance()->CreateMaterial("LitC");
-    //m_material->SetParams<UnlitC_PS::UnlitColor>(CB_CUSTOM, { Color::GREEN });
     m_material->SetParams<LitC_PS::MaterialData>(CB_CUSTOM, { Color::GREEN });
 }
 
