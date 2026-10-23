@@ -28,8 +28,8 @@ int main(void) {
 
     window = SDL_CreateWindow(
         "Framebuffer",
-        WIDTH * 2,
-        HEIGHT * 2,
+        WIDTH * 4,
+        HEIGHT * 4,
         0
     );
 
@@ -74,7 +74,7 @@ int main(void) {
     }
 
     Engine engine;
-    Texture frameBuffer(256, 256, Texture::LINEAR);
+    Texture frameBuffer(WIDTH, HEIGHT, Texture::LINEAR);
     engine.init(&frameBuffer);
     bool isRunning = true;
     uint32_t frame = 1;
