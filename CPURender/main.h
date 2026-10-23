@@ -4,5 +4,5 @@
 
 //Students cannot change anything in this file
 
-#define WIDTH 1280
-#define HEIGHT 960
+#define WIDTH 320
+#define HEIGHT 240
