@@ -3,5 +3,6 @@
 
 #include "Shaders/UnlitC.hpp"
 #include "Shaders/UnlitT.hpp"
+#include "Shaders/LitC.hpp"
 
 #endif

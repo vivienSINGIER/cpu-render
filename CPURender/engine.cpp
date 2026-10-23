@@ -79,7 +79,7 @@ void Engine::init(Texture* _frameBuffer)
     m_camera.SetAspectRatio((float)WIDTH / (float)HEIGHT);
     m_camTransform.SetPosition(glm::vec3(0.0f, 0.0f, -5.0f));
     
-    m_mesh = GeometryFactory::Instance()->BuildCube();
+    m_mesh = GeometryFactory::Instance()->BuildCylinder(32);
     
     Handle t = TextureFactory::Instance()->CreateTexture("doomGuy", "Assets/doomguy.png");
     

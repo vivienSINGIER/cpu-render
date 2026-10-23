@@ -6,10 +6,10 @@
 #include "../../Datas/ConstantBuffers.hpp"
 #include "../ShaderBase/Shader.h"
 
-class UnlitVS : public VertexShader
+class UnlitC_VS : public VertexShader
 {
 public:
-    UnlitVS(GraphicsContext* _ctx) : VertexShader(_ctx) {}  
+    UnlitC_VS(GraphicsContext* _ctx) : VertexShader(_ctx) {}  
     
     Vertex_OUT Execute(ShaderResources const& _r, Vertex const& _in) const override
     {
@@ -26,7 +26,7 @@ public:
     }
 };
 
-class UnlitPS : public PixelShader
+class UnlitC_PS : public PixelShader
 {
 public:
     struct UnlitColor
@@ -34,7 +34,7 @@ public:
         Color color;
     };
     
-    UnlitPS(GraphicsContext* _ctx) : PixelShader(_ctx) { AddConstantBuffer<UnlitColor>(CB_CUSTOM); }
+    UnlitC_PS(GraphicsContext* _ctx) : PixelShader(_ctx) { AddConstantBuffer<UnlitColor>(CB_CUSTOM); }
     
     Color Execute(ShaderResources const& _r, Vertex_OUT const& _in) const override
     {

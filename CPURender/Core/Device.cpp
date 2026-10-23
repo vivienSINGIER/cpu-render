@@ -39,6 +39,9 @@ void Device::BeginDraw()
 	assert(m_mainCam != nullptr && "Can't draw on uninitialized main camera");
 	PerPassCB perPassCB;
 	perPassCB.deltaTime = 0.066f;
+	perPassCB.lightIntensity = 0.8f;
+	perPassCB.lightDirection = { 1, 1, 1 };
+	perPassCB.lightDirection = glm::normalize(perPassCB.lightDirection);
 	m_mainCam->FillData(&perPassCB);
 	
 	m_ctx.constantBufferHeap.Write<PerPassCB>(m_perPassCB, perPassCB);
