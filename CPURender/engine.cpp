@@ -45,7 +45,7 @@ void Engine::RotateCamera(float _yaw, float _pitch)
 
 void Engine::InitLightScene()
 {
-    m_lightData.lights[0] = MakeDirectionalLight({1.0f, 1.0f, 1.0f}, 0.8f);
+    m_lightData.lights[0] = MakeDirectionalLight({1.0f, -1.0f, 1.0f}, 0.5f);
 }
 
 void Engine::UpdateCamera(float _dt)
@@ -78,18 +78,27 @@ void Engine::init(Texture* _frameBuffer)
 {
     printf("Init engine \n");
     
+    InitLightScene();
+    
     m_device.SetRenderTarget(_frameBuffer);
     m_device.SetMainCamera(&m_camera);
+    m_device.SetLightData(m_lightData);
     
     m_camera.SetAspectRatio((float)WIDTH / (float)HEIGHT);
     m_camTransform.SetPosition(glm::vec3(0.0f, 0.0f, -5.0f));
     
-    m_mesh = GeometryFactory::Instance()->BuildCylinder(32);
+    m_mesh = GeometryFactory::Instance()->BuildDonut(1.0f, 0.3f, 32, 32);
     
     Handle t = TextureFactory::Instance()->CreateTexture("doomGuy", "Assets/doomguy.png");
     
-    m_material = ShaderFactory::Instance()->CreateMaterial("UnlitT");
-    m_material->SetTexture(0, t);
+    LitC_BP_PS::MaterialCB cb = {
+        {0.3f, 0.2f, 0.0f, 1.0f}, 
+            Lighting::g_fresnelR0Templates[GOLD], 
+                0.2f
+    };
+    
+    m_material = ShaderFactory::Instance()->CreateMaterial("LitC_BP");
+    m_material->SetParams<LitC_BP_PS::MaterialCB>(CB_CUSTOM, cb);
 }
 
 void Engine::handleEvent(const SDL_Event& event)

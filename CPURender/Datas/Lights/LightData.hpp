@@ -8,7 +8,7 @@
 
 enum class LightType
 {
-    Directional, Point, Spot
+    None, Directional, Point, Spot
 };
 
 struct Light
@@ -25,7 +25,7 @@ struct Light
 
 struct LightDesc
 {
-    LightType type;
+    LightType type = LightType::None;
     Light light;
 };
 
@@ -72,8 +72,9 @@ inline void FillLightPassCB(LightData _data, LightPassCB& _out)
     lights.insert(lights.end(), pointLights.begin(), pointLights.end());
     lights.insert(lights.end(), spotLights.begin(),  spotLights.end());
 
-    memset(_data.lights, 0, sizeof(Light) * 16);
-    memcpy(_data.lights, lights.data(), sizeof(Light) * lights.size());
+    memset(_out.lights, 0, sizeof(_out.lights));
+    memcpy(_out.lights, lights.data(), sizeof(Light) * lights.size());
+    _out.ambientLight = _data.ambient;
 }
 
 inline LightDesc MakeDirectionalLight(glm::vec3 direction, float _intensity, Color _color = Color::WHITE)
@@ -109,7 +110,7 @@ inline LightDesc MakePointLight(glm::vec3 _pos, float _intensity, glm::vec2 _fal
 inline LightDesc MakeSpotLight(glm::vec3 _pos, glm::vec3 _dir, float _intensity, glm::vec2 _fallOff, Color _color = Color::WHITE)
 {
     LightDesc d;
-    d.type = LightType::Point;
+    d.type = LightType::Spot;
     
     d.light.direction = _dir;
     d.light.strength = glm::vec3(_intensity);

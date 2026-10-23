@@ -24,9 +24,6 @@
     <ClCompile Include="Heaps\ConstantBufferHeap.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Heaps\Heap.inl">
-      <Filter>Header Files</Filter>
-    </ClCompile>
     <ClCompile Include="Camera.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -59,9 +56,6 @@
     </ClCompile>
     <ClCompile Include="Factories\ShaderFactory.cpp">
       <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Heaps\BufferHeap.inl">
-      <Filter>Header Files</Filter>
     </ClCompile>
     <ClCompile Include="Maths\PerlinNoise.cpp">
       <Filter>Source Files</Filter>
@@ -113,6 +107,9 @@
     <ClInclude Include="Heaps\Heap.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Heaps\Heap.inl">
+          <Filter>Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="Camera.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -163,6 +160,9 @@
     </ClInclude>
     <ClInclude Include="Heaps\BufferHeap.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Heaps\BufferHeap.inl">
+              <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Heaps\Heaps.h">
       <Filter>Header Files</Filter>

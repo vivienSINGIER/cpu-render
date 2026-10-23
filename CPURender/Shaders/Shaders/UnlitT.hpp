@@ -13,8 +13,8 @@ public:
     
     Vertex_OUT Execute(ShaderResources const& _r, Vertex const& _in) const override
     {
-        PerPassCB const& pCB = CB<PerPassCB>(_r, 0);
-        PerObjectCB const& oCB = CB<PerObjectCB>(_r, 1);
+        PerPassCB const& pCB = CB<PerPassCB>(_r, CB_PER_PASS);
+        PerObjectCB const& oCB = CB<PerObjectCB>(_r, CB_PER_OBJECT);
         
         Vertex_OUT v;
         v.color = _in.color;

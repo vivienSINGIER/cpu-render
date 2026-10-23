@@ -64,4 +64,5 @@ void ShaderFactory::RegisterPrebuilts()
     RegisterGroup<UnlitC_VS, UnlitC_PS>("UnlitC");
     RegisterGroup<UnlitT_VS, UnlitT_PS>("UnlitT");
     RegisterGroup<LitC_VS, LitC_PS>("LitC");
+    RegisterGroup<LitC_BP_VS, LitC_BP_PS>("LitC_BP");
 }

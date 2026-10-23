@@ -6,6 +6,7 @@
 #include "../Datas/ConstantBuffers.hpp"
 #include "../Datas/Triangle.h"
 #include "../Clipping.h"
+#include "../Datas/Lights/LightData.hpp"
 #include "../Shaders/ShaderBase/Material.h"
 
 Device::Device() : m_ctx()
@@ -20,6 +21,7 @@ Device::Device() : m_ctx()
 	m_depthBuffer = m_ctx.frameBufferHeap.Create<Texture>(WIDTH, HEIGHT, Texture::Encoding::MORTON, Color::BLACK);
 	
 	m_perPassCB = m_ctx.constantBufferHeap.Create(sizeof(PerPassCB));
+	m_lightCB = m_ctx.constantBufferHeap.Create(sizeof(LightPassCB));
 	m_perObjectCB = m_ctx.constantBufferHeap.Create(sizeof(PerObjectCB));
 }
 
@@ -47,7 +49,6 @@ void Device::BeginDraw()
 	m_ctx.constantBufferHeap.Write<PerPassCB>(m_perPassCB, perPassCB);
 }
 
-// TODO Add materials
 void Device::RegisterCommand(Mesh const& _m, glm::mat4x4 _world, MaterialData const* _mat)
 {
 	DrawCommand d = { _m, _world, _mat };
@@ -90,6 +91,7 @@ void Device::ExecCommand(DrawCommand const& _cmd)
 	ShaderResources res;
 	_cmd.material->Resolve(res);
 	res.cbs[CB_PER_PASS] = m_ctx.constantBufferHeap.GetRaw(m_perPassCB);
+	res.cbs[CB_LIGHT_PASS] = m_ctx.constantBufferHeap.GetRaw(m_lightCB);
 	res.cbs[CB_PER_OBJECT] = m_ctx.constantBufferHeap.GetRaw(m_perObjectCB);
 	
 	ShaderStages stages = m_ctx.shaderGroupHeap.Get(_cmd.material->ShaderGroupHandle())->Resolve();
@@ -115,7 +117,9 @@ void Device::SetRenderTarget(Texture* _tex)
 
 void Device::SetLightData(LightData const& _ld)
 {
-	
+	LightPassCB l;
+	FillLightPassCB(_ld, l);
+	m_ctx.constantBufferHeap.Write<LightPassCB>(m_lightCB, l);
 }
 
 void Device::VertexShaderStep(Mesh const& _mesh, ShaderResources const& _r, ShaderStages _s, std::vector<Vertex_OUT>& _out)

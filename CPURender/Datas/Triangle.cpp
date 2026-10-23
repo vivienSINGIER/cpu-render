@@ -72,6 +72,13 @@ Vertex_OUT InterpolateVertex(glm::vec2 _point, const Triangle& _tri)
     glm::vec3 bary = BarycentricWeight(_point, _tri);
     Vertex_OUT vert;
 
+    vert.positionModel = {
+        glm::dot(bary, { _tri.v1.positionModel.x, _tri.v2.positionModel.x, _tri.v3.positionModel.x }),
+        glm::dot(bary, { _tri.v1.positionModel.y, _tri.v2.positionModel.y, _tri.v3.positionModel.y }),
+        glm::dot(bary, { _tri.v1.positionModel.z, _tri.v2.positionModel.z, _tri.v3.positionModel.z }),
+        1.0f
+    };
+    
     vert.positionH = { _point,
         glm::dot(bary, { _tri.v1.positionH.z, _tri.v2.positionH.z, _tri.v3.positionH.z }), 
         glm::dot(bary, { _tri.v1.positionH.w, _tri.v2.positionH.w, _tri.v3.positionH.w }) };
@@ -104,6 +111,13 @@ Vertex_OUT InterpolateVertex(glm::vec3 _point, const Triangle& _tri)
     glm::vec3 bary = BarycentricWeight(_point, _tri);
     Vertex_OUT vert;
 
+    vert.positionModel = {
+        glm::dot(bary, { _tri.v1.positionModel.x, _tri.v2.positionModel.x, _tri.v3.positionModel.x }),
+        glm::dot(bary, { _tri.v1.positionModel.y, _tri.v2.positionModel.y, _tri.v3.positionModel.y }),
+        glm::dot(bary, { _tri.v1.positionModel.z, _tri.v2.positionModel.z, _tri.v3.positionModel.z }),
+        1.0f
+    };
+    
     vert.positionH = { _point, glm::dot(bary, { _tri.v1.positionH.w, _tri.v2.positionH.w, _tri.v3.positionH.w }) };
 
     vert.uv = { glm::dot(bary, { _tri.v1.uv.x, _tri.v2.uv.x, _tri.v3.uv.x }),

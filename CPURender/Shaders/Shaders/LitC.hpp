@@ -14,8 +14,8 @@ public:
 
     inline Vertex_OUT Execute(ShaderResources const& _r, Vertex const& _in) const override
     {
-        PerPassCB const& pCB = CB<PerPassCB>(_r, 0);
-        PerObjectCB const& oCB = CB<PerObjectCB>(_r, 1);
+        PerPassCB const& pCB = CB<PerPassCB>(_r, CB_PER_PASS);
+        PerObjectCB const& oCB = CB<PerObjectCB>(_r, CB_PER_OBJECT);
 
         Vertex_OUT v;
         v.normal = _in.normal;
@@ -38,8 +38,8 @@ public:
 
     inline Color Execute(ShaderResources const& _r, Vertex_OUT const& _in) const override
     {
-        PerPassCB const& pCB = CB<PerPassCB>(_r, 0);
-        MaterialData const& cb = CB<MaterialData>(_r, 2);
+        PerPassCB const& pCB = CB<PerPassCB>(_r, CB_PER_PASS);
+        MaterialData const& cb = CB<MaterialData>(_r, CB_CUSTOM);
 
         float ambientFactors[3] = { 0.1f, 0.1f, 0.15f };
         Color ambientColor = { 255,

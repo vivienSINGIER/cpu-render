@@ -4,7 +4,7 @@
 
 #include "../../Core/GraphicsContext.h"
 #include "../../Datas/ConstantBuffers.hpp"
-#include "../../Datas/LightData.hpp"
+#include "../../Datas/Lights/LightData.hpp"
 
 void Shader::AddTexture(int _slot)
 {

@@ -156,9 +156,7 @@
     <ClCompile Include="Factories\GeometryFactory.cpp" />
     <ClCompile Include="Factories\ShaderFactory.cpp" />
     <ClCompile Include="Factories\TextureFactory.cpp" />
-    <ClCompile Include="Heaps\BufferHeap.inl" />
     <ClCompile Include="Heaps\ConstantBufferHeap.cpp" />
-    <ClCompile Include="Heaps\Heap.inl" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Maths\PerlinNoise.cpp" />
     <ClCompile Include="Shaders\ShaderBase\Material.cpp" />
@@ -192,10 +190,12 @@
     <ClInclude Include="Factories\ShaderFactory.inl" />
     <ClInclude Include="Factories\TextureFactory.h" />
     <ClInclude Include="Heaps\BufferHeap.h" />
+    <ClInclude Include="Heaps\BufferHeap.inl" />
     <ClInclude Include="Heaps\ConstantBufferHeap.h" />
     <ClInclude Include="Heaps\ConstantBufferHeap.inl" />
     <ClInclude Include="Heaps\Handle.hpp" />
     <ClInclude Include="Heaps\Heap.h" />
+    <ClInclude Include="Heaps\Heap.inl" />
     <ClInclude Include="Heaps\Heaps.h" />
     <ClInclude Include="Heaps\HeapUtils.hpp" />
     <ClInclude Include="main.h" />
@@ -212,6 +212,7 @@
     <ClInclude Include="Shaders\ShaderBase\ShaderGroup.h" />
     <ClInclude Include="Shaders\Shaders.h" />
     <ClInclude Include="Shaders\Shaders\LitC.hpp" />
+    <ClInclude Include="Shaders\Shaders\LitC_BP.hpp" />
     <ClInclude Include="Shaders\Shaders\UnlitC.hpp" />
     <ClInclude Include="Shaders\Shaders\UnlitT.hpp" />
     <ClInclude Include="stb_image.h" />

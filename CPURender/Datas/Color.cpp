@@ -34,5 +34,10 @@ Color Color::FromUint32(glm::uint32 _uint32)
 
 glm::vec4 Color::ToVec4(Color _c)
 {
-    return glm::vec4((float)_c.a / 255.0f, (float)_c.r / 255.0f, (float)_c.g / 255.0f, (float)_c.b / 255.0f);
+    return glm::vec4((float)_c.r / 255.0f, (float)_c.g / 255.0f, (float)_c.b / 255.0f, (float)_c.a / 255.0f);
+}
+
+Color Color::FromVec4(glm::vec4 _vec)
+{
+    return Color((uint8_t)(_vec.w * 255.0f), (uint8_t)(_vec.x * 255.0f), (uint8_t)(_vec.y * 255.0f), (uint8_t)(_vec.z * 255.0f));
 }
