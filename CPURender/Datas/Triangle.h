@@ -13,9 +13,9 @@ struct Triangle
 
 bool IsFront(const Triangle& _tri, bool _clockwise = false);
 bool IsInTriangle(glm::vec2 _point, const Triangle& _tri);
+glm::vec3 BarycentricWeightPerspective(glm::vec2 _point, const Triangle& _tri);
 glm::vec3 BarycentricWeight(glm::vec2 _point, const Triangle& _tri);
-glm::vec3 BarycentricWeight(glm::vec3 _point, const Triangle& _tri);
+Vertex_OUT InterpolateVertex(Vertex_OUT _v1, Vertex_OUT _v2, float _t);
 Vertex_OUT InterpolateVertex(glm::vec2 _point, const Triangle& _tri);
-Vertex_OUT InterpolateVertex(glm::vec3 _point, const Triangle& _tri);
 Color GetPointColor(glm::vec2 _point, const Triangle& _tri);
 glm::vec4 GetBoundingBox(const Triangle& _tri);
