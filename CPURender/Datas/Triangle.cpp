@@ -29,6 +29,12 @@ glm::vec3 BarycentricWeight(glm::vec2 _point, const Triangle& _tri)
     weights.y = (shiftedPoint.x * shiftedV3.y - shiftedPoint.y * shiftedV3.x) / d;
     weights.z = (shiftedPoint.y * shiftedV2.x - shiftedPoint.x * shiftedV2.y) / d;
     weights.x = 1 - weights.y - weights.z;
+    
+    // float alpha = weights.x / _tri.v1.positionH.z + weights.y / _tri.v2.positionH.z + weights.z / _tri.v3.positionH.z;
+    //
+    // glm::vec3 correctedW = {    weights.x / alpha * _tri.v1.positionH.z, 
+    //                             weights.y / alpha * _tri.v2.positionH.z, 
+    //                             weights.z / alpha * _tri.v3.positionH.z };
 
     return weights;
 }
@@ -50,7 +56,15 @@ glm::vec3 BarycentricWeight(glm::vec3 _point, const Triangle& _tri)
     float dB = glm::dot(nB, n) / glm::dot(n, n);
     float dC = 1 - dA - dB;
 
-    return glm::vec3(dA, dB, dC);
+    glm::vec3 weights = { dA, dB, dC };
+    
+    // float alpha = weights.x / _tri.v1.positionH.z + weights.y / _tri.v2.positionH.z + weights.z / _tri.v3.positionH.z;
+    //
+    // glm::vec3 correctedW = {    weights.x / alpha * _tri.v1.positionH.z, 
+    //                             weights.y / alpha * _tri.v2.positionH.z, 
+    //                             weights.z / alpha * _tri.v3.positionH.z };
+    
+    return weights;
 }
 
 Vertex_OUT InterpolateVertex(glm::vec2 _point, const Triangle& _tri)
@@ -86,6 +100,17 @@ Vertex_OUT InterpolateVertex(glm::vec3 _point, const Triangle& _tri)
     vert.positionH = { _point, glm::dot(bary, { _tri.v1.positionH.w, _tri.v2.positionH.w, _tri.v3.positionH.w }) };
 
     vert.color = _tri.v1.color * bary.x + _tri.v2.color * bary.y + _tri.v3.color * bary.z;
+    
+    vert.uv = { glm::dot(bary, { _tri.v1.uv.x, _tri.v2.uv.x, _tri.v3.uv.x }),
+            glm::dot(bary, { _tri.v1.uv.y, _tri.v2.uv.y, _tri.v3.uv.y }) };
+
+    vert.normal = { glm::dot(bary, { _tri.v1.normal.x, _tri.v2.normal.x, _tri.v3.normal.x }),
+                    glm::dot(bary, { _tri.v1.normal.y, _tri.v2.normal.y, _tri.v3.normal.y }),
+                    glm::dot(bary, { _tri.v1.normal.z, _tri.v2.normal.z, _tri.v3.normal.z }) };
+    
+    vert.tangent = { glm::dot(bary, { _tri.v1.tangent.x, _tri.v2.tangent.x, _tri.v3.tangent.x }),
+                    glm::dot(bary, { _tri.v1.tangent.y, _tri.v2.tangent.y, _tri.v3.tangent.y }),
+                    glm::dot(bary, { _tri.v1.tangent.z, _tri.v2.tangent.z, _tri.v3.tangent.z }) };
     return vert;
 }
 
