@@ -1,7 +1,7 @@
 #include "Scene.h"
 #include "../Core/Device.h"
 
-Scene::Scene() : m_octTree(1'000'000.f, 3, 4)
+Scene::Scene() : m_octTree(1'000.f, 3, 8)
 {
 	m_octTree.SetStaticObjects(&m_static_objects);
 	m_octTree.SetDynamicObjects(&m_dynamic_objects);

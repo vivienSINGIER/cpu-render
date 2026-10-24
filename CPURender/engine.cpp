@@ -75,18 +75,25 @@ void Engine::init(Texture* _frameBuffer)
     srand(time(nullptr));
     
     Object* o1 = mainScene.CreateObject(DYNAMIC);
-    o1->transform.SetPosition(glm::vec3(0, 0, 0));
+    o1->transform.SetPosition(glm::vec3(-1, -0.5f, 0));
 
     o1->mesh = GeometryFactory::Instance()->BuildCube();
     o1->mat = ShaderFactory::Instance()->CreateMaterial("UnlitC");
     o1->mat->SetParams<UnlitPS::UnlitColor>(CB_CUSTOM, { Color::GREEN });
 
-   /* Object* o2 = mainScene.CreateObject(DYNAMIC);
-    o2->transform.SetPosition(glm::vec3(0, 0, 0));
+    Object* o2 = mainScene.CreateObject(DYNAMIC);
+    o2->transform.SetPosition(glm::vec3(1, -0.5f, 0));
 
     o2->mesh = GeometryFactory::Instance()->BuildUVSphere(10, 10);
     o2->mat = ShaderFactory::Instance()->CreateMaterial("UnlitC");
-    o2->mat->SetParams<UnlitPS::UnlitColor>(CB_CUSTOM, { Color::RED });*/
+    o2->mat->SetParams<UnlitPS::UnlitColor>(CB_CUSTOM, { Color::RED });
+
+    Object* o3 = mainScene.CreateObject(DYNAMIC);
+    o3->transform.SetPosition(glm::vec3(0, 0.5f, 0));
+
+    o3->mesh = GeometryFactory::Instance()->BuildPyramid();
+    o3->mat = ShaderFactory::Instance()->CreateMaterial("UnlitC");
+    o3->mat->SetParams<UnlitPS::UnlitColor>(CB_CUSTOM, { Color::BLUE });
 
     printf("Init engine \n");
     
