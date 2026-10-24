@@ -93,8 +93,7 @@ void Texture::Load(std::string const& _filePath)
     int width, height;
     unsigned char* data = stbi_load(_filePath.c_str(), &width, &height, &nbrChannel, 4);
     
-    if (data == nullptr)
-        return;
+    assert(data != nullptr && "failed to load texture");
     
     SetSize(width, height);
     

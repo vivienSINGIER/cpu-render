@@ -1,5 +1,6 @@
 #include "Device.h"
 
+#include "Binning.hpp"
 #include "../Camera.h"
 #include "../main.h"
 #include "../Datas/DrawCommand.h"
@@ -272,9 +273,12 @@ void Device::ClippingStep(std::vector<Vertex_OUT>& _inOut)
 
 void Device::ClipToScreen(std::vector<Vertex_OUT>& _inOut)
 {
+	wPreDiv.reserve(_inOut.size());
+	
+#pragma omp parallel for
 	for (uint32_t v = 0; v < _inOut.size(); v++)
 	{
-		wPreDiv.push_back(_inOut[v].positionH.w);
+		wPreDiv[v] = _inOut[v].positionH.w;
 
 		// Perspective Divide
 		_inOut[v].positionH /= _inOut[v].positionH.w;
@@ -290,51 +294,57 @@ void Device::ClipToScreen(std::vector<Vertex_OUT>& _inOut)
 
 void Device::RasterStep(std::vector<Vertex_OUT> const& _vBuffer, ShaderStages _s)
 {
+	Binning::Tiles tiles;
+	Binning::InitTiles(tiles);
+	Binning::BlinningStep(_vBuffer, tiles);
+	
 	Texture* fb = m_ctx.frameBufferHeap.Get(m_frameBuffer);
 	Texture* db = m_ctx.frameBufferHeap.Get(m_depthBuffer);
 	
-	// TODO OPEN MP
-	for (uint32_t v = 0; v < _vBuffer.size(); v += 3)
+#pragma omp parallel
+#pragma omp for schedule(dynamic)
+	for (int i = 0; i < TILE_COUNT; i++)
 	{
-		Triangle currentTriangle = { _vBuffer[v], _vBuffer[v + 1], _vBuffer[v + 2] };
-		glm::vec4 box = GetBoundingBox(currentTriangle);
-		box.x = fmax(box.x, 0);
-		box.y = fmax(box.y, 0);
-		box.z = fmin(box.z, WIDTH);
-		box.w = fmin(box.w, HEIGHT);
-
-		glm::vec3 initial = BarycentricWeight({ box.x, box.y}, currentTriangle);
-		glm::vec3 incRight = (BarycentricWeight({box.z, box.y}, currentTriangle) - initial) / (box.z - box.x);
-		glm::vec3 incDown = (BarycentricWeight({ box.x, box.w }, currentTriangle) - initial) / (box.w - box.y);
-
-		for (int32_t x = box.x; x < box.z; x++) 
+		Binning::Tile const& t = tiles[i];
+		
+		for (auto const& entry : tiles[i].entries)
 		{
-			glm::vec3 bary = initial + incRight * (float)((x + 0.5f) - box.x) + incDown * 0.5f;
-
-			for (int32_t y = box.y; y < box.w; y++) 
+			Binning::BoundingBox box = entry.box;
+			glm::vec3 baryOffsetX = entry.barOffsetX;
+			glm::vec3 baryOffsetY = entry.barOffsetY;
+			Index v = entry.index;
+			
+			Triangle tri = Triangle{ _vBuffer[entry.index], _vBuffer[entry.index + 1], _vBuffer[entry.index + 2] };
+			glm::vec3 bary = BarycentricWeight({ (float)t.x + 0.5f, (float)t.y + 0.5f}, tri);
+			
+			for (int x = box.minX; x < box.maxX; x++)
 			{
-				glm::vec3 baryP = BarycentricWeightPerspective(bary, wPreDiv[v], wPreDiv[v + 1], wPreDiv[v + 2]);
-
-				if (IsInTriangle(bary))
+				for (int y = box.minY; y < box.maxY; y++)
 				{
-					glm::vec4 posH = InterpolatePositionH(glm::vec2({ x + 0.5f, y + 0.5f }), currentTriangle, baryP);
+					glm::vec3 baryOffset = (float)(x - t.x) * baryOffsetX + (float)(y - t.y) * baryOffsetY;
+					glm::vec3 tBary = bary + baryOffset;
+					
+					if (IsInTriangle(tBary) == false)
+						continue;
+					
+					glm::vec3 baryP = BarycentricWeightPerspective(tBary, wPreDiv[v], wPreDiv[v + 1], wPreDiv[v + 2]);
+					
+					glm::vec4 posH = InterpolatePositionH(glm::vec2({ (float)x + 0.5f, (float)y + 0.5f }), tri, baryP);
 					float pixelDepth = posH.z;
 					
 					if (pixelDepth > 1.0f || pixelDepth < 0.0f)
 						continue;
 					if (pixelDepth > db->GetPixelData<float>(x, y))
 						continue;
-
+	
 					Vertex_OUT px;
 					px.positionH = posH;
-					InterpolateVertex(px, glm::vec2({ x + 0.5f, y + 0.5f }), currentTriangle, baryP);
-
+					InterpolateVertex(px, glm::vec2({ (float)x + 0.5f, (float)y + 0.5f }), tri, baryP);
+	
 					db->SetPixelData<float>(x, y, pixelDepth);
-
-					fb->SetPixelColor(x, y, _s.ps->Execute(px));
+	
+					fb->SetPixelColor(x, y, _s.ps->Execute(px)); 
 				}
-
-				bary += incDown;
 			}
 		}
 	}

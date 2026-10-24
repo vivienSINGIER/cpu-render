@@ -16,18 +16,26 @@
 
 namespace Binning
 {
-    struct Tile
-    {
-        std::vector<Index> indices;
-        int x = 0, y = 0;
-    };
-    
-    using Tiles = std::array<Tile, TILE_COUNT>;
-    
     struct BoundingBox
     {
         int minX, minY, maxX, maxY;
     };
+    
+    struct BinEntry
+    {
+        Index index;
+        BoundingBox box;
+        glm::vec3 barOffsetX;
+        glm::vec3 barOffsetY;
+    };
+    
+    struct Tile
+    {
+        std::vector<BinEntry> entries;
+        int x = 0, y = 0;
+    };
+    
+    using Tiles = std::array<Tile, TILE_COUNT>;
     
     inline BoundingBox GetBoundingBox(Triangle _tri)
     {
@@ -53,8 +61,8 @@ namespace Binning
     
     inline void InitTiles(Tiles& _out)
     {
-#pragma omp parallel
-#pragma omp for
+// #pragma omp parallel
+// #pragma omp for
         for (int i = 0; i < TILE_COUNT; i++)
         {
             int y = i / TILE_COUNT_W;
@@ -64,14 +72,38 @@ namespace Binning
         }
     }
     
-    bool TrivialReject(Triangle const& _tri, Tile const& _tile)
+    inline bool TrivialReject(Triangle const& _tri, Tile const& _tile)
     {
+        glm::vec3 states[4];
+        int factorsX[4] = {0, 0, 1, 1};
+        int factorsY[4] = {0, 1, 0, 1};
         
+        for (int i = 0; i < 4; i++)
+        {
+            glm::vec2 point = { _tile.x + factorsX[i] * TILE_SIZE , _tile.y + factorsY[i] * TILE_SIZE };
+            glm::vec3 bary = BarycentricWeight(point, _tri);
+            
+            states[i] = {bary.x, bary.y, bary.z};
+        }
+        
+        for (int i = 0; i < 3; i++)
+        {
+            bool isCorrect = false;
+            for (int j = 0; j < 4; j++)
+                isCorrect = isCorrect || states[j][i] >= 0;
+            
+            if (!isCorrect)
+                return true;
+        }
+        
+        return false;
     }
+    
+    // TODO add TrivialAccept
     
     inline void WriteOverlappedTiles(Triangle const& _tri, Index _index, Tiles& _out)
     {
-        BoundingBox box = GetBoundingBox(_tri);
+        BoundingBox box = Binning::GetBoundingBox(_tri);
         box.minX = std::max(box.minX, 0);
         box.minY = std::max(box.minY, 0);
         box.maxX = std::min(box.maxX, WIDTH);
@@ -83,17 +115,39 @@ namespace Binning
             return;
         
         int tileMinX = box.minX / TILE_SIZE;
-        int tileMaxX = box.maxX / TILE_SIZE;
         int tileMinY = box.minY / TILE_SIZE;
-        int tileMaxY = box.maxY / TILE_SIZE;
+        int tileMaxX = (box.maxX - 1) / TILE_SIZE;
+        int tileMaxY = (box.maxY - 1) / TILE_SIZE;
         
-        for (int i = tileMinX; i < tileMaxX; i++)
+        for (int i = tileMinX; i <= tileMaxX; i++)
         {
-            for (int j = tileMinY; j < tileMaxY; j++)
+            for (int j = tileMinY; j <= tileMaxY; j++)
             {
                 Tile& t = _out[i + TILE_COUNT_W * j];
-                t.indices.push_back(_index);
+                if (TrivialReject(_tri, t))
+                    continue;
+                
+                BoundingBox newB;
+                newB.minX = std::max(box.minX, t.x);
+                newB.minY = std::max(box.minY, t.y);
+                newB.maxX = std::min(box.maxX, t.x + TILE_SIZE);
+                newB.maxY = std::min(box.maxY, t.y + TILE_SIZE);
+                
+                glm::vec3 barOffsetX;
+                glm::vec3 barOffsetY;
+                BarycentricOffsets(_tri, barOffsetX, barOffsetY);
+                
+                t.entries.push_back({_index, newB, barOffsetX, barOffsetY});
             }
+        }
+    }
+    
+    inline void BlinningStep(std::vector<Vertex_OUT> const& _vBuffer, Tiles& _out)
+    {
+        for (uint32_t v = 0; v < _vBuffer.size(); v += 3)
+        {
+            Triangle currentTriangle = { _vBuffer[v], _vBuffer[v + 1], _vBuffer[v + 2] };
+            WriteOverlappedTiles(currentTriangle, v, _out);
         }
     }
     

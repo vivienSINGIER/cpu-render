@@ -52,7 +52,7 @@ glm::vec3 BarycentricWeightPerspective(const glm::vec3& _bary, float _w1, float 
     return weightsCorrected;
 }
 
-glm::vec3 BarycentricWeight(const glm::vec2& _point, const Triangle& _tri)
+glm::vec3  BarycentricWeight(const glm::vec2& _point, const Triangle& _tri)
 {
     // Shift everything by v1
     glm::vec3 shiftedV2 = _tri.v2.positionH - _tri.v1.positionH;
@@ -68,6 +68,18 @@ glm::vec3 BarycentricWeight(const glm::vec2& _point, const Triangle& _tri)
     bary.x = 1 - bary.y - bary.z;
 
     return bary;
+}
+
+void BarycentricOffsets(const Triangle& _tri, glm::vec3& _offsetX, glm::vec3& _offsetY)
+{
+    glm::vec3 e2 = _tri.v2.positionH - _tri.v1.positionH;
+    glm::vec3 e3 = _tri.v3.positionH - _tri.v1.positionH;
+
+    // Det of {v2, v3}
+    float invDet = 1.0f / (e2.x * e3.y - e3.x * e2.y);
+    
+    _offsetX = { (e2.y - e3.y) * invDet,  e3.y * invDet, -e2.y * invDet };
+    _offsetY = { (e3.x - e2.x) * invDet, -e3.x * invDet,  e2.x * invDet };
 }
 
 Vertex_OUT InterpolateVertex(const Vertex_OUT& _v1, const Vertex_OUT& _v2, float _t)

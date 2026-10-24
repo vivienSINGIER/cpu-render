@@ -28,8 +28,8 @@ int main(void) {
 
     window = SDL_CreateWindow(
         "Framebuffer",
-        WIDTH * 4,
-        HEIGHT * 4,
+        SCREEN_WIDTH,
+        SCREEN_HEIGHT,
         0
     );
 

@@ -4,5 +4,8 @@
 
 //Students cannot change anything in this file
 
-#define WIDTH 320
-#define HEIGHT 240
+#define WIDTH 1280
+#define HEIGHT 920
+
+#define SCREEN_WIDTH 2560
+#define SCREEN_HEIGHT 1600
