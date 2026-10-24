@@ -273,7 +273,7 @@ void Device::ClippingStep(std::vector<Vertex_OUT>& _inOut)
 
 void Device::ClipToScreen(std::vector<Vertex_OUT>& _inOut)
 {
-	wPreDiv.reserve(_inOut.size());
+	wPreDiv.resize(_inOut.size());
 	
 #pragma omp parallel for
 	for (uint32_t v = 0; v < _inOut.size(); v++)

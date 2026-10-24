@@ -34,10 +34,12 @@ public:
     struct MaterialCB
     {
         glm::vec4 diffuseAlbedo;
+        
         glm::vec3 fresnelR0;
         float roughness;
         
         float heightScale;
+        float metalness;
     };
     
     SHADER_CB(MaterialCB, mat, CB_CUSTOM)
@@ -46,6 +48,7 @@ public:
     SHADER_TEX_OPT(displacement, 2)
     SHADER_TEX_OPT(normal, 3)
     SHADER_TEX_OPT(ambient, 4)
+    SHADER_TEX_OPT(metal, 5)
 
     LitT_BP_PS(GraphicsContext* _ctx) : PixelShader(_ctx) {}
 
@@ -69,9 +72,9 @@ public:
         
         glm::vec4 albedo;
         if (Has_diffuse())
-            albedo = Color::ToVec4(diffuse(uv));
+            albedo = Color::ToVec4(diffuse(uv)) * mat().diffuseAlbedo;
         else
-            albedo = Color::ToVec4(_in.color);
+            albedo = Color::ToVec4(_in.color) * mat().diffuseAlbedo;
         
         glm::vec3 normalW;
         if (Has_normal())
@@ -82,19 +85,28 @@ public:
         }
         else
             normalW = glm::normalize(_in.normal);
-        
-        glm::vec3 ambientFactor = Light().ambientLight * glm::vec3(mat().diffuseAlbedo) * glm::vec3(albedo);
-        if (Has_ambient())
-            ambientFactor *= Color::ToVec3(ambient(uv));
 
         float roughnessFactor;
         if  (Has_roughness())
             roughnessFactor = Color::ToVec4(roughness(uv)).x;
         else
             roughnessFactor = mat().roughness;
+        
+        float metalnessFactor;
+        if  (Has_metal())
+            metalnessFactor = Color::ToVec4(metal(uv)).b;
+        else
+            metalnessFactor = mat().metalness;
 
+        glm::vec4 diffuse = albedo * (1.0f - metalnessFactor);
+        glm::vec3 F0 = glm::mix(mat().fresnelR0, glm::vec3(albedo), metalnessFactor);
         float shininess = 1.0f - roughnessFactor;
-        BlinnPhongData d = { albedo, mat().fresnelR0, shininess};
+        
+        glm::vec3 ambientFactor = Light().ambientLight * (glm::vec3(diffuse) + F0);
+        if (Has_ambient())
+            ambientFactor *= Color::ToVec3(ambient(uv));
+        
+        BlinnPhongData d = { diffuse, F0, shininess};
         glm::vec3 shadowFactor = glm::vec3(1.0f, 1.0f, 1.0f);
         glm::vec4 directLight = ComputeLighting(Light(), d, _in.positionModel, normalW, toEye, shadowFactor);
 

@@ -45,7 +45,7 @@ void Engine::RotateCamera(float _yaw, float _pitch)
 
 void Engine::InitLightScene()
 {
-    m_lightData.lights[0] = MakeDirectionalLight({1.0f, -1.0f, 1.0f}, 0.5f);
+    m_lightData.lights[0] = MakeDirectionalLight({1.0f, -1.0f, 1.0f}, 0.8f);
 }
 
 void Engine::UpdateCamera(float _dt)
@@ -87,19 +87,20 @@ void Engine::init(Texture* _frameBuffer)
     m_camera.SetAspectRatio((float)WIDTH / (float)HEIGHT);
     m_camTransform.SetPosition(glm::vec3(0.0f, 0.0f, -5.0f));
     
-    m_mesh = GeometryFactory::Instance()->BuildCube();
-    // m_mesh = GeometryFactory::Instance()->BuildDonut(1.0f, 0.3f, 32, 32);
+    // m_mesh = GeometryFactory::Instance()->BuildCube();
+    m_mesh = GeometryFactory::Instance()->BuildDonut(1.0f, 0.3f, 32, 32);
     
     Handle diff = TextureFactory::Instance()->CreateTexture("dark_rock_diffuse", "Assets/Textures/DarkRock/diffuse.png");
     Handle ambient = TextureFactory::Instance()->CreateTexture("dark_rock_ambient", "Assets/Textures/DarkRock/ambient.png");
     Handle normal = TextureFactory::Instance()->CreateTexture("dark_rock_normal", "Assets/Textures/DarkRock/normal.png");
     Handle roughness = TextureFactory::Instance()->CreateTexture("dark_rock_roughness", "Assets/Textures/DarkRock/roughness.png");
     Handle displacement = TextureFactory::Instance()->CreateTexture("dark_rock_displacement", "Assets/Textures/DarkRock/displacement.png");
+    Handle metalness = TextureFactory::Instance()->CreateTexture("dark_rock_metalness", "Assets/Textures/DarkRock/metalness.png");
     
     LitT_BP_PS::MaterialCB cb = {
         {1.0f, 1.0f, 1.0f, 1.0f}, 
             Lighting::g_fresnelR0Templates[PLASTIC], 
-                0.2f, 0.08f
+                0.5f, 0.02f, 0.8f
     };
     
     m_material = ShaderFactory::Instance()->CreateMaterial("LitT_BP");
@@ -109,6 +110,7 @@ void Engine::init(Texture* _frameBuffer)
     m_material->SetTexture(LitT_BP_PS::TEX_SLOT_normal, normal);
     m_material->SetTexture(LitT_BP_PS::TEX_SLOT_roughness, roughness);
     m_material->SetTexture(LitT_BP_PS::TEX_SLOT_displacement,displacement );
+    m_material->SetTexture(LitT_BP_PS::TEX_SLOT_metal, metalness);
 }
 
 void Engine::handleEvent(const SDL_Event& event)

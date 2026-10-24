@@ -11,21 +11,17 @@ namespace Lighting
 {
     enum FresnelTemplates : int
     {
-        WATER, PLASTIC, GLASS, CRYSTAL, DIAMOND, GOLD, SILVER, COPPER, ALUMINUM, 
+        WATER, PLASTIC, GLASS, CRYSTAL, DIAMOND, 
         COUNT  
     };
     
     static std::array<glm::vec3, FresnelTemplates::COUNT> g_fresnelR0Templates(
     {
         {0.02f, 0.02f, 0.02f}, // WATER
-        { 0.05f, 0.05f, 0.05f}, // PLASTIC
+        { 0.04f, 0.04f, 0.04f}, // PLASTIC
         { 0.08f, 0.08f, 0.08f}, // GLASS
         {0.11, 0.11, 0.11}, // CRYSTAL
         {0.17, 0.17, 0.17}, // DIAMOND
-        {1.0, 0.71, 0.29}, // GOLD
-        {0.95, 0.93, 0.88}, // SILVER
-        {0.95, 0.64, 0.54}, // COPPER
-        {0.91, 0.92, 0.92} // ALUMINUM
     });
     
     struct BlinnPhongData
