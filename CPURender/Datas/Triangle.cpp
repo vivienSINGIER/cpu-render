@@ -41,13 +41,13 @@ glm::vec3 BarycentricWeightPerspective(const glm::vec3& _bary, float _w1, float 
     float invW2 = 1 / _w2;
     float invW3 = 1 / _w3;
 
-    float gamma = _bary.x * _w1 + _bary.y * _w2 + _bary.z * _w3;
+    float gamma = _bary.x * invW1 + _bary.y * invW2 + _bary.z * invW3;
     float invGamma = 1/gamma;
 
     glm::vec3 weightsCorrected = {
-        _bary.x * _w1* invGamma,
-        _bary.y * _w2* invGamma,
-        _bary.z * _w3* invGamma };
+        _bary.x * invW1 * invGamma,
+        _bary.y * invW2 * invGamma,
+        _bary.z * invW3 * invGamma };
 
     return weightsCorrected;
 }
