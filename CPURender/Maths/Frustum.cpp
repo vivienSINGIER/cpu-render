@@ -1,7 +1,7 @@
 #include "Frustum.h"
 
 #include "AABB.h"
-
+#include <iostream>
 
 Frustum::Frustum(bool _isGl)
 {
@@ -126,4 +126,43 @@ bool Frustum::Intersects(AABB const& _o) const
     }
 
     return true;
+}
+
+void Frustum::PrintDebug() const
+{
+    for (int i = 0; i < 6; ++i)
+    {
+        const glm::vec3& n = planes[i].normal;
+
+        std::cout << "Plane ";
+
+        switch (i)
+        {
+        case 0:
+            std::cout << "Left";
+            break;
+
+        case 1:
+            std::cout << "Right";
+            break;
+
+        case 2:
+            std::cout << "Bottom";
+            break;
+
+        case 3:
+            std::cout << "Up";
+            break;
+
+        case 4:
+            std::cout << "Near";
+            break;
+
+        case 5:
+            std::cout << "Far";
+            break;
+        }
+
+        std::cout << " : n(" << n.x << ", " << n.y << ", " << n.z << ")\n";
+    }
 }

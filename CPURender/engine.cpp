@@ -73,10 +73,20 @@ void Engine::UpdateCamera(float _dt)
 void Engine::init(Texture* _frameBuffer)
 {
     srand(time(nullptr));
-    Octree o(100.f);
-    o.Update();
+    
+    Object* o1 = mainScene.CreateObject(DYNAMIC);
+    o1->transform.SetPosition(glm::vec3(0, 0, 0));
 
-    exit(0);
+    o1->mesh = GeometryFactory::Instance()->BuildCube();
+    o1->mat = ShaderFactory::Instance()->CreateMaterial("UnlitC");
+    o1->mat->SetParams<UnlitPS::UnlitColor>(CB_CUSTOM, { Color::GREEN });
+
+   /* Object* o2 = mainScene.CreateObject(DYNAMIC);
+    o2->transform.SetPosition(glm::vec3(0, 0, 0));
+
+    o2->mesh = GeometryFactory::Instance()->BuildUVSphere(10, 10);
+    o2->mat = ShaderFactory::Instance()->CreateMaterial("UnlitC");
+    o2->mat->SetParams<UnlitPS::UnlitColor>(CB_CUSTOM, { Color::RED });*/
 
     printf("Init engine \n");
     
@@ -85,11 +95,6 @@ void Engine::init(Texture* _frameBuffer)
     
     m_camera.SetAspectRatio((float)WIDTH / (float)HEIGHT);
     m_camTransform.SetPosition(glm::vec3(0.0f, 0.0f, -5.0f));
-    
-    m_mesh = GeometryFactory::Instance()->BuildCube();
-    
-    m_material = ShaderFactory::Instance()->CreateMaterial("UnlitC");
-    m_material->SetParams<UnlitPS::UnlitColor>(CB_CUSTOM, { Color::GREEN });
 }
 
 void Engine::handleEvent(const SDL_Event& event)
@@ -100,24 +105,30 @@ void Engine::handleEvent(const SDL_Event& event)
     }
 }
 
-void Engine::renderFrame()
+void Engine::mainLoop()
 {
     uint64_t now = SDL_GetPerformanceCounter();
     float dt = m_lastTime == 0 ? 0.0f : (float)(now - m_lastTime) / (float)SDL_GetPerformanceFrequency();
     m_lastTime = now;
 
-    std::cout << "FPS : " << 1 / dt << "\n";
-    
+    //std::cout << "FPS : " << 1 / dt << "\n";
+
+    // Update //
     UpdateCamera(glm::min(dt, MAX_DELTA_TIME));
-    
     if (m_camTransform.IsWorldDirty())
+    {
         m_camera.SetWorld(m_camTransform.GetMatrix());
-    
+    }
+
+    //m_test->transform.AddYPR(glm::vec3(dt, 0, 0));
+    mainScene.Update(dt);
+
+    // Draw //
     m_device.BeginDraw();
-    
-    m_device.RegisterCommand(m_mesh, m_meshTransform.GetMatrix(), m_material.get());
+
+    mainScene.Draw(&m_device, m_camera.GetFrustum());
     m_device.Draw();
-    
+
     m_device.EndDraw();
 }
 
