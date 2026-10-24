@@ -99,6 +99,8 @@ void Device::ExecCommand(DrawCommand const& _cmd)
 	std::vector<Vertex_OUT> vBuffer;
 	std::vector<size_t> iBuffer;
 	
+	wPreDiv.clear();
+
 	VertexShaderStep(_cmd.mesh, res, stages, vBuffer);
 	ClippingStep(vBuffer);
 	ClipToScreen(vBuffer);
@@ -272,7 +274,7 @@ void Device::ClipToScreen(std::vector<Vertex_OUT>& _inOut)
 {
 	for (uint32_t v = 0; v < _inOut.size(); v++)
 	{
-		_inOut[v].wPreDiv = _inOut[v].positionH.w;
+		wPreDiv.push_back(_inOut[v].positionH.w);
 
 		// Perspective Divide
 		_inOut[v].positionH /= _inOut[v].positionH.w;
@@ -300,25 +302,39 @@ void Device::RasterStep(std::vector<Vertex_OUT> const& _vBuffer, ShaderResources
 		box.y = fmax(box.y, 0);
 		box.z = fmin(box.z, WIDTH);
 		box.w = fmin(box.w, HEIGHT);
-		
+
+		glm::vec3 initial = BarycentricWeight({ box.x, box.y}, currentTriangle);
+		glm::vec3 incRight = (BarycentricWeight({box.z, box.y}, currentTriangle) - initial) / (box.z - box.x);
+		glm::vec3 incDown = (BarycentricWeight({ box.x, box.w }, currentTriangle) - initial) / (box.w - box.y);
+
 		for (int32_t x = box.x; x < box.z; x++) 
 		{
+			glm::vec3 bary = initial + incRight * (float)((x + 0.5f) - box.x) + incDown * 0.5f;
+
 			for (int32_t y = box.y; y < box.w; y++) 
 			{
-				if (IsInTriangle({ x + 0.5f, y + 0.5f }, currentTriangle))
+				glm::vec3 baryP = BarycentricWeightPerspective(bary, wPreDiv[v], wPreDiv[v + 1], wPreDiv[v + 2]);
+
+				if (IsInTriangle(bary))
 				{
-					Vertex_OUT px = InterpolateVertex(glm::vec2({ x + 0.5f, y + 0.5f }), currentTriangle);
-					float pixelDepth = px.positionH.z;
+					glm::vec4 posH = InterpolatePositionH(glm::vec2({ x + 0.5f, y + 0.5f }), currentTriangle, baryP);
+					float pixelDepth = posH.z;
 					
 					if (pixelDepth > 1.0f || pixelDepth < 0.0f)
 						continue;
 					if (pixelDepth > db->GetPixelData<float>(x, y))
 						continue;
 
-					db->SetPixelData<float>(x, y, px.positionH.z);
+					Vertex_OUT px;
+					px.positionH = posH;
+					InterpolateVertex(px, glm::vec2({ x + 0.5f, y + 0.5f }), currentTriangle, baryP);
+
+					db->SetPixelData<float>(x, y, pixelDepth);
 
 					fb->SetPixelColor(x, y, _s.ps->Execute(_r, px));
 				}
+
+				bary += incDown;
 			}
 		}
 	}
