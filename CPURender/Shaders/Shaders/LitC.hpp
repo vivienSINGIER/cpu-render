@@ -21,7 +21,6 @@ public:
         v.color = _in.color;
         v.positionH = glm::vec4({ _in.position, 1 });
         v.positionH = Pass().proj * Pass().view * Object().model * v.positionH;
-        v.wPreDiv = 1.0f;
         return v;
     }
 };
