@@ -30,7 +30,7 @@ Frustum::Frustum(glm::mat4x4 const& _view, glm::mat4x4 const& _proj, bool _isGl)
             return res;
         };
 
-    glm::mat4x4 vp = _view * _proj;
+    glm::mat4x4 vp = _proj * _view;
     
     glm::vec4 C0 = GetColumn(vp, 0);
     glm::vec4 C1 = GetColumn(vp, 1);
