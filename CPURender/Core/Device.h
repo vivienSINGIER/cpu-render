@@ -53,6 +53,7 @@ private:
 	
 	GraphicsContext m_ctx;
 	
+	std::vector<float> wPreDiv;
 	void VertexShaderStep(Mesh const& _mesh, ShaderStages _s, std::vector<Vertex_OUT>& _out);
 	
 	void ClippingStep(std::vector<Vertex_OUT>& _inOut);
