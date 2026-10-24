@@ -11,29 +11,8 @@ void Scene::Draw(Device* _device, Frustum const& _frustum)
 {
 	std::vector<Object*> to_draw = {};
 
-	//FRUSTUM CULLING TEST
-	//Outside Boxes
-
-	for (Object* o : m_dynamic_objects)
-	{
-		AABB& box = o->mesh.world_box;
-		glm::vec3 center = box.Center();
-
-		bool intersect = _frustum.Intersects(box);
-		bool contains = _frustum.Contains(center);
-
-		std::cout << o << " | intersect = " << intersect << " | contains = " << contains << std::endl;
-
-		if (!intersect && !contains)
-		{
-			continue;
-		}
-
-		to_draw.push_back(o);
-	}
-
-	/*to_draw = m_octTree.GetDatasInFrustum(_frustum);*/
-	//std::cout << "Draw : " << to_draw.size() << std::endl;
+	to_draw = m_octTree.GetDatasInFrustum(_frustum);
+	std::cout << "Draw : " << to_draw.size() << std::endl;
 
 	for (Object* o : to_draw)
 	{
