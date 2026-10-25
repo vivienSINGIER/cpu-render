@@ -107,7 +107,7 @@ void Camera::UpdateMatrices()
 {
     m_view = glm::inverse(m_world);
 
-    m_viewProj = m_view * m_proj;
+    m_viewProj = m_proj * m_view;
     m_frustum = Frustum(m_viewProj, true);
     m_viewProj = glm::transpose(m_viewProj); //hlsl
 

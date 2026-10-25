@@ -27,7 +27,7 @@ float AABB::Volume() const
 {
     glm::vec3 l = Extent() * 2.0f;
     
-    return l.x * l.y * l.x;
+    return l.x * l.y * l.z;
 }
 
 void AABB::SetCenter(glm::vec3 const& _center)

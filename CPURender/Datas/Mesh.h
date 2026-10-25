@@ -6,6 +6,7 @@
 #include "Color.h"
 
 #include "../Heaps/Handle.hpp"
+#include "../Maths/AABB.h"
 
 struct Vertex
 {
@@ -31,8 +32,11 @@ using Index = uint32_t;
 struct Mesh
 {
 	Handle vertexBuffer;
-	uint32_t vertexCount;
+	uint32_t vertexCount = 0;
 	Handle indexBuffer;
-	uint32_t indexCount;
+	uint32_t indexCount = 0;
+
+	AABB local_box;
+	AABB world_box;
 };
 

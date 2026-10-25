@@ -150,6 +150,7 @@
     <ClCompile Include="Datas\Color.cpp" />
     <ClCompile Include="Datas\Mesh.cpp" />
     <ClCompile Include="Datas\Object.cpp" />
+    <ClCompile Include="Datas\Scene.cpp" />
     <ClCompile Include="Datas\Texture.cpp" />
     <ClCompile Include="Datas\Triangle.cpp" />
     <ClCompile Include="engine.cpp" />
@@ -159,6 +160,7 @@
     <ClCompile Include="Heaps\ConstantBufferHeap.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Maths\PerlinNoise.cpp" />
+    <ClCompile Include="Octree.cpp" />
     <ClCompile Include="Shaders\ShaderBase\Material.cpp" />
     <ClCompile Include="Shaders\ShaderBase\Shader.cpp" />
     <ClCompile Include="Shaders\ShaderBase\ShaderGroup.cpp" />
@@ -182,6 +184,7 @@
     <ClInclude Include="Datas\Mesh.h" />
     <ClInclude Include="Datas\Morton.hpp" />
     <ClInclude Include="Datas\Object.h" />
+    <ClInclude Include="Datas\Scene.h" />
     <ClInclude Include="Datas\Texture.h" />
     <ClInclude Include="Datas\Texture.inl" />
     <ClInclude Include="Datas\Triangle.h" />
@@ -206,6 +209,7 @@
     <ClInclude Include="Maths\Plane.h" />
     <ClInclude Include="Maths\Ray.h" />
     <ClInclude Include="Maths\Transform.h" />
+    <ClInclude Include="Octree.h" />
     <ClInclude Include="Shaders\ShaderBase\Material.h" />
     <ClInclude Include="Shaders\ShaderBase\Material.inl" />
     <ClInclude Include="Shaders\ShaderBase\Shader.h" />
