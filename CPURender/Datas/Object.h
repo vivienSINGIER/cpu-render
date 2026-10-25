@@ -21,6 +21,6 @@ struct Object
 
 	Mesh mesh;
 	Transform transform;
-	Material mat;
+	MaterialData const* mat;
 };
 

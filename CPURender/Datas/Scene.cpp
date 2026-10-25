@@ -16,7 +16,7 @@ void Scene::Draw(Device* _device, Frustum const& _frustum)
 
 	for (Object* o : to_draw)
 	{
-		_device->RegisterCommand(o->mesh, o->transform.GetMatrix(), o->mat.get());
+		_device->RegisterCommand(o->mesh, o->transform.GetMatrix(), o->mat);
 	}
 }
 

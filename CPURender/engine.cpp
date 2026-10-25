@@ -103,18 +103,32 @@ void Engine::init(Texture* _frameBuffer)
                 0.5f, 0.02f, 0.8f
     };
 
-    ref = mainScene.CreateObject(DYNAMIC);
-    ref->transform.SetPosition(glm::vec3(-1, -0.5f, 0));
+    Mesh m = GeometryFactory::Instance()->BuildUVSphere(20, 20, true);
 
-    ref->mesh = GeometryFactory::Instance()->BuildCube();
-    ref->mat = ShaderFactory::Instance()->CreateMaterial("LitT_BP");
-    ref->mat->SetParams<LitT_BP_PS::MaterialCB>(LitT_BP_PS::CB_SLOT_mat, cb);
-    ref->mat->SetTexture(LitT_BP_PS::TEX_SLOT_diffuse, diff);
-    ref->mat->SetTexture(LitT_BP_PS::TEX_SLOT_ambient, ambient);
-    ref->mat->SetTexture(LitT_BP_PS::TEX_SLOT_normal, normal);
-    ref->mat->SetTexture(LitT_BP_PS::TEX_SLOT_roughness, roughness);
-    ref->mat->SetTexture(LitT_BP_PS::TEX_SLOT_displacement,displacement );
-    ref->mat->SetTexture(LitT_BP_PS::TEX_SLOT_metal, metalness);
+    m_mat = ShaderFactory::Instance()->CreateMaterial("LitT_BP");
+    m_mat->SetParams<LitT_BP_PS::MaterialCB>(LitT_BP_PS::CB_SLOT_mat, cb);
+    m_mat->SetTexture(LitT_BP_PS::TEX_SLOT_diffuse, diff);
+    m_mat->SetTexture(LitT_BP_PS::TEX_SLOT_ambient, ambient);
+    m_mat->SetTexture(LitT_BP_PS::TEX_SLOT_normal, normal);
+    m_mat->SetTexture(LitT_BP_PS::TEX_SLOT_roughness, roughness);
+    m_mat->SetTexture(LitT_BP_PS::TEX_SLOT_displacement, displacement);
+    m_mat->SetTexture(LitT_BP_PS::TEX_SLOT_metal, metalness);
+
+    for (int i = -1; i < 2; ++i)
+    {
+        for (int j = -1; j < 2; ++j)
+        {
+            for (int k = -1; k < 2; ++k)
+            {
+                Object* o = mainScene.CreateObject(DYNAMIC);
+                o->mesh = m;
+                o->mat = m_mat.get();
+                o->transform.SetPosition(glm::vec3(i*3, j*3, k*3));
+            }
+        }
+    }
+
+    std::cout << "End Init" << std::endl;
 }
 
 void Engine::handleEvent(const SDL_Event& event)
@@ -140,7 +154,6 @@ void Engine::mainLoop()
         m_camera.SetWorld(m_camTransform.GetMatrix());
     }
 
-    ref->transform.AddYPR(glm::vec3(dt, 0, 0));
     mainScene.Update(dt);
 
     // Draw //

@@ -40,6 +40,8 @@ private:
 	Camera m_camera;
 	Transform m_camTransform;
 
+	Material m_mat;
+
 	LightData m_lightData;
 	
 	void InitLightScene();
