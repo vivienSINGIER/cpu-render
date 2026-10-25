@@ -52,7 +52,7 @@ public:
 
     LitT_BP_PS(GraphicsContext* _ctx) : PixelShader(_ctx) {}
 
-    inline float Depth(glm::vec2 _uv) const { return 1.0f - Color::ToVec4(displacement(_uv)).x; }
+    inline float Depth(glm::vec2 _uv) const { return 1.0f - displacement(_uv).x; }
     
     inline Color Execute(Vertex_OUT const& _in) const override
     {
@@ -72,14 +72,14 @@ public:
         
         glm::vec4 albedo;
         if (Has_diffuse())
-            albedo = Color::ToVec4(diffuse(uv)) * mat().diffuseAlbedo;
+            albedo = diffuse(uv) * mat().diffuseAlbedo;
         else
             albedo = Color::ToVec4(_in.color) * mat().diffuseAlbedo;
         
         glm::vec3 normalW;
         if (Has_normal())
         {
-            glm::vec3 sampledN = Color::ToVec3(normal(uv));
+            glm::vec3 sampledN = glm::vec3(normal(uv));
             sampledN = sampledN * 2.0f - 1.0f;
             normalW = glm::normalize(TBN * sampledN);
         }
@@ -88,13 +88,13 @@ public:
 
         float roughnessFactor;
         if  (Has_roughness())
-            roughnessFactor = Color::ToVec4(roughness(uv)).x;
+            roughnessFactor = roughness(uv).x;
         else
             roughnessFactor = mat().roughness;
         
         float metalnessFactor;
         if  (Has_metal())
-            metalnessFactor = Color::ToVec4(metal(uv)).b;
+            metalnessFactor = metal(uv).b;
         else
             metalnessFactor = mat().metalness;
 
@@ -104,7 +104,7 @@ public:
         
         glm::vec3 ambientFactor = Light().ambientLight * (glm::vec3(diffuse) + F0);
         if (Has_ambient())
-            ambientFactor *= Color::ToVec3(ambient(uv));
+            ambientFactor *= glm::vec3(ambient(uv));
         
         BlinnPhongData d = { diffuse, F0, shininess};
         glm::vec3 shadowFactor = glm::vec3(1.0f, 1.0f, 1.0f);

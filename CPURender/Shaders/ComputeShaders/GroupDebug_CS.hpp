@@ -23,15 +23,12 @@ public:
         glm::uvec3 group = _id / gs;
         glm::uvec3 local = _id % gs;
 
-        uint32_t r = local.x * 255 / (gs.x - 1);
-        uint32_t g = local.y * 255 / (gs.y - 1);
-        uint32_t b = ((group.x + group.y) & 1) ? 255 : 0;
+        float r = (float)local.x / (float)(gs.x - 1);
+        float g = (float)local.y / (float)(gs.y - 1);
+        float b = ((group.x + group.y) & 1) ? 1.0 : 0.0;
         
-        Color scene = Load_target(_id.x, _id.y);
-        Store_target(_id.x, _id.y, Color(255,
-            (glm::uint8)((scene.r + r) / 2),
-            (glm::uint8)((scene.g + g) / 2),
-            (glm::uint8)((scene.b + b) / 2)));
+        glm::vec4 scene = Load_target(_id.x, _id.y);
+        Store_target(_id.x, _id.y, { (scene.r + r) / 2.0f, (scene.g + g) / 2.0f, (scene.b + b) / 2.0f, 1.0f });
     }
 };
 

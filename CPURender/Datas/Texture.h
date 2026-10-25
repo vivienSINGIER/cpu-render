@@ -16,15 +16,16 @@ class Texture
 {
 public:
     enum Encoding { MORTON, LINEAR };
+    enum Format { ARGB8, R32F };
     
-    Texture(uint32 _width = 256, uint32 _height = 256, Encoding _enc = MORTON, Color _color = Color::BLACK);
+    Texture(uint32 _width = 256, uint32 _height = 256, Format _format = ARGB8, Encoding _enc = MORTON, Color _color = Color::BLACK);
     ~Texture() = default;
 
     Texture ToLinear() const;
     
     void Load(std::string const& _filePath);
-    void Clear(Color _color = Color::BLACK);
     
+    Format GetFormat()                              const;
     uint32 Size()                                   const;
     uint32 Width()                                  const;
     uint32 Height()                                 const;
@@ -33,8 +34,14 @@ public:
     
     Color SampleNP(glm::vec2 uv) const;
     
-    void SetPixelColor(uint32 _x, uint32 _y, Color _color);
-    Color GetPixelColor(uint32 _x, uint32 _y)  const;
+    // vec4 is always (r, g, b, a)
+    glm::vec4   Load(uint32 _x, uint32 _y) const;
+    void        Store(uint32 _x, uint32 _y, glm::vec4 _v);
+    void        Clear(glm::vec4 _color);
+    
+    Color LoadC(uint32 _x, uint32 _y)  const;
+    void Store(uint32 _x, uint32 _y, Color _color);
+    void Clear(Color _color = Color::BLACK);
     
     template <typename T>
     T GetPixelData(uint32 _x, uint32 _y);
@@ -50,6 +57,7 @@ private:
     uint32 m_size;
     
     Encoding m_encoding;
+    Format m_format;
     
     uint32 GetIndex(uint32 _x, uint32 _y) const;
 };

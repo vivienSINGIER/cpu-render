@@ -16,8 +16,8 @@ Device::Device() : m_ctx()
 	
 	m_defaultFB.width = WIDTH;
 	m_defaultFB.height = HEIGHT;
-	m_defaultFB.gBuffer[0] = m_ctx.textureHeap.Create<Texture>(WIDTH, HEIGHT, Texture::Encoding::MORTON, Color::WHITE);
-	m_defaultFB.depthBuffer = m_ctx.textureHeap.Create<Texture>(WIDTH, HEIGHT, Texture::Encoding::MORTON, Color::BLACK);
+	m_defaultFB.gBuffer[0] = m_ctx.textureHeap.Create<Texture>(WIDTH, HEIGHT, Texture::ARGB8, Texture::MORTON, Color::WHITE);
+	m_defaultFB.depthBuffer = m_ctx.textureHeap.Create<Texture>(WIDTH, HEIGHT, Texture::R32F, Texture::MORTON, Color::BLACK);
 	m_defaultFB.clearColor = Color(255, 20, 20, 20);
 	
 	m_boundFB = m_defaultFB;
@@ -64,7 +64,7 @@ void Device::Clear(FrameBuffer _fb, ClearFlags _flags)
 		return;
 	
 	Texture* depth = m_ctx.textureHeap.Get(_fb.depthBuffer);
-	depth->Clear(std::bit_cast<Color>(1.0f));
+	depth->Clear(glm::vec4(1.0f));
 }
 
 void Device::RegisterCommand(Mesh const& _m, glm::mat4x4 _world, MaterialData const* _mat)
@@ -127,13 +127,20 @@ void Device::Present(Handle _texH)
 	
 	assert(width == WIDTH && height == HEIGHT && "Can't present texture not matching final render target format");
 	
+	bool isSingleChannel = fb->GetFormat() == Texture::R32F;
+	
 #pragma omp parallel
 #pragma omp for
 	for (uint32_t i = 0; i < HEIGHT * WIDTH; i++)
 	{
 		uint32_t y = i / WIDTH;
 		uint32_t x = i % WIDTH;
-		m_renderTarget->SetPixelColor(x, HEIGHT - y - 1, fb->GetPixelColor(x, y));
+		
+		glm::vec4 v = fb->Load(x, y);
+		// if (isSingleChannel)
+		// 	v = { v.r, v.r, v.r, 1.0f };
+
+		m_renderTarget->Store(x, HEIGHT - y - 1, Color::FromVec4(v));
 	}
 }
 
@@ -216,10 +223,10 @@ FrameBuffer Device::CreateFrameBuffer(uint32_t _w, uint32_t _h, uint32_t _colorB
 	out.clearColor = _clearColor;
 	
 	for (uint32_t i = 0; i < _colorBuffCount; i++)
-		out.gBuffer[i] = m_ctx.textureHeap.Create<Texture>(_w, _h, Texture::Encoding::MORTON, Color::WHITE);
-	
+		out.gBuffer[i] = m_ctx.textureHeap.Create<Texture>(_w, _h, Texture::ARGB8, Texture::MORTON, Color::WHITE);
+
 	if (_useDepth)
-		out.depthBuffer = m_ctx.textureHeap.Create<Texture>(_w, _h, Texture::Encoding::MORTON, Color::BLACK);
+		out.depthBuffer = m_ctx.textureHeap.Create<Texture>(_w, _h, Texture::R32F, Texture::MORTON, Color::BLACK);
 	
 	return out;
 }
@@ -470,7 +477,7 @@ void Device::RasterStep(std::vector<Vertex_OUT> const& _vBuffer, ShaderStages _s
 					if (writeColor == false)
 						continue;
 	
-					fb->SetPixelColor(x, y, _s.ps->Execute(px)); 
+					fb->Store(x, y, _s.ps->Execute(px)); 
 				}
 			}
 		}

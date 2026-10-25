@@ -44,11 +44,11 @@ protected:
     PerObjectCB const& Object() const;
 
     bool HasTexture(uint32_t _slot) const;
-    Color Sample(int _slot, glm::vec2 _uv) const;
-    Color Load(uint32_t _slot, int _x, int _y) const;
+    glm::vec4 Sample(int _slot, glm::vec2 _uv) const;
+    glm::vec4 Load(uint32_t _slot, int _x, int _y) const;
     
-    Color LoadRW(uint32_t _slot, int _x, int _y) const;
-    void StoreRW(uint32_t _slot, int _x, int _y, Color _color) const;
+    glm::vec4 LoadRW(uint32_t _slot, int _x, int _y) const;
+    void StoreRW(uint32_t _slot, int _x, int _y, glm::vec4 _color) const;
 
 private:
     std::array<CBRegister, MAX_CB> m_cb;
@@ -126,15 +126,15 @@ struct ComputeBindScope
 
 #define SHADER_TEX(name, slot)                                              \
     private: int m_bind_##name = (AddTexture(slot), slot);                  \
-    public: Color name(glm::vec2 _uv) const { return Sample(slot, _uv); }   \
-            Color name(uint32_t _x, uint32_t _y) const                      \
+    public: glm::vec4 name(glm::vec2 _uv) const { return Sample(slot, _uv); }   \
+            glm::vec4 name(uint32_t _x, uint32_t _y) const                      \
             { return Load(slot, _x, _y); }                                  \
             static constexpr int TEX_SLOT_##name = slot;
 
 #define SHADER_TEX_OPT(name, slot)                                          \
     private: int m_bind_##name = (AddTexture(slot, true), slot);            \
-    public: Color name(glm::vec2 _uv) const { return Sample(slot, _uv); }   \
-            Color name(uint32_t _x, uint32_t _y) const                      \
+    public: glm::vec4 name(glm::vec2 _uv) const { return Sample(slot, _uv); }   \
+            glm::vec4 name(uint32_t _x, uint32_t _y) const                      \
             { return Load(slot, _x, _y); }                                  \
             bool Has_##name() const { return HasTexture(slot); }            \
             static constexpr int TEX_SLOT_##name = slot;
@@ -149,9 +149,9 @@ struct ComputeBindScope
 
 #define SHADER_UAV_TEX(name, slot)                                          \
     private: int m_bind_##name = (AddRWTexture(slot), slot);                \
-    public: Color Load_##name(int _x, int _y) const                         \
+    public: glm::vec4 Load_##name(int _x, int _y) const                         \
             { return LoadRW(slot, _x, _y); }                                \
-            void Store_##name(int _x, int _y, Color _color) const           \
+            void Store_##name(int _x, int _y, glm::vec4 _color) const           \
             { StoreRW(slot, _x, _y, _color); }                          \
             static constexpr int UAV_SLOT_##name = slot;
 

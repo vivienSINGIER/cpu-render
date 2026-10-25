@@ -32,7 +32,7 @@ public:
 
     Color Execute(Vertex_OUT const& _in) const override
     {
-        return albedo(_in.uv);
+        return Color::FromVec4(albedo(_in.uv));
     }
 };
 

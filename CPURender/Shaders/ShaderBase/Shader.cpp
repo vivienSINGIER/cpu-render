@@ -56,7 +56,7 @@ bool Shader::HasTexture(uint32_t _slot) const
     return m_r->textures[_slot] != nullptr;
 }
 
-Color Shader::Sample(int _slot, glm::vec2 _uv) const
+glm::vec4 Shader::Sample(int _slot, glm::vec2 _uv) const
 {
     assert(m_r && "shader executed without bound ressources");
     assert(_slot >= 0 && _slot < MAX_TEX && "Texture slot index out of bounds");
@@ -64,20 +64,20 @@ Color Shader::Sample(int _slot, glm::vec2 _uv) const
     
     Texture const* tex = m_r->textures[_slot];
     
-    return tex->SampleNP(_uv);
+    return Color::ToVec4(tex->SampleNP(_uv));
 }
 
-Color Shader::Load(uint32_t _slot, int _x, int _y) const
+glm::vec4 Shader::Load(uint32_t _slot, int _x, int _y) const
 {
     assert(m_r && "shader executed without bound ressources");
     assert(_slot >= 0 && _slot < MAX_TEX && "Texture slot index out of bounds");
     assert(m_r->textures[_slot] != nullptr && "Can't access texture data");
     
     Texture const* tex = m_r->textures[_slot];
-    return tex->GetPixelColor(_x, _y);
+    return tex->Load(_x, _y);
 }
 
-Color Shader::LoadRW(uint32_t _slot, int _x, int _y) const
+glm::vec4 Shader::LoadRW(uint32_t _slot, int _x, int _y) const
 {
     assert(m_r && "shader executed without bound ressources");
     assert(_slot < MAX_UAV && "UAV texture slot index out of bounds");
@@ -86,10 +86,10 @@ Color Shader::LoadRW(uint32_t _slot, int _x, int _y) const
     Texture* tex = static_cast<Texture*>(m_r->uavs[_slot].data);
     assert(tex != nullptr && "Can't access UAV texture data");
     
-    return tex->GetPixelColor(_x, _y);
+    return tex->Load(_x, _y);
 }
 
-void Shader::StoreRW(uint32_t _slot, int _x, int _y, Color _color) const
+void Shader::StoreRW(uint32_t _slot, int _x, int _y, glm::vec4 _color) const
 {
     assert(m_r && "shader executed without bound ressources");
     assert(_slot < MAX_UAV && "UAV texture slot index out of bounds");
@@ -98,7 +98,7 @@ void Shader::StoreRW(uint32_t _slot, int _x, int _y, Color _color) const
     Texture* tex = static_cast<Texture*>(m_r->uavs[_slot].data);
     assert(tex != nullptr && "Can't access UAV texture data");
     
-    tex->SetPixelColor(_x, _y, _color);
+    tex->Store(_x, _y, _color);
 }
 
 
