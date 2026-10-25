@@ -20,20 +20,30 @@ public:
     Handle CreateVertexShader(Args&&... _args);
     template <typename PS, typename... Args>
     Handle CreatePixelShader(Args&&... _args);
-
+    template<typename CS, typename... Args>
+    Handle CreateComputeShader(Args&&... _args);
+    
     Handle CreateShaderGroup(Handle _vs, Handle _ps);
     template <typename VS, typename PS>
     Handle CreateShaderGroup();
 
     Material CreateMaterial(Handle _shaderGroup);
     Material CreateMaterial(std::string const& _libraryName);
+    Material CreateComputeMaterial(Handle _computeShader);
+    Material CreateComputeMaterial(std::string const& _libraryName);
     
     void RegisterGroup(std::string const& _name, Handle _shaderGroup);
     template <typename VS, typename PS>
     Handle RegisterGroup(std::string const& _name);
     
+    void RegisterCompute(std::string const& _name, Handle _computeHandle);
+    template <typename CS>
+    Handle RegisterCompute(std::string const& _name);
+    
     Handle GetGroup(std::string const& _name) const;
+    Handle GetCompute(std::string const& _name) const;
     bool HasGroup(std::string const& _name) const;
+    bool HasCompute(std::string const& _name) const;
 
 private:
     static inline ShaderFactory* g_instance = nullptr;

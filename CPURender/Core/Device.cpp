@@ -24,6 +24,7 @@ Device::Device() : m_ctx()
 	m_perPassCB = m_ctx.constantBufferHeap.Create(sizeof(PerPassCB));
 	m_lightCB = m_ctx.constantBufferHeap.Create(sizeof(LightPassCB));
 	m_perObjectCB = m_ctx.constantBufferHeap.Create(sizeof(PerObjectCB));
+	m_dispatchCB = m_ctx.constantBufferHeap.Create(sizeof(DispatchCB));
 }
 
 void Device::Clear()
@@ -48,21 +49,29 @@ void Device::BeginDraw()
 	m_mainCam->FillData(&perPassCB);
 	
 	m_ctx.constantBufferHeap.Write<PerPassCB>(m_perPassCB, perPassCB);
+
+	m_ctx.SetHeapsState(HeapState::BLOCKED);
 }
 
 void Device::RegisterCommand(Mesh const& _m, glm::mat4x4 _world, MaterialData const* _mat)
 {
 	DrawCommand d = { _m, _world, _mat };
-	m_pendingDraws.push_back(d);
+	m_pendingCmds.push_back(d);
+}
+
+void Device::Dispatch(MaterialData const* _mat, uint32_t _groupsX, uint32_t _groupsY, uint32_t _groupsZ)
+{
+	DispatchCommand d = { _mat, {_groupsX, _groupsY, _groupsZ} };
+	m_pendingCmds.push_back(d);
 }
 
 void Device::Draw()
 {
-	for (DrawCommand& d : m_pendingDraws)
+	for (Command& d : m_pendingCmds)
 	{
-		ExecCommand(d);
+		std::visit([this](auto const& _cmd) { ExecCommand(_cmd); }, d);
 	}
-	m_pendingDraws.clear();
+	m_pendingCmds.clear();
 }
 
 void Device::EndDraw()
@@ -79,6 +88,8 @@ void Device::EndDraw()
 		uint32_t x = i % WIDTH;
 		m_renderTarget->SetPixelColor(x, HEIGHT - y - 1, fb->GetPixelColor(x, y));
 	}
+
+	m_ctx.SetHeapsState(HeapState::FREE);
 }
 
 void Device::ExecCommand(DrawCommand const& _cmd)
@@ -95,7 +106,7 @@ void Device::ExecCommand(DrawCommand const& _cmd)
 	res.cbs[CB_LIGHT_PASS] = m_ctx.constantBufferHeap.GetRaw(m_lightCB);
 	res.cbs[CB_PER_OBJECT] = m_ctx.constantBufferHeap.GetRaw(m_perObjectCB);
 	
-	ShaderStages stages = m_ctx.shaderGroupHeap.Get(_cmd.material->ShaderGroupHandle())->Resolve();
+	ShaderStages stages = m_ctx.shaderGroupHeap.Get(_cmd.material->PipelineHandle())->Resolve();
 	
 	std::vector<Vertex_OUT> vBuffer;
 	std::vector<size_t> iBuffer;
@@ -106,6 +117,35 @@ void Device::ExecCommand(DrawCommand const& _cmd)
 	ClippingStep(vBuffer);
 	ClipToScreen(vBuffer);
 	RasterStep(vBuffer, stages);
+}
+
+void Device::ExecCommand(DispatchCommand const& _cmd)
+{
+	ComputeShader* cs = m_ctx.computeShaderHeap.Get(_cmd.material->PipelineHandle());
+	glm::uvec3 gs = cs->GroupSize();
+	glm::uvec3 g = _cmd.groups;
+	
+	DispatchCB cb = { g, 0, g * gs, 0 };
+	m_ctx.constantBufferHeap.Write<DispatchCB>(m_dispatchCB, cb);
+	
+	ShaderResources res;
+	_cmd.material->Resolve(res);
+	res.cbs[CB_PER_PASS] = m_ctx.constantBufferHeap.GetRaw(m_perPassCB);
+	res.cbs[CB_LIGHT_PASS] = m_ctx.constantBufferHeap.GetRaw(m_lightCB);
+	res.cbs[CB_PER_OBJECT] = m_ctx.constantBufferHeap.GetRaw(m_dispatchCB);
+	
+	ComputeBindScope bind(cs, res);
+	
+	int groupCount = (int)(g.x * g.y * g.z);
+#pragma omp parallel for schedule(dynamic)
+	for (int i = 0; i < groupCount; i++)
+	{
+		glm::uvec3 gId = { i % g.x, (i / g.x) % g.y, i / (g.x * g.y) };
+		for (uint32_t z = 0; z < gs.z; z++)
+			for (uint32_t y = 0; y < gs.y; y++)
+				for (uint32_t x = 0; x < gs.x; x++)
+					cs->Execute(gId * gs + glm::uvec3{x, y, z});
+	}
 }
 
 void Device::SetMainCamera(Camera* _c)
@@ -123,6 +163,16 @@ void Device::SetLightData(LightData const& _ld)
 	LightPassCB l;
 	FillLightPassCB(_ld, l);
 	m_ctx.constantBufferHeap.Write<LightPassCB>(m_lightCB, l);
+}
+
+Handle Device::FrameBuffer()
+{
+	return m_frameBuffer;
+}
+
+Handle Device::DepthBuffer()
+{
+	return m_depthBuffer;
 }
 
 void Device::VertexShaderStep(Mesh const& _mesh, ShaderStages _s, std::vector<Vertex_OUT>& _out)

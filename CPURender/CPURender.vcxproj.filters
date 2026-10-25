@@ -24,6 +24,12 @@
     <ClCompile Include="Heaps\ConstantBufferHeap.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Heaps\RawBufferHeap.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Heaps\UAVHeap.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="Camera.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -49,6 +55,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Datas\Triangle.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Factories\BufferFactory.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Factories\GeometryFactory.cpp">
@@ -98,7 +107,13 @@
     <ClInclude Include="Heaps\ConstantBufferHeap.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Heaps\ConstantBufferHeap.inl">
+    <ClInclude Include="Heaps\RawBufferHeap.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Heaps\RawBufferHeap.inl">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Heaps\UAVHeap.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Heaps\Handle.hpp">
@@ -147,6 +162,15 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Datas\Triangle.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Shaders\ComputeShaders\GroupDebug_CS.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Factories\BufferFactory.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Factories\BufferFactory.inl">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Factories\GeometryFactory.h">

@@ -153,10 +153,13 @@
     <ClCompile Include="Datas\Texture.cpp" />
     <ClCompile Include="Datas\Triangle.cpp" />
     <ClCompile Include="engine.cpp" />
+    <ClCompile Include="Factories\BufferFactory.cpp" />
     <ClCompile Include="Factories\GeometryFactory.cpp" />
     <ClCompile Include="Factories\ShaderFactory.cpp" />
     <ClCompile Include="Factories\TextureFactory.cpp" />
     <ClCompile Include="Heaps\ConstantBufferHeap.cpp" />
+    <ClCompile Include="Heaps\RawBufferHeap.cpp" />
+    <ClCompile Include="Heaps\UAVHeap.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Maths\PerlinNoise.cpp" />
     <ClCompile Include="Shaders\ShaderBase\Material.cpp" />
@@ -186,6 +189,8 @@
     <ClInclude Include="Datas\Texture.inl" />
     <ClInclude Include="Datas\Triangle.h" />
     <ClInclude Include="engine.h" />
+    <ClInclude Include="Factories\BufferFactory.h" />
+    <ClInclude Include="Factories\BufferFactory.inl" />
     <ClInclude Include="Factories\GeometryFactory.h" />
     <ClInclude Include="Factories\ShaderFactory.h" />
     <ClInclude Include="Factories\ShaderFactory.inl" />
@@ -193,7 +198,9 @@
     <ClInclude Include="Heaps\BufferHeap.h" />
     <ClInclude Include="Heaps\BufferHeap.inl" />
     <ClInclude Include="Heaps\ConstantBufferHeap.h" />
-    <ClInclude Include="Heaps\ConstantBufferHeap.inl" />
+    <ClInclude Include="Heaps\RawBufferHeap.h" />
+    <ClInclude Include="Heaps\RawBufferHeap.inl" />
+    <ClInclude Include="Heaps\UAVHeap.h" />
     <ClInclude Include="Heaps\Handle.hpp" />
     <ClInclude Include="Heaps\Heap.h" />
     <ClInclude Include="Heaps\Heap.inl" />
@@ -208,15 +215,17 @@
     <ClInclude Include="Maths\Transform.h" />
     <ClInclude Include="Shaders\ShaderBase\Material.h" />
     <ClInclude Include="Shaders\ShaderBase\Material.inl" />
+    <ClInclude Include="Shaders\ShaderBase\ResourceLayout.hpp" />
     <ClInclude Include="Shaders\ShaderBase\Shader.h" />
     <ClInclude Include="Shaders\ShaderBase\Shader.inl" />
     <ClInclude Include="Shaders\ShaderBase\ShaderGroup.h" />
     <ClInclude Include="Shaders\Shaders.h" />
-    <ClInclude Include="Shaders\Shaders\LitC.hpp" />
-    <ClInclude Include="Shaders\Shaders\LitC_BP.hpp" />
-    <ClInclude Include="Shaders\Shaders\LitT_BP.hpp" />
-    <ClInclude Include="Shaders\Shaders\UnlitC.hpp" />
-    <ClInclude Include="Shaders\Shaders\UnlitT.hpp" />
+    <ClInclude Include="Shaders\GraphicsShaders\LitC.hpp" />
+    <ClInclude Include="Shaders\GraphicsShaders\LitC_BP.hpp" />
+    <ClInclude Include="Shaders\GraphicsShaders\LitT_BP.hpp" />
+    <ClInclude Include="Shaders\GraphicsShaders\UnlitC.hpp" />
+    <ClInclude Include="Shaders\GraphicsShaders\UnlitT.hpp" />
+    <ClInclude Include="Shaders\ComputeShaders\GroupDebug_CS.hpp" />
     <ClInclude Include="stb_image.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

@@ -18,12 +18,18 @@ public:
     Heap<VertexShader> vertexShaderHeap;
     Heap<PixelShader> pixelShaderHeap;
     Heap<ShaderGroup> shaderGroupHeap;
+    Heap<ComputeShader> computeShaderHeap;
     
     Heap<Texture> textureHeap;
     Heap<Texture> frameBufferHeap;
     
     ConstantBufferHeap constantBufferHeap;
+    UAVHeap uavHeap;
     
+    void SetHeapsState(HeapState _state);
+    
+    Texture* GetTexture(Handle _h);
+
 private:
     GraphicsContext();
     

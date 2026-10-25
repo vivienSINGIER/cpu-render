@@ -2,20 +2,25 @@
 
 #include "../../Core/GraphicsContext.h"
 
-void ShaderGroup::Build()
+ResourceLayout ShaderGroup::Build()
 {
     ShaderStages s = Resolve();
     
+    ResourceLayout res;
+    
+    ResourceLayout vs = s.vs->Layout();
+    ResourceLayout ps = s.ps->Layout();
+    
     for (int i = 0; i < MAX_CB; i++)
     {
-        CBSlotDesc& d = m_cbLayout[i];
-        d.isVS = s.vs->m_cb[i].isDeclared;
-        d.isPS = s.ps->m_cb[i].isDeclared;
+        CBSlotDesc& d = res.cb[i];
+        d.isVS = vs.cb[i].isDeclared;
+        d.isPS = ps.cb[i].isDeclared;
         
         d.isDeclared = d.isVS || d.isPS;
         
-        uint16_t vsSize = s.vs->m_cb[i].size;
-        uint16_t psSize = s.ps->m_cb[i].size;
+        uint16_t vsSize = vs.cb[i].size;
+        uint16_t psSize = ps.cb[i].size;
         
         if (d.isVS && d.isPS)
             assert(vsSize == psSize && "CB register format don't match accross shader group");
@@ -29,9 +34,9 @@ void ShaderGroup::Build()
 
     for (int i = 0; i < MAX_TEX; i++)
     {
-        TexSlotDesc& d = m_texLayout[i];
-        d.isVS = s.vs->m_tex[i].isDeclared;
-        d.isPS = s.ps->m_tex[i].isDeclared;
+        TexSlotDesc& d = res.tex[i];
+        d.isVS = vs.tex[i].isDeclared;
+        d.isPS = ps.tex[i].isDeclared;
         d.isDeclared = d.isVS || d.isPS;
         
         if (d.isDeclared == false)
@@ -39,27 +44,28 @@ void ShaderGroup::Build()
         
         bool bothDeclared = d.isVS && d.isPS;
         if (bothDeclared)
-            d.isOptional = s.vs->m_tex[i].isOptional && s.ps->m_tex[i].isOptional;
+            d.isOptional = vs.tex[i].isOptional && ps.tex[i].isOptional;
         else if (d.isVS)
-            d.isOptional = s.vs->m_tex[i].isOptional;
+            d.isOptional = vs.tex[i].isOptional;
         else
-            d.isOptional = s.ps->m_tex[i].isOptional;
+            d.isOptional = ps.tex[i].isOptional;
             
     }
-}
-
-CBSlotDesc ShaderGroup::CBLayout(int _slot)
-{
-    assert(_slot < MAX_CB && "Constant buffer slot index out of bounds");
     
-    return m_cbLayout[_slot];
-}
-
-TexSlotDesc ShaderGroup::TexLayout(int _slot)
-{
-    assert(_slot < MAX_TEX && "Texture slot index out of bounds");
+    for (int i = 0; i < MAX_UAV; i++)
+    {
+        UAVSlotDesc& d = res.uav[i];
+        
+        bool eqDec = vs.uav[i].isDeclared == ps.uav[i].isDeclared;
+        bool eqType = vs.uav[i].type == ps.uav[i].type;
+        bool eqStride = vs.uav[i].stride == ps.uav[i].stride;
+        
+        assert(eqDec && eqType && eqStride && "Uav register don't match between group members");
+        
+        d = vs.uav[i];
+    }
     
-    return m_texLayout[_slot];
+    return res;
 }
 
 ShaderStages ShaderGroup::Resolve()

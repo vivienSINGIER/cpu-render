@@ -35,7 +35,9 @@ private:
 	Mesh m_mesh;
 	Transform m_meshTransform;
 	Material m_material;
-	
+	Material m_groupDebug;
+	bool m_showGroups = true;
+
 	LightData m_lightData;
 	
 	void InitLightScene();

@@ -26,15 +26,20 @@ public:
 	void Clear();
 	void BeginDraw();
 	void RegisterCommand(Mesh const& _m, glm::mat4x4 _world, MaterialData const* _mat);
+	void Dispatch(MaterialData const* _mat, uint32_t _groupsX, uint32_t _groupsY, uint32_t _groupsZ);
 	void Draw();
 	void EndDraw();
 
 	void ExecCommand(DrawCommand const& _cmd);
+	void ExecCommand(DispatchCommand const& _cmd);
 
 	void SetMainCamera(Camera* _c);
 	void SetRenderTarget(Texture* _tex);
 	void SetLightData(LightData const& _ld);
 
+	Handle FrameBuffer();
+	Handle DepthBuffer();
+	
 private:
 	Handle m_frameBuffer;
 	Handle m_depthBuffer;
@@ -42,6 +47,7 @@ private:
 	Handle m_perPassCB;
 	Handle m_lightCB;
 	Handle m_perObjectCB;
+	Handle m_dispatchCB;
 	
 	Texture* m_renderTarget;
 	
@@ -49,7 +55,7 @@ private:
 	Color m_clearColor;
 	Camera* m_mainCam;
 	
-	std::vector<DrawCommand> m_pendingDraws;
+	std::vector<Command> m_pendingCmds;
 	
 	GraphicsContext m_ctx;
 	

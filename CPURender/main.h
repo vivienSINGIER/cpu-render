@@ -7,5 +7,5 @@
 #define WIDTH 1280
 #define HEIGHT 920
 
-#define SCREEN_WIDTH 2560
-#define SCREEN_HEIGHT 1600
+#define SCREEN_WIDTH 1280
+#define SCREEN_HEIGHT 920

@@ -1,11 +1,13 @@
 ﻿#ifndef SHADERS_SHADERS_H_DEFINED
 #define SHADERS_SHADERS_H_DEFINED
 
-#include "Shaders/UnlitC.hpp"
-#include "Shaders/UnlitT.hpp"
+#include "GraphicsShaders/UnlitC.hpp"
+#include "GraphicsShaders/UnlitT.hpp"
 
-#include "Shaders/LitC.hpp"
-#include "Shaders/LitC_BP.hpp"
-#include "Shaders/LitT_BP.hpp"
+#include "GraphicsShaders/LitC.hpp"
+#include "GraphicsShaders/LitC_BP.hpp"
+#include "GraphicsShaders/LitT_BP.hpp"
+
+#include "ComputeShaders/GroupDebug_CS.hpp"
 
 #endif
