@@ -112,33 +112,33 @@ void Engine::init(Texture* _frameBuffer)
 
     m_mat = ShaderFactory::Instance()->CreateMaterial("LitT_BP");
     m_mat->SetParams<LitT_BP_PS::MaterialCB>(LitT_BP_PS::CB_SLOT_mat, cb);
-    m_mat->SetTexture(LitT_BP_PS::TEX_SLOT_diffuse, diff);
-    m_mat->SetTexture(LitT_BP_PS::TEX_SLOT_ambient, ambient);
-    m_mat->SetTexture(LitT_BP_PS::TEX_SLOT_normal, normal);
-    
-    m_mat->SetTexture(LitT_BP_PS::TEX_SLOT_roughness, roughness);
-    m_mat->SetTexture(LitT_BP_PS::TEX_SLOT_displacement, displacement);
-    m_mat->SetTexture(LitT_BP_PS::TEX_SLOT_metal, metalness);
+    // m_mat->SetTexture(LitT_BP_PS::TEX_SLOT_diffuse, diff);
+    // m_mat->SetTexture(LitT_BP_PS::TEX_SLOT_ambient, ambient);
+    // m_mat->SetTexture(LitT_BP_PS::TEX_SLOT_normal, normal);
+    //
+    // m_mat->SetTexture(LitT_BP_PS::TEX_SLOT_roughness, roughness);
+    // m_mat->SetTexture(LitT_BP_PS::TEX_SLOT_displacement, displacement);
+    // m_mat->SetTexture(LitT_BP_PS::TEX_SLOT_metal, metalness);
 
-    for (int i = -1; i < 2; ++i)
-    {
-        for (int j = -1; j < 2; ++j)
-        {
-            for (int k = -1; k < 2; ++k)
-            {
+    // for (int i = -1; i < 2; ++i)
+    // {
+    //     for (int j = -1; j < 2; ++j)
+    //     {
+    //         for (int k = -1; k < 2; ++k)
+    //         {
                 Object* o = mainScene.CreateObject(DYNAMIC);
                 o->mesh = m;
                 o->mat = m_mat.get();
-                o->transform.SetPosition(glm::vec3(i*3, j*3, k*3));
-            }
-        }
-    }
+                o->transform.SetPosition(glm::vec3(0, 0, 0));
+    //         }
+    //     }
+    // }
 
-    Object* o = mainScene.CreateObject(DYNAMIC);
-    o->mesh = cube;
-    o->mat = m_mat.get();
-    o->transform.SetPosition(glm::vec3(0.0f, -5.0f, 0.f));
-    o->transform.SetScale(glm::vec3(25.0f, 0.2f, 25.0f));
+    Object* floor = mainScene.CreateObject(DYNAMIC);
+    floor->mesh = cube;
+    floor->mat = m_mat.get();
+    floor->transform.SetPosition(glm::vec3(0.0f, -5.0f, 0.f));
+    floor->transform.SetScale(glm::vec3(25.0f, 0.2f, 25.0f));
     
     
     std::cout << "End Init" << std::endl;
@@ -175,7 +175,7 @@ void Engine::mainLoop()
     
     m_camera.FillData(&m_shadowPass.view);
     m_shadowPass.view.viewProj = Lighting::ComputeDirLightViewProj(m_shadowPass.view.view, m_camera.GetShadowProj(), 
-                                        m_lightData.lights[0].light.direction, 1024, 0.0f);
+                                        m_lightData.lights[0].light.direction, 512, 0.0f);
     
     // Draw //
 
@@ -183,8 +183,11 @@ void Engine::mainLoop()
     m_device.BeginPass(m_shadowPass);
         mainScene.Draw(&m_device, m_camera.GetFrustum());
     m_device.EndPass();
+    m_device.BeginPass(m_mainPass);
+        mainScene.Draw(&m_device, m_camera.GetFrustum());
+    m_device.EndPass();
     m_device.EndFrame();
-    m_device.Present(m_shadowPass.fb.depthBuffer);
+    m_device.Present(m_mainPass.fb.gBuffer[0]);
 }
 
 void Engine::destroy()
