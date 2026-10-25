@@ -32,7 +32,7 @@ public:
     uint32 GetSize(uint32& _width, uint32& _height) const;
     void SetSize(uint32 _width, uint32 _height);
     
-    Color SampleNP(glm::vec2 uv) const;
+    glm::vec4 SampleNP(glm::vec2 uv) const; // nearest point, format aware
     
     // vec4 is always (r, g, b, a)
     glm::vec4   Load(uint32 _x, uint32 _y) const;

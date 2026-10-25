@@ -20,7 +20,7 @@ public:
         Vertex_OUT v;
         v.color = _in.color;
         v.positionModel = Object().model * glm::vec4({ _in.position, 1 });
-        v.positionH = Pass().proj * Pass().view * v.positionModel;
+        v.positionH = v.positionModel * Pass().viewProj;
         v.normal = glm::mat3x3(Object().normalMatrix) * _in.normal;
         v.tangent = glm::mat3x3(Object().normalMatrix) * _in.tangent;
         v.uv = _in.uv;

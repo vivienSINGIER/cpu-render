@@ -1,5 +1,8 @@
 #include "Device.h"
 
+#include <iostream>
+#include <ostream>
+
 #include "Binning.hpp"
 #include "../Camera.h"
 #include "../main.h"
@@ -19,8 +22,6 @@ Device::Device() : m_ctx()
 	m_defaultFB.gBuffer[0] = m_ctx.textureHeap.Create<Texture>(WIDTH, HEIGHT, Texture::ARGB8, Texture::MORTON, Color::WHITE);
 	m_defaultFB.depthBuffer = m_ctx.textureHeap.Create<Texture>(WIDTH, HEIGHT, Texture::R32F, Texture::MORTON, Color::BLACK);
 	m_defaultFB.clearColor = Color(255, 20, 20, 20);
-	
-	m_boundFB = m_defaultFB;
 	
 	m_perPassCB = m_ctx.constantBufferHeap.Create(sizeof(PerPassCB));
 	m_lightCB = m_ctx.constantBufferHeap.Create(sizeof(LightPassCB));
@@ -125,8 +126,8 @@ void Device::Present(Handle _texH)
 	uint32_t width = fb->Width();
 	uint32_t height = fb->Height();
 	
-	assert(width == WIDTH && height == HEIGHT && "Can't present texture not matching final render target format");
-	
+	bool match = width == WIDTH && height == HEIGHT;
+	// assert(width == WIDTH && height == HEIGHT && "Can't present texture not matching final render target format");
 	bool isSingleChannel = fb->GetFormat() == Texture::R32F;
 	
 #pragma omp parallel
@@ -136,9 +137,15 @@ void Device::Present(Handle _texH)
 		uint32_t y = i / WIDTH;
 		uint32_t x = i % WIDTH;
 		
-		glm::vec4 v = fb->Load(x, y);
-		// if (isSingleChannel)
-		// 	v = { v.r, v.r, v.r, 1.0f };
+		glm::vec4 v;
+		
+		if (match)
+			v = fb->Load(x, y);
+		else
+			v = fb->SampleNP({ ((float)x + 0.5f) / (float)WIDTH, ((float)y + 0.5f) / (float)HEIGHT });
+		
+		if (isSingleChannel)
+			v = { v.r, v.r, v.r, 1.0f };	
 
 		m_renderTarget->Store(x, HEIGHT - y - 1, Color::FromVec4(v));
 	}

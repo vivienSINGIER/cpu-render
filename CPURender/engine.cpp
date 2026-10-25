@@ -84,11 +84,14 @@ void Engine::init(Texture* _frameBuffer)
     InitLightScene();
     
     m_mainPass.fb = m_device.GetDefaultFrameBuffer();
+    m_shadowPass.fb = m_device.CreateFrameBuffer(2048, 2048, 0, true);
+    m_shadowPass.state.cullMode = CullMode::FRONT;
     
     m_device.SetRenderTarget(_frameBuffer);
     m_device.SetLightData(m_lightData);
     
     m_camera.SetAspectRatio((float)WIDTH / (float)HEIGHT);
+    m_camera.SetShadowDistance(25.0f);
     m_camTransform.SetPosition(glm::vec3(0.0f, 0.0f, -10.f));
 
     Handle diff = TextureFactory::Instance()->CreateTexture("dark_rock_diffuse", "Assets/Textures/DarkRock/diffuse.png");
@@ -112,7 +115,6 @@ void Engine::init(Texture* _frameBuffer)
     m_mat->SetTexture(LitT_BP_PS::TEX_SLOT_diffuse, diff);
     m_mat->SetTexture(LitT_BP_PS::TEX_SLOT_ambient, ambient);
     m_mat->SetTexture(LitT_BP_PS::TEX_SLOT_normal, normal);
-    
     
     m_mat->SetTexture(LitT_BP_PS::TEX_SLOT_roughness, roughness);
     m_mat->SetTexture(LitT_BP_PS::TEX_SLOT_displacement, displacement);
@@ -171,14 +173,18 @@ void Engine::mainLoop()
     m_mainPass.view.deltaTime = dt;
     m_mainPass.view.totalTime = static_cast<float>(now);
     
+    m_camera.FillData(&m_shadowPass.view);
+    m_shadowPass.view.viewProj = Lighting::ComputeDirLightViewProj(m_shadowPass.view.view, m_camera.GetShadowProj(), 
+                                        m_lightData.lights[0].light.direction, 1024, 0.0f);
+    
     // Draw //
 
     m_device.BeginFrame();
-    m_device.BeginPass(m_mainPass);
+    m_device.BeginPass(m_shadowPass);
         mainScene.Draw(&m_device, m_camera.GetFrustum());
     m_device.EndPass();
     m_device.EndFrame();
-    m_device.Present(m_mainPass.fb.gBuffer[0]);
+    m_device.Present(m_shadowPass.fb.depthBuffer);
 }
 
 void Engine::destroy()

@@ -74,7 +74,7 @@ void Texture::SetSize(uint32 _width, uint32 _height)
     m_data.resize(m_size);
 }
 
-Color Texture::SampleNP(glm::vec2 uv) const
+glm::vec4 Texture::SampleNP(glm::vec2 uv) const
 {
     uv.x = glm::clamp(uv.x, 0.0f, 1.0f);
     uv.y = glm::clamp(uv.y, 0.0f, 1.0f);
@@ -85,7 +85,7 @@ Color Texture::SampleNP(glm::vec2 uv) const
     if (x >= m_width)  x = m_width - 1;
     if (y >= m_height) y = m_height - 1;
 
-    return LoadC(x, y);
+    return Load(x, y);
 }
 
 glm::vec4 Texture::Load(uint32 _x, uint32 _y) const

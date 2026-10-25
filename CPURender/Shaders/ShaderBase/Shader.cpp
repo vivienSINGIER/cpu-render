@@ -64,7 +64,7 @@ glm::vec4 Shader::Sample(int _slot, glm::vec2 _uv) const
     
     Texture const* tex = m_r->textures[_slot];
     
-    return Color::ToVec4(tex->SampleNP(_uv));
+    return tex->SampleNP(_uv);
 }
 
 glm::vec4 Shader::Load(uint32_t _slot, int _x, int _y) const
