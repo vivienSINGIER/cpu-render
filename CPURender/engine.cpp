@@ -79,28 +79,6 @@ void Engine::UpdateCamera(float _dt)
 void Engine::init(Texture* _frameBuffer)
 {
     srand(time(nullptr));
-    
-    Object* o1 = mainScene.CreateObject(DYNAMIC);
-    o1->transform.SetPosition(glm::vec3(-1, -0.5f, 0));
-
-    o1->mesh = GeometryFactory::Instance()->BuildCube();
-    o1->mat = ShaderFactory::Instance()->CreateMaterial("LitT_BP");
-    o1->mat->SetParams<UnlitPS::UnlitColor>(CB_CUSTOM, { Color::GREEN });
-
-    Object* o2 = mainScene.CreateObject(DYNAMIC);
-    o2->transform.SetPosition(glm::vec3(1, -0.5f, 0));
-
-    o2->mesh = GeometryFactory::Instance()->BuildUVSphere(10, 10);
-    o2->mat = ShaderFactory::Instance()->CreateMaterial("UnlitC");
-    o2->mat->SetParams<UnlitPS::UnlitColor>(CB_CUSTOM, { Color::RED });
-
-    Object* o3 = mainScene.CreateObject(DYNAMIC);
-    o3->transform.SetPosition(glm::vec3(0, 0.5f, 0));
-
-    o3->mesh = GeometryFactory::Instance()->BuildPyramid();
-    o3->mat = ShaderFactory::Instance()->CreateMaterial("UnlitC");
-    o3->mat->SetParams<UnlitPS::UnlitColor>(CB_CUSTOM, { Color::BLUE });
-
     printf("Init engine \n");
     
     InitLightScene();
@@ -110,7 +88,7 @@ void Engine::init(Texture* _frameBuffer)
     m_device.SetLightData(m_lightData);
     
     m_camera.SetAspectRatio((float)WIDTH / (float)HEIGHT);
-    m_camTransform.SetPosition(glm::vec3(0.0f, 0.0f, -5.0f));
+    m_camTransform.SetPosition(glm::vec3(0.0f, 0.0f, -10.f));
 
     Handle diff = TextureFactory::Instance()->CreateTexture("dark_rock_diffuse", "Assets/Textures/DarkRock/diffuse.png");
     Handle ambient = TextureFactory::Instance()->CreateTexture("dark_rock_ambient", "Assets/Textures/DarkRock/ambient.png");
@@ -125,13 +103,32 @@ void Engine::init(Texture* _frameBuffer)
                 0.5f, 0.02f, 0.8f
     };
 
-    o1->mat->SetParams<LitT_BP_PS::MaterialCB>(LitT_BP_PS::CB_SLOT_mat, cb);
-    o1->mat->SetTexture(LitT_BP_PS::TEX_SLOT_diffuse, diff);
-    o1->mat->SetTexture(LitT_BP_PS::TEX_SLOT_ambient, ambient);
-    o1->mat->SetTexture(LitT_BP_PS::TEX_SLOT_normal, normal);
-    o1->mat->SetTexture(LitT_BP_PS::TEX_SLOT_roughness, roughness);
-    o1->mat->SetTexture(LitT_BP_PS::TEX_SLOT_displacement,displacement );
-    o1->mat->SetTexture(LitT_BP_PS::TEX_SLOT_metal, metalness);
+    Mesh m = GeometryFactory::Instance()->BuildCircle();
+
+    for (int i = 0; i < 4; ++i)
+    {
+        for (int j = 0; j < 4; ++i)
+        {
+            for (int k = 0; k < 4; ++k)
+            {
+                Object* o = mainScene.CreateObject(DYNAMIC);
+                o->mesh
+            }
+        }
+    }
+
+    ref = mainScene.CreateObject(DYNAMIC);
+    ref->transform.SetPosition(glm::vec3(-1, -0.5f, 0));
+
+    ref->mesh = GeometryFactory::Instance()->BuildCube();
+    ref->mat = ShaderFactory::Instance()->CreateMaterial("LitT_BP");
+    ref->mat->SetParams<LitT_BP_PS::MaterialCB>(LitT_BP_PS::CB_SLOT_mat, cb);
+    ref->mat->SetTexture(LitT_BP_PS::TEX_SLOT_diffuse, diff);
+    ref->mat->SetTexture(LitT_BP_PS::TEX_SLOT_ambient, ambient);
+    ref->mat->SetTexture(LitT_BP_PS::TEX_SLOT_normal, normal);
+    ref->mat->SetTexture(LitT_BP_PS::TEX_SLOT_roughness, roughness);
+    ref->mat->SetTexture(LitT_BP_PS::TEX_SLOT_displacement,displacement );
+    ref->mat->SetTexture(LitT_BP_PS::TEX_SLOT_metal, metalness);
 }
 
 void Engine::handleEvent(const SDL_Event& event)
@@ -157,7 +154,7 @@ void Engine::mainLoop()
         m_camera.SetWorld(m_camTransform.GetMatrix());
     }
 
-    //m_test->transform.AddYPR(glm::vec3(dt, 0, 0));
+    ref->transform.AddYPR(glm::vec3(dt, 0, 0));
     mainScene.Update(dt);
 
     // Draw //

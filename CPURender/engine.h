@@ -35,6 +35,8 @@ private:
 	//TODO REMOVE
 	Scene mainScene;
 
+	Object* ref = nullptr;
+
 	Camera m_camera;
 	Transform m_camTransform;
 
