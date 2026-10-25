@@ -34,8 +34,20 @@ Mesh GeometryFactory::CreateMesh(std::vector<Vertex>& _vertices, std::vector<Ind
 	Mesh m;
 	m.vertexCount = (uint32_t)_vertices.size();
 	m.indexCount = (uint32_t)_indices.size();
-	m.vertexBuffer = m_ctx->vertexBufferHeap.Create(_vertices.data(), m.vertexCount);
-	m.indexBuffer = m_ctx->indexBufferHeap.Create(_indices.data(), m.indexCount);
+	m.vertexBuffer = m_ctx->vertexBufferHeap.Create(_vertices.data(), (uint16_t)m.vertexCount);
+	m.indexBuffer = m_ctx->indexBufferHeap.Create(_indices.data(), (uint16_t)m.indexCount);
+
+	glm::vec3& box_min = m.local_box.min;
+	glm::vec3& box_max = m.local_box.max;
+	box_min = _vertices[0].position;
+	box_max = _vertices[0].position;
+
+	for (int i = 1; i < _vertices.size(); ++i)
+	{
+		box_min = glm::min(box_min, _vertices[i].position);
+		box_max = glm::max(box_max, _vertices[i].position);
+	}
+
 	return m;
 }
 

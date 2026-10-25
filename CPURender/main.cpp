@@ -91,7 +91,7 @@ int main(void) {
             engine.handleEvent(event);
         }
 
-        engine.renderFrame();
+        engine.mainLoop();
 
         /* Copy contents of the framebuffer to our SDL texture */
         SDL_UpdateTexture(

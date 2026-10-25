@@ -8,6 +8,8 @@
 #include "Maths/Transform.h"
 #include "Shaders/ShaderBase/Material.h"
 
+#include "Datas/Scene.h"
+
 union SDL_Event;
 
 class Engine {
@@ -16,7 +18,7 @@ public:
 
 	void handleEvent(const SDL_Event& event);
 
-	void renderFrame();
+	void mainLoop();
 
 	void destroy();
 
@@ -29,13 +31,16 @@ private:
 	uint64_t m_lastTime = 0;
 	
 	Device m_device;
+
+	//TODO REMOVE
+	Scene mainScene;
+
+	Object* ref = nullptr;
+
 	Camera m_camera;
 	Transform m_camTransform;
-	
-	Mesh m_mesh;
-	Transform m_meshTransform;
-	Material m_material;
-	Material m_groupDebug;
+
+	Material m_mat;
 
 	LightData m_lightData;
 	

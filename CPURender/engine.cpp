@@ -21,6 +21,8 @@
 #include "Factories/ShaderFactory.h"
 #include "Factories/TextureFactory.h"
 
+#include "Octree.h"
+
 namespace
 {
     constexpr float CAM_MOVE_SPEED = 3.0f;          // world units per second
@@ -76,6 +78,7 @@ void Engine::UpdateCamera(float _dt)
 
 void Engine::init(Texture* _frameBuffer)
 {
+    srand(time(nullptr));
     printf("Init engine \n");
     
     InitLightScene();
@@ -85,11 +88,8 @@ void Engine::init(Texture* _frameBuffer)
     m_device.SetLightData(m_lightData);
     
     m_camera.SetAspectRatio((float)WIDTH / (float)HEIGHT);
-    m_camTransform.SetPosition(glm::vec3(0.0f, 0.0f, -5.0f));
-    
-    // m_mesh = GeometryFactory::Instance()->BuildCube();
-    m_mesh = GeometryFactory::Instance()->BuildDonut(1.0f, 0.3f, 32, 32);
-    
+    m_camTransform.SetPosition(glm::vec3(0.0f, 0.0f, -10.f));
+
     Handle diff = TextureFactory::Instance()->CreateTexture("dark_rock_diffuse", "Assets/Textures/DarkRock/diffuse.png");
     Handle ambient = TextureFactory::Instance()->CreateTexture("dark_rock_ambient", "Assets/Textures/DarkRock/ambient.png");
     Handle normal = TextureFactory::Instance()->CreateTexture("dark_rock_normal", "Assets/Textures/DarkRock/normal.png");
@@ -102,15 +102,33 @@ void Engine::init(Texture* _frameBuffer)
             Lighting::g_fresnelR0Templates[PLASTIC], 
                 0.5f, 0.02f, 0.8f
     };
-    
-    m_material = ShaderFactory::Instance()->CreateMaterial("LitT_BP");
-    m_material->SetParams<LitT_BP_PS::MaterialCB>(LitT_BP_PS::CB_SLOT_mat, cb);
-    m_material->SetTexture(LitT_BP_PS::TEX_SLOT_diffuse, diff);
-    m_material->SetTexture(LitT_BP_PS::TEX_SLOT_ambient, ambient);
-    m_material->SetTexture(LitT_BP_PS::TEX_SLOT_normal, normal);
-    m_material->SetTexture(LitT_BP_PS::TEX_SLOT_roughness, roughness);
-    m_material->SetTexture(LitT_BP_PS::TEX_SLOT_displacement,displacement );
-    m_material->SetTexture(LitT_BP_PS::TEX_SLOT_metal, metalness);
+
+    Mesh m = GeometryFactory::Instance()->BuildUVSphere(20, 20, true);
+
+    m_mat = ShaderFactory::Instance()->CreateMaterial("LitT_BP");
+    m_mat->SetParams<LitT_BP_PS::MaterialCB>(LitT_BP_PS::CB_SLOT_mat, cb);
+    m_mat->SetTexture(LitT_BP_PS::TEX_SLOT_diffuse, diff);
+    m_mat->SetTexture(LitT_BP_PS::TEX_SLOT_ambient, ambient);
+    m_mat->SetTexture(LitT_BP_PS::TEX_SLOT_normal, normal);
+    m_mat->SetTexture(LitT_BP_PS::TEX_SLOT_roughness, roughness);
+    m_mat->SetTexture(LitT_BP_PS::TEX_SLOT_displacement, displacement);
+    m_mat->SetTexture(LitT_BP_PS::TEX_SLOT_metal, metalness);
+
+    for (int i = -1; i < 2; ++i)
+    {
+        for (int j = -1; j < 2; ++j)
+        {
+            for (int k = -1; k < 2; ++k)
+            {
+                Object* o = mainScene.CreateObject(DYNAMIC);
+                o->mesh = m;
+                o->mat = m_mat.get();
+                o->transform.SetPosition(glm::vec3(i*3, j*3, k*3));
+            }
+        }
+    }
+
+    std::cout << "End Init" << std::endl;
 }
 
 void Engine::handleEvent(const SDL_Event& event)
@@ -121,30 +139,29 @@ void Engine::handleEvent(const SDL_Event& event)
     }
 }
 
-void Engine::renderFrame()
+void Engine::mainLoop()
 {
     uint64_t now = SDL_GetPerformanceCounter();
     float dt = m_lastTime == 0 ? 0.0f : (float)(now - m_lastTime) / (float)SDL_GetPerformanceFrequency();
     m_lastTime = now;
 
     std::cout << "FPS : " << 1 / dt << "\n";
-    
+
+    // Update //
     UpdateCamera(glm::min(dt, MAX_DELTA_TIME));
-    
     if (m_camTransform.IsWorldDirty())
+    {
         m_camera.SetWorld(m_camTransform.GetMatrix());
-    
+    }
+
+    mainScene.Update(dt);
+
+    // Draw //
     m_device.BeginDraw();
-    
-    m_device.RegisterCommand(m_mesh, m_meshTransform.GetMatrix(), m_material.get());
 
-    // // queued after the draw, so it runs on the finished frame
-    // constexpr uint32_t gs = GroupDebug_CS::GROUP_SIZE;
-    // if (m_showGroups)
-    //     m_device.Dispatch(m_groupDebug.get(), (WIDTH + gs - 1) / gs, (HEIGHT + gs - 1) / gs, 1);
-
+    mainScene.Draw(&m_device, m_camera.GetFrustum());
     m_device.Draw();
-    
+
     m_device.EndDraw();
 }
 

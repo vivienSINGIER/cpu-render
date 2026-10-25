@@ -30,6 +30,8 @@ public:
 
     bool Contains(glm::vec3 const& _p) const;
     bool Intersects(AABB const& _o) const;
+
+    void PrintDebug() const;
 };
 
 #endif

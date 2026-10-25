@@ -66,6 +66,11 @@
     <ClCompile Include="Factories\ShaderFactory.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+
+    <ClCompile Include="Heaps\BufferHeap.inl">
+      <Filter>Header Files</Filter>
+    </ClCompile>
+	  
     <ClCompile Include="Maths\PerlinNoise.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -91,6 +96,12 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Maths\Transform.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Octree.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Datas\Scene.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -234,6 +245,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Shaders\Shaders\LitC.hpp">
+	  <Filter>Header Files</Filter>
+	</ClInclude>
+    <ClInclude Include="Octree.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Datas\Scene.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
