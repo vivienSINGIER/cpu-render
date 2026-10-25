@@ -12,8 +12,8 @@ namespace Clipping
     std::vector<uint8_t> GetBufferFrustumBitmask(std::vector<Vertex_OUT> _vBuffer)
     {
         std::vector<uint8_t> bufferFrustumBitmask;
-        size_t vCount = _vBuffer.size();
-        for (int i = 0; i < vCount; i++)
+        uint16_t vCount = _vBuffer.size();
+        for (uint16_t i = 0; i < vCount; i++)
         {
             bufferFrustumBitmask.push_back(GetFrustumBitmask(_vBuffer[i]));
         }
@@ -31,7 +31,7 @@ namespace Clipping
         return bitmask;
     }
 
-    uint8_t GetFrustumBitmask(Vertex_OUT _v)
+    uint8_t GetFrustumBitmask(const Vertex_OUT& _v)
     {
         uint8_t bitmask = 0;
         bitmask |= (!IsFrontOfPlane(_v, FrustumPlane::NEAR)  << 0);
@@ -44,12 +44,12 @@ namespace Clipping
         return bitmask;
     }
 
-    bool IsFrontOfPlane(Vertex_OUT _v, FrustumPlane _plane)
+    bool IsFrontOfPlane(const Vertex_OUT& _v, FrustumPlane _plane)
     {
         return (SignedDistanceToPlane(_v, _plane) > 0);
     }
 
-    float SignedDistanceToPlane(Vertex_OUT _v, FrustumPlane _side)
+    float SignedDistanceToPlane(const Vertex_OUT& _v, FrustumPlane _side)
     {
         switch (_side)
         {
@@ -63,7 +63,7 @@ namespace Clipping
         }
     }
 
-    float GetPlaneIntersection(Vertex_OUT _v1, Vertex_OUT _v2, FrustumPlane _plane)
+    float GetPlaneIntersection(const Vertex_OUT& _v1, const Vertex_OUT& _v2, FrustumPlane _plane)
     {
         float dist1 = abs(Clipping::SignedDistanceToPlane(_v1, _plane));
         float dist2 = abs(Clipping::SignedDistanceToPlane(_v2, _plane));
