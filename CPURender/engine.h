@@ -34,6 +34,10 @@ private:
 	
 	Mesh m_mesh;
 	Transform m_meshTransform;
+
+	Mesh m_terrain;
+	Transform m_terrainTransform;
+
 	Material m_material;
 	
 	LightData m_lightData;

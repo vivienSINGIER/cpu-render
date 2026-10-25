@@ -167,6 +167,7 @@
     <ClCompile Include="Maths\Plane.cpp" />
     <ClCompile Include="Maths\Ray.cpp" />
     <ClCompile Include="Maths\Transform.cpp" />
+    <ClCompile Include="TerrainGenerator.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Camera.h" />
@@ -218,6 +219,7 @@
     <ClInclude Include="Shaders\Shaders\UnlitC.hpp" />
     <ClInclude Include="Shaders\Shaders\UnlitT.hpp" />
     <ClInclude Include="stb_image.h" />
+    <ClInclude Include="TerrainGenerator.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

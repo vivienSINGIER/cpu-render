@@ -20,6 +20,7 @@
 #include "Shaders/Shaders.h"
 #include "Factories/ShaderFactory.h"
 #include "Factories/TextureFactory.h"
+#include "TerrainGenerator.h"
 
 namespace
 {
@@ -86,6 +87,7 @@ void Engine::init(Texture* _frameBuffer)
     
     m_camera.SetAspectRatio((float)WIDTH / (float)HEIGHT);
     m_camTransform.SetPosition(glm::vec3(0.0f, 0.0f, -5.0f));
+
     
     // m_mesh = GeometryFactory::Instance()->BuildCube();
     m_mesh = GeometryFactory::Instance()->BuildDonut(1.0f, 0.3f, 32, 32);
@@ -111,6 +113,13 @@ void Engine::init(Texture* _frameBuffer)
     m_material->SetTexture(LitT_BP_PS::TEX_SLOT_roughness, roughness);
     m_material->SetTexture(LitT_BP_PS::TEX_SLOT_displacement,displacement );
     m_material->SetTexture(LitT_BP_PS::TEX_SLOT_metal, metalness);
+
+    TerrainGenerator gen;
+    gen.m_cellSize = 1.0f;
+    gen.m_grid_size = 50;
+    gen.GenerateMesh();
+    m_terrain = gen.GetTerrainMesh();
+    m_terrainTransform.SetPosition(glm::vec3(0.0f, -20.0f, 0.0f));
 }
 
 void Engine::handleEvent(const SDL_Event& event)
@@ -137,6 +146,8 @@ void Engine::renderFrame()
     m_device.BeginDraw();
     
     m_device.RegisterCommand(m_mesh, m_meshTransform.GetMatrix(), m_material.get());
+    m_device.RegisterCommand(m_terrain, m_terrainTransform.GetMatrix(), m_material.get());
+
     m_device.Draw();
     
     m_device.EndDraw();
