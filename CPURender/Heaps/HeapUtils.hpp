@@ -9,9 +9,8 @@
 #define SHADER_GROUP_HEAP_ID 4
 #define COMPUTE_SHADER_HEAP_ID 5
 #define TEXTURE_HEAP_ID 6
-#define FRAMEBUFFER_HEAP_ID 7
-#define CONSTANTBUFFER_HEAP_ID 8
-#define UAV_HEAP_ID 9
+#define CONSTANTBUFFER_HEAP_ID 7
+#define UAV_HEAP_ID 8
 
 struct FreeRange
 {

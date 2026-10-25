@@ -12,8 +12,7 @@ GraphicsContext::GraphicsContext() :
     pixelShaderHeap(PIXEL_SHADER_HEAP_ID, this),
     shaderGroupHeap(SHADER_GROUP_HEAP_ID, this), 
     computeShaderHeap(COMPUTE_SHADER_HEAP_ID, this),
-    textureHeap(TEXTURE_HEAP_ID, this), 
-    frameBufferHeap(FRAMEBUFFER_HEAP_ID, this), 
+    textureHeap(TEXTURE_HEAP_ID, this),
     constantBufferHeap(CONSTANTBUFFER_HEAP_ID, this),
     uavHeap(UAV_HEAP_ID, this)
 {
@@ -31,7 +30,6 @@ void GraphicsContext::SetHeapsState(HeapState _state)
     pixelShaderHeap.SetState(_state);
     shaderGroupHeap.SetState(_state);
     textureHeap.SetState(_state);
-    frameBufferHeap.SetState(_state);
     constantBufferHeap.SetState(_state);
     uavHeap.SetState(_state);
     computeShaderHeap.SetState(_state);
@@ -39,10 +37,7 @@ void GraphicsContext::SetHeapsState(HeapState _state)
 
 Texture* GraphicsContext::GetTexture(Handle _h)
 {
-    assert((_h.HeapId() == FRAMEBUFFER_HEAP_ID || _h.HeapId() == TEXTURE_HEAP_ID) && "invalid heap id");
+    assert((_h.HeapId() == _h.HeapId() == TEXTURE_HEAP_ID) && "invalid heap id");
     
-    if (_h.HeapId() == FRAMEBUFFER_HEAP_ID)
-        return frameBufferHeap.Get(_h);
-    else
-        return textureHeap.Get(_h);
+    return textureHeap.Get(_h);
 }

@@ -38,7 +38,7 @@ void MaterialData::SetRWTexture(uint32_t _slot, Handle _h)
     assert(m_layout.uav[_slot].isDeclared && "cannot bind rw texture to undeclared slot");
     assert(_h.IsValid() && "Invalid rw texture handle");
     assert(m_layout.uav[_slot].type == UAVType::TEXTURE && "incompatible uav resource type");
-    assert((_h.HeapId() == TEXTURE_HEAP_ID || _h.HeapId() == FRAMEBUFFER_HEAP_ID) && "incompatible handle type");
+    assert((_h.HeapId() == TEXTURE_HEAP_ID) && "incompatible handle type");
     
     m_uav[_slot] = _h;
 }

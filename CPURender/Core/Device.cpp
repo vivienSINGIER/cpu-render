@@ -18,8 +18,11 @@ Device::Device() : m_ctx()
 	m_mainCam = nullptr;
 	m_renderTarget = nullptr;
 	
-	m_frameBuffer = m_ctx.frameBufferHeap.Create<Texture>(WIDTH, HEIGHT, Texture::Encoding::MORTON, Color::WHITE);
-	m_depthBuffer = m_ctx.frameBufferHeap.Create<Texture>(WIDTH, HEIGHT, Texture::Encoding::MORTON, Color::BLACK);
+	m_frameBuffer.width = WIDTH;
+	m_frameBuffer.height = HEIGHT;
+	m_frameBuffer.gBuffer[0] = m_ctx.textureHeap.Create<Texture>(WIDTH, HEIGHT, Texture::Encoding::MORTON, Color::WHITE);
+	m_frameBuffer.depthBuffer = m_ctx.textureHeap.Create<Texture>(WIDTH, HEIGHT, Texture::Encoding::MORTON, Color::BLACK);
+	m_frameBuffer.clearColor = m_clearColor;
 	
 	m_perPassCB = m_ctx.constantBufferHeap.Create(sizeof(PerPassCB));
 	m_lightCB = m_ctx.constantBufferHeap.Create(sizeof(LightPassCB));
@@ -29,10 +32,18 @@ Device::Device() : m_ctx()
 
 void Device::Clear()
 {
-	Texture* rt = m_ctx.frameBufferHeap.Get(m_frameBuffer);
-	Texture* depth = m_ctx.frameBufferHeap.Get(m_depthBuffer);
+	for (int i = 0; i < MAX_RT; i++)
+	{
+		if (m_frameBuffer.gBuffer[i].IsValid() == false)
+			continue;
+		Texture* rt = m_ctx.textureHeap.Get(m_frameBuffer.gBuffer[i]);
+		rt->Clear(m_frameBuffer.clearColor);
+	}
 	
-	rt->Clear(m_clearColor);
+	if (m_frameBuffer.useDepth == false)
+		return;
+	
+	Texture* depth = m_ctx.textureHeap.Get(m_frameBuffer.depthBuffer);
 	depth->Clear(std::bit_cast<Color>(1.0f));
 }
 
@@ -78,7 +89,19 @@ void Device::EndDraw()
 {
 	assert(m_renderTarget != nullptr && "Can't draw on uninitialized render target");
 	
-	Texture* fb = m_ctx.frameBufferHeap.Get(m_frameBuffer);
+	Present(m_frameBuffer.gBuffer[0]);
+
+	m_ctx.SetHeapsState(HeapState::FREE);
+}
+
+void Device::Present(Handle _texH)
+{
+	Texture* fb = m_ctx.textureHeap.Get(_texH);
+	
+	uint32_t width = fb->Width();
+	uint32_t height = fb->Height();
+	
+	assert(width == WIDTH && height == HEIGHT && "Can't present texture not matching final render target format");
 	
 #pragma omp parallel
 #pragma omp for
@@ -88,8 +111,6 @@ void Device::EndDraw()
 		uint32_t x = i % WIDTH;
 		m_renderTarget->SetPixelColor(x, HEIGHT - y - 1, fb->GetPixelColor(x, y));
 	}
-
-	m_ctx.SetHeapsState(HeapState::FREE);
 }
 
 void Device::ExecCommand(DrawCommand const& _cmd)
@@ -163,16 +184,6 @@ void Device::SetLightData(LightData const& _ld)
 	LightPassCB l;
 	FillLightPassCB(_ld, l);
 	m_ctx.constantBufferHeap.Write<LightPassCB>(m_lightCB, l);
-}
-
-Handle Device::FrameBuffer()
-{
-	return m_frameBuffer;
-}
-
-Handle Device::DepthBuffer()
-{
-	return m_depthBuffer;
 }
 
 void Device::VertexShaderStep(Mesh const& _mesh, ShaderStages _s, std::vector<Vertex_OUT>& _out)
@@ -348,8 +359,8 @@ void Device::RasterStep(std::vector<Vertex_OUT> const& _vBuffer, ShaderStages _s
 	Binning::InitTiles(tiles);
 	Binning::BlinningStep(_vBuffer, tiles);
 	
-	Texture* fb = m_ctx.frameBufferHeap.Get(m_frameBuffer);
-	Texture* db = m_ctx.frameBufferHeap.Get(m_depthBuffer);
+	Texture* fb = m_ctx.textureHeap.Get(m_frameBuffer.gBuffer[0]);
+	Texture* db = m_ctx.textureHeap.Get(m_frameBuffer.depthBuffer);
 	
 #pragma omp parallel
 #pragma omp for schedule(dynamic)

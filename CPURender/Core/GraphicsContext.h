@@ -21,7 +21,6 @@ public:
     Heap<ComputeShader> computeShaderHeap;
     
     Heap<Texture> textureHeap;
-    Heap<Texture> frameBufferHeap;
     
     ConstantBufferHeap constantBufferHeap;
     UAVHeap uavHeap;

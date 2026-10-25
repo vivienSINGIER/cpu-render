@@ -111,9 +111,6 @@ void Engine::init(Texture* _frameBuffer)
     m_material->SetTexture(LitT_BP_PS::TEX_SLOT_roughness, roughness);
     m_material->SetTexture(LitT_BP_PS::TEX_SLOT_displacement,displacement );
     m_material->SetTexture(LitT_BP_PS::TEX_SLOT_metal, metalness);
-
-    m_groupDebug = ShaderFactory::Instance()->CreateComputeMaterial("GroupDebug");
-    m_groupDebug->SetRWTexture(GroupDebug_CS::UAV_SLOT_target, m_device.FrameBuffer());
 }
 
 void Engine::handleEvent(const SDL_Event& event)
@@ -121,10 +118,6 @@ void Engine::handleEvent(const SDL_Event& event)
     if (event.type == SDL_EVENT_MOUSE_MOTION && (event.motion.state & SDL_BUTTON_RMASK))
     {
         RotateCamera(event.motion.xrel * CAM_MOUSE_SENSITIVITY, event.motion.yrel * CAM_MOUSE_SENSITIVITY);
-    }
-    if (event.type == SDL_EVENT_KEY_DOWN && event.key.scancode == SDL_SCANCODE_G && event.key.repeat == false)
-    {
-        m_showGroups = !m_showGroups;
     }
 }
 
@@ -145,10 +138,10 @@ void Engine::renderFrame()
     
     m_device.RegisterCommand(m_mesh, m_meshTransform.GetMatrix(), m_material.get());
 
-    // queued after the draw, so it runs on the finished frame
-    constexpr uint32_t gs = GroupDebug_CS::GROUP_SIZE;
-    if (m_showGroups)
-        m_device.Dispatch(m_groupDebug.get(), (WIDTH + gs - 1) / gs, (HEIGHT + gs - 1) / gs, 1);
+    // // queued after the draw, so it runs on the finished frame
+    // constexpr uint32_t gs = GroupDebug_CS::GROUP_SIZE;
+    // if (m_showGroups)
+    //     m_device.Dispatch(m_groupDebug.get(), (WIDTH + gs - 1) / gs, (HEIGHT + gs - 1) / gs, 1);
 
     m_device.Draw();
     

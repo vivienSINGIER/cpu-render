@@ -4,6 +4,7 @@
 #include <glm/matrix.hpp>
 #include <vector>
 
+#include "FrameBuffer.hpp"
 #include "../Heaps/Handle.hpp"
 #include "../Datas/Color.h"
 
@@ -29,6 +30,8 @@ public:
 	void Dispatch(MaterialData const* _mat, uint32_t _groupsX, uint32_t _groupsY, uint32_t _groupsZ);
 	void Draw();
 	void EndDraw();
+	
+	void Present(Handle _texH);
 
 	void ExecCommand(DrawCommand const& _cmd);
 	void ExecCommand(DispatchCommand const& _cmd);
@@ -37,13 +40,9 @@ public:
 	void SetRenderTarget(Texture* _tex);
 	void SetLightData(LightData const& _ld);
 
-	Handle FrameBuffer();
-	Handle DepthBuffer();
-	
 private:
-	Handle m_frameBuffer;
-	Handle m_depthBuffer;
-
+	FrameBuffer m_frameBuffer;
+	
 	Handle m_perPassCB;
 	Handle m_lightCB;
 	Handle m_perObjectCB;

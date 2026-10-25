@@ -176,6 +176,7 @@
     <ClInclude Include="Clipping.h" />
     <ClInclude Include="Core\Binning.hpp" />
     <ClInclude Include="Core\Device.h" />
+    <ClInclude Include="Core\FrameBuffer.hpp" />
     <ClInclude Include="Core\GraphicsContext.h" />
     <ClInclude Include="Datas\Color.h" />
     <ClInclude Include="Datas\ConstantBuffers.hpp" />
