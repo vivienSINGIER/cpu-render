@@ -1,18 +1,12 @@
 ﻿#ifndef CORE_BINNING_HPP_DEFINED
 #define CORE_BINNING_HPP_DEFINED
 
-#include <array>
 #include <vector>
 
-#include "../main.h"
 #include "../Datas/Mesh.h"
 #include "../Datas/Triangle.h"
 
 #define TILE_SIZE 32
-
-#define TILE_COUNT_W ((WIDTH + TILE_SIZE - 1) / TILE_SIZE)
-#define TILE_COUNT_H ((HEIGHT + TILE_SIZE - 1) / TILE_SIZE)
-#define TILE_COUNT (TILE_COUNT_W * TILE_COUNT_H)
 
 namespace Binning
 {
@@ -35,7 +29,16 @@ namespace Binning
         int x = 0, y = 0;
     };
     
-    using Tiles = std::array<Tile, TILE_COUNT>;
+    struct Tiles
+    {
+        std::vector<Tile> tiles;
+        int width = 0, height = 0;
+        int countW = 0, countH = 0;
+
+        int Count() const { return countW * countH; }
+        Tile&       operator[](int _i)       { return tiles[_i]; }
+        Tile const& operator[](int _i) const { return tiles[_i]; }
+    };
     
     inline BoundingBox GetBoundingBox(Triangle _tri)
     {
@@ -59,17 +62,30 @@ namespace Binning
         return BoundingBox{(int)floor(minX), (int)floor(minY), (int)ceil(maxX), (int)ceil(maxY)};
     }
     
-    inline void InitTiles(Tiles& _out)
+    inline void InitTiles(Tiles& _out, int _width, int _height)
     {
-// #pragma omp parallel
-// #pragma omp for
-        for (int i = 0; i < TILE_COUNT; i++)
+        if (_out.width == _width && _out.height == _height)
+            return;
+
+        _out.width = _width;
+        _out.height = _height;
+        _out.countW = (_width + TILE_SIZE - 1) / TILE_SIZE;
+        _out.countH = (_height + TILE_SIZE - 1) / TILE_SIZE;
+        _out.tiles.assign(_out.Count(), Tile{});
+
+        for (int i = 0; i < _out.Count(); i++)
         {
-            int y = i / TILE_COUNT_W;
-            int x = i % TILE_COUNT_W;
+            int y = i / _out.countW;
+            int x = i % _out.countW;
             _out[i].x = x * TILE_SIZE;
             _out[i].y = y * TILE_SIZE;
         }
+    }
+    
+    inline void ClearTiles(Tiles& _inOut)
+    {
+        for (Tile& t : _inOut.tiles)
+            t.entries.clear();
     }
     
     inline bool TrivialReject(Triangle const& _tri, Tile const& _tile)
@@ -106,8 +122,8 @@ namespace Binning
         BoundingBox box = Binning::GetBoundingBox(_tri);
         box.minX = std::max(box.minX, 0);
         box.minY = std::max(box.minY, 0);
-        box.maxX = std::min(box.maxX, WIDTH);
-        box.maxY = std::min(box.maxY, HEIGHT);
+        box.maxX = std::min(box.maxX, _out.width);
+        box.maxY = std::min(box.maxY, _out.height);
         
         if (box.minX == box.maxX)
             return;
@@ -119,11 +135,15 @@ namespace Binning
         int tileMaxX = (box.maxX - 1) / TILE_SIZE;
         int tileMaxY = (box.maxY - 1) / TILE_SIZE;
         
+        glm::vec3 barOffsetX;
+        glm::vec3 barOffsetY;
+        BarycentricOffsets(_tri, barOffsetX, barOffsetY);
+        
         for (int i = tileMinX; i <= tileMaxX; i++)
         {
             for (int j = tileMinY; j <= tileMaxY; j++)
             {
-                Tile& t = _out[i + TILE_COUNT_W * j];
+                Tile& t = _out[i + _out.countW * j];
                 if (TrivialReject(_tri, t))
                     continue;
                 
@@ -132,10 +152,6 @@ namespace Binning
                 newB.minY = std::max(box.minY, t.y);
                 newB.maxX = std::min(box.maxX, t.x + TILE_SIZE);
                 newB.maxY = std::min(box.maxY, t.y + TILE_SIZE);
-                
-                glm::vec3 barOffsetX;
-                glm::vec3 barOffsetY;
-                BarycentricOffsets(_tri, barOffsetX, barOffsetY);
                 
                 t.entries.push_back({_index, newB, barOffsetX, barOffsetY});
             }

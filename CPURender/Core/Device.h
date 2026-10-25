@@ -4,6 +4,7 @@
 #include <glm/matrix.hpp>
 #include <vector>
 
+#include "Binning.hpp"
 #include "FrameBuffer.hpp"
 #include "../Heaps/Handle.hpp"
 #include "../Datas/Color.h"
@@ -23,25 +24,37 @@ class Device
 {
 public:
 	Device();
-
-	void Clear();
-	void BeginDraw();
+	
+	void BeginFrame();
+	void BeginPass(PassDesc const& _pass);
+	
+	void EndPass();
+	void EndFrame();
+	
+	void Clear(FrameBuffer _fb, ClearFlags _flags);
 	void RegisterCommand(Mesh const& _m, glm::mat4x4 _world, MaterialData const* _mat);
 	void Dispatch(MaterialData const* _mat, uint32_t _groupsX, uint32_t _groupsY, uint32_t _groupsZ);
-	void Draw();
-	void EndDraw();
 	
 	void Present(Handle _texH);
 
 	void ExecCommand(DrawCommand const& _cmd);
 	void ExecCommand(DispatchCommand const& _cmd);
-
-	void SetMainCamera(Camera* _c);
+	
 	void SetRenderTarget(Texture* _tex);
 	void SetLightData(LightData const& _ld);
+	
+	FrameBuffer CreateFrameBuffer(uint32_t _w, uint32_t _h, uint32_t _colorBuffCount, bool _useDepth, Color _clearColor = Color(255, 20, 20, 20));
+	FrameBuffer const& GetDefaultFrameBuffer();
 
 private:
-	FrameBuffer m_frameBuffer;
+	FrameBuffer m_defaultFB;
+	FrameBuffer m_boundFB;
+	
+	glm::vec4 m_viewport;
+	Binning::Tiles m_tiles;
+	std::vector<RenderPass> m_pendingPasses;
+	bool m_hasOpenPass = false;
+	uint32_t m_activePass = 0;
 	
 	Handle m_perPassCB;
 	Handle m_lightCB;
@@ -49,12 +62,6 @@ private:
 	Handle m_dispatchCB;
 	
 	Texture* m_renderTarget;
-	
-	glm::vec4 m_viewport;
-	Color m_clearColor;
-	Camera* m_mainCam;
-	
-	std::vector<Command> m_pendingCmds;
 	
 	GraphicsContext m_ctx;
 	

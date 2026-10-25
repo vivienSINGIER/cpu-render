@@ -12,7 +12,7 @@ void Scene::Draw(Device* _device, Frustum const& _frustum)
 	std::vector<Object*> to_draw = {};
 
 	to_draw = m_octTree.GetDatasInFrustum(_frustum);
-	std::cout << "Draw : " << to_draw.size() << std::endl;
+	// std::cout << "Draw : " << to_draw.size() << std::endl;
 
 	for (Object* o : to_draw)
 	{

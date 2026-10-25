@@ -83,8 +83,9 @@ void Engine::init(Texture* _frameBuffer)
     
     InitLightScene();
     
+    m_mainPass.fb = m_device.GetDefaultFrameBuffer();
+    
     m_device.SetRenderTarget(_frameBuffer);
-    m_device.SetMainCamera(&m_camera);
     m_device.SetLightData(m_lightData);
     
     m_camera.SetAspectRatio((float)WIDTH / (float)HEIGHT);
@@ -103,7 +104,7 @@ void Engine::init(Texture* _frameBuffer)
                 0.5f, 0.02f, 0.8f
     };
 
-    Mesh m = GeometryFactory::Instance()->BuildUVSphere(20, 20, true);
+    Mesh m = GeometryFactory::Instance()->BuildUVSphere(10, 10, true);
 
     m_mat = ShaderFactory::Instance()->CreateMaterial("LitT_BP");
     m_mat->SetParams<LitT_BP_PS::MaterialCB>(LitT_BP_PS::CB_SLOT_mat, cb);
@@ -155,14 +156,19 @@ void Engine::mainLoop()
     }
 
     mainScene.Update(dt);
-
+    
+    m_camera.FillData(&m_mainPass.view);
+    m_mainPass.view.deltaTime = dt;
+    m_mainPass.view.totalTime = static_cast<float>(now);
+    
     // Draw //
-    m_device.BeginDraw();
 
-    mainScene.Draw(&m_device, m_camera.GetFrustum());
-    m_device.Draw();
-
-    m_device.EndDraw();
+    m_device.BeginFrame();
+    m_device.BeginPass(m_mainPass);
+        mainScene.Draw(&m_device, m_camera.GetFrustum());
+    m_device.EndPass();
+    m_device.EndFrame();
+    m_device.Present(m_mainPass.fb.gBuffer[0]);
 }
 
 void Engine::destroy()

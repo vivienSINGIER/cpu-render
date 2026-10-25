@@ -2,6 +2,7 @@
 #define CORE_FRAMEBUFFER_HPP_DEFINED
 
 #include <array>
+#include <vector>
 #include <glm/fwd.hpp>
 #include <glm/vec2.hpp>
 
@@ -25,23 +26,36 @@ struct FrameBuffer
     Handle depthBuffer;
     bool useDepth = true;
     
-    int width;
-    int height;
+    uint32_t width = 0;
+    uint32_t height = 0;
 };
 
 struct PipelineState
 {
-    bool depthTest;
-    bool depthWrite;
+    bool depthTest = true;
+    bool depthWrite = true;
     
-    CullMode cullMode;
+    CullMode cullMode = CullMode::BACK;
+};
+
+struct ClearFlags
+{
+    std::array<bool, MAX_RT> clearGBuffer = { true };
+    bool clearDepth = true;
+};
+
+struct PassDesc
+{
+    FrameBuffer fb;
+    PerPassCB view;
+    PipelineState state;
+    ClearFlags clearFlags;
+    bool isCompute = false;
 };
 
 struct RenderPass
 {
-    FrameBuffer* fb;
-    PerPassCB view;
-    PipelineState state;
+    PassDesc desc;
     std::vector<Command> cmds;
 };
 

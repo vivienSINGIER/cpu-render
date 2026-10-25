@@ -42,6 +42,7 @@ private:
 
 	Material m_mat;
 
+	PassDesc m_mainPass;
 	LightData m_lightData;
 	
 	void InitLightScene();

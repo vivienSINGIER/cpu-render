@@ -45,6 +45,7 @@ private:
     void FillData(PerPassCB* _passData);
 
     friend class Device;
+    friend class Engine;
 };
 
 #endif

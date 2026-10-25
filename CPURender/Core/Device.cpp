@@ -12,17 +12,15 @@
 
 Device::Device() : m_ctx()
 {
-	m_viewport = { 0.0f, 0.0f, WIDTH, HEIGHT };
-	m_clearColor = Color(255, 20, 20, 20);
-	
-	m_mainCam = nullptr;
 	m_renderTarget = nullptr;
 	
-	m_frameBuffer.width = WIDTH;
-	m_frameBuffer.height = HEIGHT;
-	m_frameBuffer.gBuffer[0] = m_ctx.textureHeap.Create<Texture>(WIDTH, HEIGHT, Texture::Encoding::MORTON, Color::WHITE);
-	m_frameBuffer.depthBuffer = m_ctx.textureHeap.Create<Texture>(WIDTH, HEIGHT, Texture::Encoding::MORTON, Color::BLACK);
-	m_frameBuffer.clearColor = m_clearColor;
+	m_defaultFB.width = WIDTH;
+	m_defaultFB.height = HEIGHT;
+	m_defaultFB.gBuffer[0] = m_ctx.textureHeap.Create<Texture>(WIDTH, HEIGHT, Texture::Encoding::MORTON, Color::WHITE);
+	m_defaultFB.depthBuffer = m_ctx.textureHeap.Create<Texture>(WIDTH, HEIGHT, Texture::Encoding::MORTON, Color::BLACK);
+	m_defaultFB.clearColor = Color(255, 20, 20, 20);
+	
+	m_boundFB = m_defaultFB;
 	
 	m_perPassCB = m_ctx.constantBufferHeap.Create(sizeof(PerPassCB));
 	m_lightCB = m_ctx.constantBufferHeap.Create(sizeof(LightPassCB));
@@ -30,67 +28,93 @@ Device::Device() : m_ctx()
 	m_dispatchCB = m_ctx.constantBufferHeap.Create(sizeof(DispatchCB));
 }
 
-void Device::Clear()
+void Device::BeginFrame()
+{
+	assert(m_renderTarget != nullptr && "Can't draw on uninitialized render target");
+	
+	m_pendingPasses.clear();
+	
+	m_ctx.SetHeapsState(HeapState::BLOCKED);
+}
+
+void Device::BeginPass(PassDesc const& _pass)
+{
+	assert(m_hasOpenPass == false && "Can't open multiple render passes at once");
+	m_hasOpenPass = true;
+	
+	m_pendingPasses.push_back({_pass, {}});
+}
+
+void Device::Clear(FrameBuffer _fb, ClearFlags _flags)
 {
 	for (int i = 0; i < MAX_RT; i++)
 	{
-		if (m_frameBuffer.gBuffer[i].IsValid() == false)
+		if (_fb.gBuffer[i].IsValid() == false)
 			continue;
-		Texture* rt = m_ctx.textureHeap.Get(m_frameBuffer.gBuffer[i]);
-		rt->Clear(m_frameBuffer.clearColor);
+		if (_flags.clearGBuffer[i] == false)
+			continue;
+		
+		Texture* rt = m_ctx.textureHeap.Get(_fb.gBuffer[i]);
+		rt->Clear(_fb.clearColor);
 	}
 	
-	if (m_frameBuffer.useDepth == false)
+	if (_fb.useDepth == false)
+		return;
+	if (_flags.clearDepth == false)
 		return;
 	
-	Texture* depth = m_ctx.textureHeap.Get(m_frameBuffer.depthBuffer);
+	Texture* depth = m_ctx.textureHeap.Get(_fb.depthBuffer);
 	depth->Clear(std::bit_cast<Color>(1.0f));
-}
-
-void Device::BeginDraw()
-{
-	Clear();
-	
-	assert(m_mainCam != nullptr && "Can't draw on uninitialized main camera");
-	PerPassCB perPassCB;
-	perPassCB.deltaTime = 0.066f;
-	perPassCB.lightIntensity = 0.8f;
-	perPassCB.lightDirection = { 1, 1, 1 };
-	perPassCB.lightDirection = glm::normalize(perPassCB.lightDirection);
-	m_mainCam->FillData(&perPassCB);
-	
-	m_ctx.constantBufferHeap.Write<PerPassCB>(m_perPassCB, perPassCB);
-
-	m_ctx.SetHeapsState(HeapState::BLOCKED);
 }
 
 void Device::RegisterCommand(Mesh const& _m, glm::mat4x4 _world, MaterialData const* _mat)
 {
+	assert(m_hasOpenPass == true && "Can't push command into close pass queue");
+	
 	DrawCommand d = { _m, _world, _mat };
-	m_pendingCmds.push_back(d);
+	m_pendingPasses.back().cmds.push_back(d);
 }
 
 void Device::Dispatch(MaterialData const* _mat, uint32_t _groupsX, uint32_t _groupsY, uint32_t _groupsZ)
 {
-	DispatchCommand d = { _mat, {_groupsX, _groupsY, _groupsZ} };
-	m_pendingCmds.push_back(d);
-}
-
-void Device::Draw()
-{
-	for (Command& d : m_pendingCmds)
-	{
-		std::visit([this](auto const& _cmd) { ExecCommand(_cmd); }, d);
-	}
-	m_pendingCmds.clear();
-}
-
-void Device::EndDraw()
-{
-	assert(m_renderTarget != nullptr && "Can't draw on uninitialized render target");
+	assert(m_hasOpenPass == true && "Can't push command into close pass queue");
 	
-	Present(m_frameBuffer.gBuffer[0]);
+	DispatchCommand d = { _mat, {_groupsX, _groupsY, _groupsZ} };
+	m_pendingPasses.back().cmds.push_back(d);
+}
 
+void Device::EndPass()
+{
+	assert(m_hasOpenPass == true && "Can't close already closed pass");
+	assert(m_pendingPasses.size() > 0 && "Can't close absent pass");
+	
+	m_hasOpenPass = false;
+}
+
+void Device::EndFrame()
+{
+	for (uint32_t i = 0; i < m_pendingPasses.size(); i++)
+	{
+		RenderPass& pass = m_pendingPasses[i];
+		m_activePass = i;
+		
+		if (pass.desc.isCompute == false)
+		{
+			m_boundFB = pass.desc.fb;
+			m_viewport = { 0.0f, 0.0f, m_boundFB.width, m_boundFB.height };
+			Binning::InitTiles(m_tiles, m_boundFB.width, m_boundFB.height);
+			pass.desc.view.renderTargetSize = { m_boundFB.width, m_boundFB.height };
+		
+			m_ctx.constantBufferHeap.Write<PerPassCB>(m_perPassCB, pass.desc.view);
+			
+			Clear(m_boundFB, pass.desc.clearFlags);
+		}
+		
+		for (Command const& d : pass.cmds)
+			std::visit([this](auto const& _cmd) { ExecCommand(_cmd); }, d);	
+	}
+	
+	m_pendingPasses.clear();
 	m_ctx.SetHeapsState(HeapState::FREE);
 }
 
@@ -169,11 +193,6 @@ void Device::ExecCommand(DispatchCommand const& _cmd)
 	}
 }
 
-void Device::SetMainCamera(Camera* _c)
-{
-	m_mainCam = _c;
-}
-
 void Device::SetRenderTarget(Texture* _tex)
 {
 	m_renderTarget = _tex;
@@ -184,6 +203,30 @@ void Device::SetLightData(LightData const& _ld)
 	LightPassCB l;
 	FillLightPassCB(_ld, l);
 	m_ctx.constantBufferHeap.Write<LightPassCB>(m_lightCB, l);
+}
+
+FrameBuffer Device::CreateFrameBuffer(uint32_t _w, uint32_t _h, uint32_t _colorBuffCount, bool _useDepth, Color _clearColor)
+{
+	assert(_colorBuffCount <= MAX_RT && "out of bounds color buffer count");
+	
+	FrameBuffer out;
+	out.useDepth = _useDepth;
+	out.width = _w;
+	out.height = _h;
+	out.clearColor = _clearColor;
+	
+	for (uint32_t i = 0; i < _colorBuffCount; i++)
+		out.gBuffer[i] = m_ctx.textureHeap.Create<Texture>(_w, _h, Texture::Encoding::MORTON, Color::WHITE);
+	
+	if (_useDepth)
+		out.depthBuffer = m_ctx.textureHeap.Create<Texture>(_w, _h, Texture::Encoding::MORTON, Color::BLACK);
+	
+	return out;
+}
+
+FrameBuffer const& Device::GetDefaultFrameBuffer()
+{
+	return m_defaultFB;
 }
 
 void Device::VertexShaderStep(Mesh const& _mesh, ShaderStages _s, std::vector<Vertex_OUT>& _out)
@@ -201,6 +244,8 @@ void Device::VertexShaderStep(Mesh const& _mesh, ShaderStages _s, std::vector<Ve
 
 	std::vector<Vertex_OUT> transformed(vertexCount);
 
+	PipelineState state = m_pendingPasses[m_activePass].desc.state;
+	
 	// Per vertex stage
 #pragma omp parallel
 #pragma omp for
@@ -224,10 +269,15 @@ void Device::VertexShaderStep(Mesh const& _mesh, ShaderStages _s, std::vector<Ve
 		assert(i0 < vertexCount && "index out of bounds");
 		assert(i1 < vertexCount && "index out of bounds");
 		assert(i2 < vertexCount && "index out of bounds");
-
+		
 		Triangle currentTriangle = { transformed[i0], transformed[i1], transformed[i2] };
-
-		visible[t] = IsFront(currentTriangle);
+		
+		if (state.cullMode == CullMode::NONE)
+			visible[t] = true;
+		else if (state.cullMode == CullMode::BACK)
+			visible[t] = IsFront(currentTriangle);
+		else
+			visible[t] = !IsFront(currentTriangle);
 	}
 
 	// Compaction stage
@@ -353,18 +403,27 @@ void Device::ClipToScreen(std::vector<Vertex_OUT>& _inOut)
 	}
 }
 
+// TODO Add multiple PS output - Output / gBuffer member -> check match
+
 void Device::RasterStep(std::vector<Vertex_OUT> const& _vBuffer, ShaderStages _s)
 {
-	Binning::Tiles tiles;
-	Binning::InitTiles(tiles);
+	Binning::Tiles& tiles = m_tiles;
+	Binning::ClearTiles(tiles);
 	Binning::BlinningStep(_vBuffer, tiles);
 	
-	Texture* fb = m_ctx.textureHeap.Get(m_frameBuffer.gBuffer[0]);
-	Texture* db = m_ctx.textureHeap.Get(m_frameBuffer.depthBuffer);
+	PipelineState state = m_pendingPasses[m_activePass].desc.state;
+	
+	bool writeColor = m_boundFB.gBuffer[0].IsValid();
+	
+	Texture* fb = writeColor ? m_ctx.textureHeap.Get(m_boundFB.gBuffer[0]) : nullptr;
+	Texture* db = m_boundFB.useDepth ? m_ctx.textureHeap.Get(m_boundFB.depthBuffer) : nullptr;
+	
+	if (m_boundFB.gBuffer[0].IsValid() == false && m_boundFB.useDepth == false)
+		return;
 	
 #pragma omp parallel
 #pragma omp for schedule(dynamic)
-	for (int i = 0; i < TILE_COUNT; i++)
+	for (int i = 0; i < tiles.Count(); i++)
 	{
 		Binning::Tile const& t = tiles[i];
 		
@@ -393,16 +452,23 @@ void Device::RasterStep(std::vector<Vertex_OUT> const& _vBuffer, ShaderStages _s
 					glm::vec4 posH = InterpolatePositionH(glm::vec2({ (float)x + 0.5f, (float)y + 0.5f }), tri, baryP);
 					float pixelDepth = posH.z;
 					
-					if (pixelDepth > 1.0f || pixelDepth < 0.0f)
-						continue;
-					if (pixelDepth > db->GetPixelData<float>(x, y))
-						continue;
-	
+					if (state.depthTest && db)
+					{
+						if (pixelDepth > 1.0f || pixelDepth < 0.0f)
+							continue;
+						if (pixelDepth > db->GetPixelData<float>(x, y))
+							continue;	
+					}
+					
+					if (state.depthWrite && db)
+						db->SetPixelData<float>(x, y, pixelDepth);
+					
 					Vertex_OUT px;
 					px.positionH = posH;
 					InterpolateVertex(px, glm::vec2({ (float)x + 0.5f, (float)y + 0.5f }), tri, baryP);
-	
-					db->SetPixelData<float>(x, y, pixelDepth);
+					
+					if (writeColor == false)
+						continue;
 	
 					fb->SetPixelColor(x, y, _s.ps->Execute(px)); 
 				}
