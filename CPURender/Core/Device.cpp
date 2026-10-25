@@ -343,8 +343,8 @@ void Device::ClippingStep(std::vector<Vertex_OUT>& _inOut)
 			for (int j = 0; j < vertexCount; j++)
 			{
 
-				bool v1InFrustum = ((frustumBitmasks[j] << Clipping::FrustumPlane(i)) & 1) == 0;
-				bool v2InFrustum = ((frustumBitmasks[(j + 1) % vertexCount] << Clipping::FrustumPlane(i)) & 1) == 0;
+				bool v1InFrustum = ((frustumBitmasks[j] >> Clipping::FrustumPlane(i)) & 1) == 0;
+				bool v2InFrustum = ((frustumBitmasks[(j + 1) % vertexCount] >> Clipping::FrustumPlane(i)) & 1) == 0;
 
 				if (v1InFrustum == false)
 				{
@@ -456,7 +456,7 @@ void Device::RasterStep(std::vector<Vertex_OUT> const& _vBuffer, ShaderStages _s
 					
 					glm::vec3 baryP = BarycentricWeightPerspective(tBary, wPreDiv[v], wPreDiv[v + 1], wPreDiv[v + 2]);
 					
-					glm::vec4 posH = InterpolatePositionH(glm::vec2({ (float)x + 0.5f, (float)y + 0.5f }), tri, baryP);
+					glm::vec4 posH = InterpolatePositionH(glm::vec2({ (float)x + 0.5f, (float)y + 0.5f }), tri, tBary);
 					float pixelDepth = posH.z;
 					
 					if (state.depthTest && db)

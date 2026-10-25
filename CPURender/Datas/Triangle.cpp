@@ -86,6 +86,7 @@ Vertex_OUT InterpolateVertex(const Vertex_OUT& _v1, const Vertex_OUT& _v2, float
 {
     Vertex_OUT vert;
     vert.positionH = _v1.positionH + (_v2.positionH - _v1.positionH) * _t;
+    vert.positionModel = _v1.positionModel + (_v2.positionModel - _v1.positionModel) * _t;
      
     vert.color.r = _v1.color.r + (int)((_v2.color.r - _v1.color.r) * _t);
     vert.color.g = _v1.color.g + (int)((_v2.color.g - _v1.color.g) * _t);

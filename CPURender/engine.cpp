@@ -105,12 +105,15 @@ void Engine::init(Texture* _frameBuffer)
     };
 
     Mesh m = GeometryFactory::Instance()->BuildUVSphere(10, 10, true);
+    Mesh cube = GeometryFactory::Instance()->BuildCube();
 
     m_mat = ShaderFactory::Instance()->CreateMaterial("LitT_BP");
     m_mat->SetParams<LitT_BP_PS::MaterialCB>(LitT_BP_PS::CB_SLOT_mat, cb);
     m_mat->SetTexture(LitT_BP_PS::TEX_SLOT_diffuse, diff);
     m_mat->SetTexture(LitT_BP_PS::TEX_SLOT_ambient, ambient);
     m_mat->SetTexture(LitT_BP_PS::TEX_SLOT_normal, normal);
+    
+    
     m_mat->SetTexture(LitT_BP_PS::TEX_SLOT_roughness, roughness);
     m_mat->SetTexture(LitT_BP_PS::TEX_SLOT_displacement, displacement);
     m_mat->SetTexture(LitT_BP_PS::TEX_SLOT_metal, metalness);
@@ -129,6 +132,13 @@ void Engine::init(Texture* _frameBuffer)
         }
     }
 
+    Object* o = mainScene.CreateObject(DYNAMIC);
+    o->mesh = cube;
+    o->mat = m_mat.get();
+    o->transform.SetPosition(glm::vec3(0.0f, -5.0f, 0.f));
+    o->transform.SetScale(glm::vec3(25.0f, 0.2f, 25.0f));
+    
+    
     std::cout << "End Init" << std::endl;
 }
 
