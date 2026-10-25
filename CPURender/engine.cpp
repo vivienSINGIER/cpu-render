@@ -103,20 +103,6 @@ void Engine::init(Texture* _frameBuffer)
                 0.5f, 0.02f, 0.8f
     };
 
-    Mesh m = GeometryFactory::Instance()->BuildCircle();
-
-    for (int i = 0; i < 4; ++i)
-    {
-        for (int j = 0; j < 4; ++i)
-        {
-            for (int k = 0; k < 4; ++k)
-            {
-                Object* o = mainScene.CreateObject(DYNAMIC);
-                o->mesh
-            }
-        }
-    }
-
     ref = mainScene.CreateObject(DYNAMIC);
     ref->transform.SetPosition(glm::vec3(-1, -0.5f, 0));
 
