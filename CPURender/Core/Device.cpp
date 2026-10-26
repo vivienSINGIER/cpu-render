@@ -474,17 +474,23 @@ void Device::RasterStep(std::vector<Vertex_OUT> const& _vBuffer, ShaderStages _s
 							continue;	
 					}
 					
-					if (state.depthWrite && db)
+					Vertex_OUT px;
+					px.posH = posH;
+					InterpolateVertex(px, glm::vec2({ (float)x + 0.5f, (float)y + 0.5f }), tri, baryP);
+					
+					if (state.depthWrite && db && px.color.a == 255 || state.blendMode == Blending::OPAQUE)
 						db->SetPixelData<float>(x, y, pixelDepth);
 					
 					if (writeColor == false)
 						continue;
 					
-					Vertex_OUT px;
-					px.posH = posH;
-					InterpolateVertex(px, glm::vec2({ (float)x + 0.5f, (float)y + 0.5f }), tri, baryP);
+					glm::vec4 src = Color::ToVec4(_s.ps->Execute(px));
+					if (src.a <= 0.1f)
+						continue;
 					
-					fb->Store(x, y, _s.ps->Execute(px)); 
+					glm::vec4 dest = fb->Load(x, y);
+					
+					fb->Store(x, y, Blending::Blend(src, dest, state.blendMode)); 
 				}
 			}
 		}

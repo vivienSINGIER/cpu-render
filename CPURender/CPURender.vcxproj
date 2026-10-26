@@ -165,6 +165,7 @@
     <ClCompile Include="Octree.cpp" />
     <ClCompile Include="Scenes\Scene.cpp" />
     <ClCompile Include="Scenes\TexturedBP_Scene.cpp" />
+    <ClCompile Include="Scenes\Transparency_Scene.cpp" />
     <ClCompile Include="Shaders\ShaderBase\Material.cpp" />
     <ClCompile Include="Shaders\ShaderBase\Shader.cpp" />
     <ClCompile Include="Shaders\ShaderBase\ShaderGroup.cpp" />
@@ -178,6 +179,7 @@
     <ClInclude Include="Camera.h" />
     <ClInclude Include="Clipping.h" />
     <ClInclude Include="Core\Binning.hpp" />
+    <ClInclude Include="Core\Blending.hpp" />
     <ClInclude Include="Core\Device.h" />
     <ClInclude Include="Core\FrameBuffer.hpp" />
     <ClInclude Include="Core\GraphicsContext.h" />
@@ -220,6 +222,7 @@
     <ClInclude Include="Octree.h" />
     <ClInclude Include="Scenes\Scene.h" />
     <ClInclude Include="Scenes\TexturedBP_Scene.h" />
+    <ClInclude Include="Scenes\Transparency_Scene.h" />
     <ClInclude Include="Shaders\ComputeShaders\GammaCorrection_CS.hpp" />
     <ClInclude Include="Shaders\ShaderBase\Material.h" />
     <ClInclude Include="Shaders\ShaderBase\Material.inl" />

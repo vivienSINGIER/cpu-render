@@ -33,8 +33,13 @@ public:
     struct MaterialCB
     {
         glm::vec4 diffuseAlbedo;
+        
         glm::vec3 fresnelR0;
         float roughness;
+        
+        float metalness;
+        float transparency;
+        bool hasTransparency;
     };
     
     SHADER_CB(MaterialCB, mat, CB_CUSTOM)
@@ -49,12 +54,13 @@ public:
         glm::vec4 ambient = Light().ambientLight * mat().diffuseAlbedo;
 
         float shininess = 1.0f - mat().roughness;
-        BlinnPhongData d = { mat().diffuseAlbedo, mat().fresnelR0, shininess};
+        glm::vec4 diffuse = mat().diffuseAlbedo * (1.0f - mat().metalness);
+        BlinnPhongData d = { diffuse, mat().fresnelR0, shininess};
         float shadowFactor = 0.0f;
         glm::vec4 directLight = ComputeLighting(Light(), d, _in.posModel, normalW, toEye, shadowFactor);
 
         Color litColor = Color::FromVec4(glm::clamp(ambient + directLight, 0.0f, 1.0f));
-        litColor.a = (uint8_t)(mat().diffuseAlbedo.a * 255.0f);
+        litColor.a = (uint8_t)(mat().diffuseAlbedo.a * (1.0f - mat().transparency) * 255.0f);
 
         return litColor;
     }

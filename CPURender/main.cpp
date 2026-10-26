@@ -9,6 +9,7 @@
 #include "engine.hpp"
 #include "Scenes/TexturedBP_Scene.h"
 #include "Core/Device.h"
+#include "Scenes/Transparency_Scene.h"
 //Students cannot change anything in this file
 
 
@@ -76,7 +77,7 @@ int main(void) {
 
     Engine engine;
     Texture frameBuffer(WIDTH, HEIGHT,  Texture::ARGB8, Texture::LINEAR);
-    engine.Init<TexturedBP_Scene>(&frameBuffer);
+    engine.Init<Transparency_Scene>(&frameBuffer);
     bool isRunning = true;
     uint32_t frame = 1;
 

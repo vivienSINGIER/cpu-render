@@ -12,6 +12,7 @@ namespace
 	constexpr float CAM_MOUSE_SENSITIVITY = 0.005f; // radians per pixel
 	constexpr float CAM_MAX_PITCH = glm::radians(89.0f);
 	constexpr float MAX_DELTA_TIME = 0.1f;          // avoids a big jump after a hitch
+	constexpr float FPS_REFRESH_TIME = 1.0f;        // seconds between two fps prints
 
 	const glm::vec3 WORLD_UP = { 0.0f, 1.0f, 0.0f };
 }
@@ -63,6 +64,7 @@ void Scene::Update(float dt)
 	m_deltaTime = dt;
 	m_totalTime += dt;
 
+	UpdateFps(dt);
 	UpdateCamera(glm::min(dt, MAX_DELTA_TIME));
 	if (m_camTransform.IsWorldDirty())
 	{
@@ -156,6 +158,12 @@ void Scene::HandleEvent(const SDL_Event& event)
 	{
 		m_running = false;
 	}
+	if (event.type == SDL_EVENT_KEY_DOWN && event.key.key == SDLK_F)
+	{
+		m_showFps = !m_showFps;
+		m_fpsTimer = 0.0f;
+		m_fpsFrames = 0;
+	}
 	if (event.type == SDL_EVENT_MOUSE_MOTION && (event.motion.state & SDL_BUTTON_RMASK))
 	{
 		RotateCamera(event.motion.xrel * CAM_MOUSE_SENSITIVITY, event.motion.yrel * CAM_MOUSE_SENSITIVITY);
@@ -173,6 +181,23 @@ void Scene::RotateCamera(float _yaw, float _pitch)
 	glm::quat pitch = glm::angleAxis(m_camPitch, glm::vec3(1.0f, 0.0f, 0.0f));
 
 	m_camTransform.SetRotationQuaternion(glm::normalize(yaw * pitch));
+}
+
+void Scene::UpdateFps(float _dt)
+{
+	if (m_showFps == false)
+		return;
+
+	// Averaged over FPS_REFRESH_TIME so the console isn't flooded every frame
+	m_fpsTimer += _dt;
+	m_fpsFrames++;
+
+	if (m_fpsTimer >= FPS_REFRESH_TIME)
+	{
+		std::cout << "FPS : " << (float)m_fpsFrames / m_fpsTimer << " (" << 1000.0f * m_fpsTimer / (float)m_fpsFrames << " ms)\n";
+		m_fpsTimer = 0.0f;
+		m_fpsFrames = 0;
+	}
 }
 
 void Scene::UpdateCamera(float _dt)

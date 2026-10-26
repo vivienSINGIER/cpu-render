@@ -6,6 +6,7 @@
 #include <glm/fwd.hpp>
 #include <glm/vec2.hpp>
 
+#include "Blending.hpp"
 #include "../Datas/Color.h"
 #include "../Datas/ConstantBuffers.hpp"
 #include "../Datas/DrawCommand.h"
@@ -36,6 +37,7 @@ struct PipelineState
     bool depthWrite = true;
     
     CullMode cullMode = CullMode::BACK;
+    Blending::BlendMode blendMode = Blending::BlendMode::ALPHA;
 };
 
 struct ClearFlags

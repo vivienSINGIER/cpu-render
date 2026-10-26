@@ -45,12 +45,17 @@ private:
 
 	void UpdateCamera(float _dt);
 	void RotateCamera(float _yaw, float _pitch);
+	void UpdateFps(float _dt);
 
 	bool m_running = true;
 	bool dirty_static = true; //update the octree for static objects when new are added or removed
 
 	float m_camYaw = 0.0f;
 	float m_camPitch = 0.0f;
+
+	bool m_showFps = false; // toggled with F
+	float m_fpsTimer = 0.0f;
+	uint32_t m_fpsFrames = 0;
 
 	Octree m_octTree;
 
