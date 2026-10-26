@@ -109,4 +109,5 @@ void ShaderFactory::RegisterPrebuilts()
     RegisterGroup<LitT_BP_VS, LitT_BP_PS>("LitT_BP");
 
     RegisterCompute<GroupDebug_CS>("GroupDebug");
+    RegisterCompute<GammaCorr_CS>("GammaCorrect");
 }

@@ -127,6 +127,8 @@ namespace Lighting
         for (i = 0; i < limit; i++)
         {
             result += ComputeDirectionalLight(_lightData.lights[i], _mat, _normal, _toEye);
+            if (i == 0)
+                result *= (1.0f - _shadowFactor);
         }
     
         limit += _lightData.pointLightCount;
@@ -143,7 +145,7 @@ namespace Lighting
             result += ComputeSpotLight(_lightData.lights[i], _mat, _pos, _normal, _toEye);
         }
     
-        return glm::vec4(result, 0.0f) * (1.0f - _shadowFactor);
+        return glm::vec4(result, 0.0f);
     }
     
     inline glm::mat4x4 ComputeDirLightViewProj(

@@ -9,5 +9,6 @@
 #include "GraphicsShaders/LitT_BP.hpp"
 
 #include "ComputeShaders/GroupDebug_CS.hpp"
+#include "ComputeShaders/GammaCorrection_CS.hpp"
 
 #endif

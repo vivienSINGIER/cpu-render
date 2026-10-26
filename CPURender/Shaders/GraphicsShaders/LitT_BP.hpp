@@ -62,9 +62,12 @@ public:
         projCoords = projCoords * 0.5f + 0.5f;
         float closestDepth = shadow(glm::vec2(projCoords)).r;
         float currentDepth = projCoords.z;
-        float shadow = currentDepth > closestDepth ? 1.0f : 0.0f;
+        
+        float bias = 0.005;
+        float shadow = currentDepth - bias > closestDepth  ? 1.0 : 0.0;
         if(projCoords.z > 1.0)
             shadow = 0.0;
+        
         return shadow;
     }
     
@@ -124,9 +127,9 @@ public:
         float shadowFactor = 0.0f;
         if (Has_shadow())
             shadowFactor = ShadowCalc(_in.posLightSpace);
-        glm::vec4 directLight = ComputeLighting(Light(), d, _in.posModel, normalW, toEye, 0.0f);
+        glm::vec4 directLight = ComputeLighting(Light(), d, _in.posModel, normalW, toEye, shadowFactor);
 
-        vec4 litColor = glm::clamp(glm::vec4(ambientFactor, 1.0f) + directLight * (1.0f - shadowFactor), 0.0f, 1.0f);
+        vec4 litColor = glm::clamp(glm::vec4(ambientFactor, 1.0f) + directLight, 0.0f, 1.0f);
         litColor.a = mat().diffuseAlbedo.a;
         Color out = Color::FromVec4(litColor);
         

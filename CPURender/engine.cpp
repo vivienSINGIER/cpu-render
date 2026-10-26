@@ -47,8 +47,9 @@ void Engine::RotateCamera(float _yaw, float _pitch)
 
 void Engine::InitLightScene()
 {
-    m_lightData.lights[0] = MakeDirectionalLight({1.0f, -1.0f, 1.0f}, 0.8f);
-    m_lightData.ambient = 0.4f;
+    m_lightData.lights[0] = MakeDirectionalLight({1.0f, -1.0f, 1.0f}, 0.75f, Color::WHITE);
+    m_lightData.lights[1] = MakePointLight({5.0f, 0.0f, 5.0f}, 0.5f, { 5.0f, 25.0f }, Color::RED);
+    m_lightData.ambient = 0.2f;
 }
 
 void Engine::UpdateCamera(float _dt)
@@ -86,7 +87,7 @@ void Engine::init(Texture* _frameBuffer)
     
     m_mainPass.fb = m_device.GetDefaultFrameBuffer();
     
-    m_shadowPass.fb = m_device.CreateFrameBuffer(512, 512, 0, true);
+    m_shadowPass.fb = m_device.CreateFrameBuffer(1024, 1024, 0, true);
     m_shadowPass.state.cullMode = CullMode::FRONT;
     
     m_postProcPass.isCompute = true;
@@ -125,8 +126,8 @@ void Engine::init(Texture* _frameBuffer)
     m_mat->SetTexture(LitT_BP_PS::TEX_SLOT_metal, metalness);
     m_mat->SetTexture(LitT_BP_PS::TEX_SLOT_shadow, m_shadowPass.fb.depthBuffer);
     
-    m_groupDebugMat = ShaderFactory::Instance()->CreateComputeMaterial("GroupDebug");
-    m_groupDebugMat->SetRWTexture(GroupDebug_CS::UAV_SLOT_target, m_mainPass.fb.gBuffer[0]);
+    m_gammaCorrectMat = ShaderFactory::Instance()->CreateComputeMaterial("GammaCorrect");
+    m_gammaCorrectMat->SetRWTexture(GammaCorr_CS::UAV_SLOT_target, m_mainPass.fb.gBuffer[0]);
 
     // for (int i = -1; i < 2; ++i)
     // {
@@ -157,6 +158,10 @@ void Engine::handleEvent(const SDL_Event& event)
     if (event.type == SDL_EVENT_MOUSE_MOTION && (event.motion.state & SDL_BUTTON_RMASK))
     {
         RotateCamera(event.motion.xrel * CAM_MOUSE_SENSITIVITY, event.motion.yrel * CAM_MOUSE_SENSITIVITY);
+    }
+    if (event.type == SDL_EVENT_KEY_DOWN && (event.key.key == SDLK_P))
+    {
+        togglePostProc = !togglePostProc;
     }
 }
 
@@ -201,9 +206,11 @@ void Engine::mainLoop()
         mainScene.Draw(&m_device, m_camera.GetFrustum());
     m_device.EndPass();
     
-    // m_device.BeginPass(m_postProcPass);
-    //     m_device.Dispatch(m_groupDebugMat.get(), 64, 64, 1);
-    // m_device.EndPass();
+    if (togglePostProc)
+    {
+        m_device.BeginPass(m_postProcPass);
+        m_device.EndPass();   
+    }
     
     m_device.EndFrame();
     m_device.Present(m_mainPass.fb.gBuffer[0]);

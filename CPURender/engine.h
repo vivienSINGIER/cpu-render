@@ -41,8 +41,9 @@ private:
 	Transform m_camTransform;
 
 	Material m_mat;
-	Material m_groupDebugMat;
+	Material m_gammaCorrectMat;
 
+	bool togglePostProc = false;
 	PassDesc m_shadowPass;
 	PassDesc m_mainPass;
 	PassDesc m_postProcPass;
