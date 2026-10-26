@@ -38,13 +38,13 @@ std::vector<Vertex> MakeCell(size_t _index, Texture _heightmap, std::vector<glm:
 	vBuffer[4].normal = _normalmap[_index + _sideCellCount + 1];
 	vBuffer[5].normal = _normalmap[_index + 1];
 
-	//vBuffer[0].normal = _normalmap[_index];
-	//vBuffer[1].normal = _normalmap[_index];
-	//vBuffer[2].normal = _normalmap[_index];
+	/*vBuffer[0].normal = _normalmap[_index];
+	vBuffer[1].normal = _normalmap[_index];
+	vBuffer[2].normal = _normalmap[_index];
 
-	//vBuffer[3].normal = _normalmap[_index];
-	//vBuffer[4].normal = _normalmap[_index];
-	//vBuffer[5].normal = _normalmap[_index];
+	vBuffer[3].normal = _normalmap[_index];
+	vBuffer[4].normal = _normalmap[_index];
+	vBuffer[5].normal = _normalmap[_index];*/
 
 	return vBuffer;
 }
@@ -69,8 +69,8 @@ void TerrainGenerator::GenerateMesh()
 		int x = i % sideVertexCount;
 		int y = i / sideVertexCount;
 
-		heightmap.SetPixelData<float>(x, y, 3.0f*PerlinNoise::FractalBrownianMotion(x, y, 0.01f, 8));// +2.0f * PerlinNoise::FractalBrownianMotion(x / 4, y / 4, 0.05f, 5));
-		//heightmap.SetPixelData<float>(x, y, 0.05f * cos(x * 0.8f) + 0.05f* cos(y * 0.8f));// +2.0f * PerlinNoise::FractalBrownianMotion(x / 4, y / 4, 0.05f, 5));
+		heightmap.SetPixelData<float>(x, y, 1.f*PerlinNoise::FractalBrownianMotion(x, y, 0.01f, 8));// +2.0f * PerlinNoise::FractalBrownianMotion(x / 4, y / 4, 0.05f, 5));
+		//heightmap.SetPixelData<float>(x, y,  2*cos(x * 0.2f) + 2*cos(y * 0.2f));// +2.0f * PerlinNoise::FractalBrownianMotion(x / 4, y / 4, 0.05f, 5));
 	}
 
 	// Compute cell normals
@@ -79,15 +79,55 @@ void TerrainGenerator::GenerateMesh()
 	{
 		int x = i % m_grid_size;
 		int y = i / m_grid_size;
-		glm::vec3 pos1 = { x * m_cellSize, heightmap.GetPixelData<float>(x, y), y * m_cellSize };
-		glm::vec3 pos2 = { x * m_cellSize, heightmap.GetPixelData<float>(x, y + 1), (y + 1) * m_cellSize };
-		glm::vec3 pos3 = { (x + 1) * m_cellSize, heightmap.GetPixelData<float>(x + 1, y), y * m_cellSize };
-		glm::vec3 pos4 = { (x + 1) * m_cellSize, heightmap.GetPixelData<float>(x + 1, y + 1), (y + 1) * m_cellSize };
+		glm::vec3 pos = { x * m_cellSize, heightmap.GetPixelData<float>(x, y), y * m_cellSize };
 
-		glm::vec3 normalA = glm::cross(pos2 - pos1, pos3 - pos1);
-		glm::vec3 normalB = glm::cross(pos4 - pos2, pos3 - pos2);
+		glm::vec3 normal = glm::vec3(0, 1, 0);
 
-		cellNormalMap[i] = glm::normalize(normalA + normalB);
+		glm::vec3 right = glm::vec3(0, 0, 0);
+		glm::vec3 left = glm::vec3(0, 0, 0);
+
+		glm::vec3 down = glm::vec3(0, 0, 0);
+		glm::vec3 up = glm::vec3(0, 0, 0);
+
+		glm::vec3 tu = {};
+		glm::vec3 tv = {};
+
+		if (x > 0 && x < sideVertexCount - 1)
+		{
+			glm::vec3 left = { (x - 1) * m_cellSize, heightmap.GetPixelData<float>(x - 1, y), y * m_cellSize };
+			glm::vec3 right = { (x + 1) * m_cellSize, heightmap.GetPixelData<float>(x + 1, y), y * m_cellSize };
+			tu = right - left;
+		}
+		else if (x == 0)
+		{
+			glm::vec3 right = { (x + 1) * m_cellSize, heightmap.GetPixelData<float>(x + 1, y), y * m_cellSize };
+			tu = right - pos;
+		}
+		else
+		{
+			glm::vec3 left = { (x - 1) * m_cellSize, heightmap.GetPixelData<float>(x - 1, y), y * m_cellSize };
+			tu = pos - left;
+		}
+	
+		if (y > 0 && y < sideVertexCount - 1)
+		{
+			glm::vec3 top = { x * m_cellSize, heightmap.GetPixelData<float>(x, y - 1), (y - 1) * m_cellSize };
+			glm::vec3 bottom = { x * m_cellSize, heightmap.GetPixelData<float>(x, y + 1), (y + 1) * m_cellSize };
+			tv = top - bottom;
+		}
+		else if (y == 0)
+		{
+			glm::vec3 bottom = { x * m_cellSize, heightmap.GetPixelData<float>(x, y + 1), (y + 1) * m_cellSize };
+			tv = pos - bottom;
+		}
+		else
+		{
+			glm::vec3 top = { x * m_cellSize, heightmap.GetPixelData<float>(x, y - 1), (y - 1) * m_cellSize };
+			tv = top - pos;
+		}
+	
+		normal = glm::cross(tu, tv);
+		cellNormalMap[i] = glm::normalize(normal);
 	}
 	// Vertice normals
 	size_t cellCount = m_grid_size * m_grid_size;
