@@ -5,8 +5,12 @@
 
 #include "../Camera.h"
 #include "../Datas/Object.h"
+#include "../Maths/Transform.h"
+#include "../Heaps/Handle.hpp"
 
 #include "../Octree.h"
+
+#include "../main.h"
 
 class Device;
 
@@ -16,21 +20,37 @@ public:
 	Scene();
 	virtual ~Scene();
 
-	virtual void Draw(Device* _device, Frustum const& _frustum) = 0;
-	void Update(float dt);
-	
 	Object* CreateObject(ObjectType type);
 	void RemoveObject(Object* o);
 
-	void HandleEvent(const SDL_Event& event);
-	
 protected:
+	virtual void OnInit(Device* _pDevice) = 0;
+	virtual void OnHandleEvent(const SDL_Event& event) {}
 	virtual void OnUpdate(float dt) = 0;
-	
+	virtual void OnDraw(Device* _pDevice) = 0;
+
+	// Registers every object inside the frustum to the device, to call between BeginPass / EndPass
+	void DrawObjects(Device* _pDevice, Frustum const& _frustum);
+
+	Handle m_presentTarget; // texture copied to the screen at the end of the frame, set it in OnInit
+
+	Camera m_camera;
+	Transform m_camTransform;
+
+	float m_deltaTime = 0.0f;
+	float m_totalTime = 0.0f;
+
 private:
 	std::vector<Object*>* GetObjects(ObjectType type);
-	
+
+	void UpdateCamera(float _dt);
+	void RotateCamera(float _yaw, float _pitch);
+
+	bool m_running = true;
 	bool dirty_static = true; //update the octree for static objects when new are added or removed
+
+	float m_camYaw = 0.0f;
+	float m_camPitch = 0.0f;
 
 	Octree m_octTree;
 
@@ -38,9 +58,12 @@ private:
 
 	std::vector<Object*> m_static_objects = {};
 	std::vector<Object*> m_dynamic_objects = {};
-	
-	void OnDraw(Device* _device, Frustum const& _frustum);
-	
+
+	void Init(Device* _pDevice);
+	void HandleEvent(const SDL_Event& event);
+	void Update(float dt);
+	void Draw(Device* _pDevice);
+
 	friend class Engine;
 	friend class Octree;
 };
