@@ -7,12 +7,23 @@ Scene::Scene() : m_octTree(1'000.f, 3, 8)
 	m_octTree.SetDynamicObjects(&m_dynamic_objects);
 }
 
-void Scene::Draw(Device* _device, Frustum const& _frustum)
+Scene::~Scene()
+{
+	for (Object* o : m_dynamic_objects)
+	{
+		delete o;
+	}
+	for (Object* o : m_static_objects)
+	{
+		delete o;
+	}
+}
+
+void Scene::OnDraw(Device* _device, Frustum const& _frustum)
 {
 	std::vector<Object*> to_draw = {};
 
 	to_draw = m_octTree.GetDatasInFrustum(_frustum);
-	// std::cout << "Draw : " << to_draw.size() << std::endl;
 
 	for (Object* o : to_draw)
 	{
@@ -22,6 +33,8 @@ void Scene::Draw(Device* _device, Frustum const& _frustum)
 
 void Scene::Update(float dt)
 {
+	OnUpdate(dt);
+	
 	if (dirty_static)
 	{
 		dirty_static = false;

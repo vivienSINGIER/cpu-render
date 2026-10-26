@@ -8,7 +8,7 @@
 #include "Maths/Transform.h"
 #include "Shaders/ShaderBase/Material.h"
 
-#include "Datas/Scene.h"
+#include "Scenes/Scene.h"
 
 union SDL_Event;
 
