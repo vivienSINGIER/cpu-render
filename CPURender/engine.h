@@ -39,6 +39,7 @@ private:
 	Transform m_terrainTransform;
 
 	Material m_material;
+	Material m_material2;
 	
 	LightData m_lightData;
 	

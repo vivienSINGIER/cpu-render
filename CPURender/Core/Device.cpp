@@ -224,7 +224,6 @@ void Device::ClippingStep(std::vector<Vertex_OUT>& _inOut)
 			size_t vertexCount = subVBuffer.size();
 			for (int j = 0; j < vertexCount; j++)
 			{
-
 				bool v1InFrustum = ((frustumBitmasks[j] << Clipping::FrustumPlane(i)) & 1) == 0;
 				bool v2InFrustum = ((frustumBitmasks[(j + 1) % vertexCount] << Clipping::FrustumPlane(i)) & 1) == 0;
 

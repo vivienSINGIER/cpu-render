@@ -24,7 +24,7 @@ Texture::Texture(uint32 _width, uint32 _height, Encoding _enc, Color _color) : m
 {
     SetSize(_width, _height);
     
-    m_data.assign(static_cast<size_t>(_width) * static_cast<size_t>(_height), _color);
+    m_data.assign(m_size, _color);
 }
 
 uint32 Texture::GetSize(uint32& _width, uint32& _height) const

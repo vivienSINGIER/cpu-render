@@ -104,7 +104,16 @@ void Engine::init(Texture* _frameBuffer)
             Lighting::g_fresnelR0Templates[PLASTIC], 
                 0.5f, 0.02f, 0.8f
     };
+
+    LitC_BP_PS::MaterialCB cb2 = {
+        {0.4f, 0.3f, 0.2f, 1.0f}, 
+            Lighting::g_fresnelR0Templates[PLASTIC], 
+                0.5f
+    };
     
+    m_material2 = ShaderFactory::Instance()->CreateMaterial("LitC_BP");
+    m_material2->SetParams<LitC_BP_PS::MaterialCB>(LitT_BP_PS::CB_SLOT_mat, cb2);
+
     m_material = ShaderFactory::Instance()->CreateMaterial("LitT_BP");
     m_material->SetParams<LitT_BP_PS::MaterialCB>(LitT_BP_PS::CB_SLOT_mat, cb);
     m_material->SetTexture(LitT_BP_PS::TEX_SLOT_diffuse, diff);
@@ -115,8 +124,8 @@ void Engine::init(Texture* _frameBuffer)
     m_material->SetTexture(LitT_BP_PS::TEX_SLOT_metal, metalness);
 
     TerrainGenerator gen;
-    gen.m_cellSize = 1.0f;
-    gen.m_grid_size = 50;
+    gen.m_cellSize = 0.1f;
+    gen.m_grid_size = 100;
     gen.GenerateMesh();
     m_terrain = gen.GetTerrainMesh();
     m_terrainTransform.SetPosition(glm::vec3(0.0f, -20.0f, 0.0f));
@@ -146,7 +155,7 @@ void Engine::renderFrame()
     m_device.BeginDraw();
     
     m_device.RegisterCommand(m_mesh, m_meshTransform.GetMatrix(), m_material.get());
-    m_device.RegisterCommand(m_terrain, m_terrainTransform.GetMatrix(), m_material.get());
+    m_device.RegisterCommand(m_terrain, m_terrainTransform.GetMatrix(), m_material2.get());
 
     m_device.Draw();
     

@@ -2,6 +2,20 @@
 #include "Datas/Mesh.h"
 #include "Maths/PerlinNoise.h"
 
+enum TerrainType
+{
+	DIRT,
+	SAND,
+	ROCK,
+	GRASS
+};
+
+struct TerrainData
+{
+	TerrainType m_type;
+	float m_height;
+};
+
 class TerrainGenerator
 {
 	// Align 3 noises: 
