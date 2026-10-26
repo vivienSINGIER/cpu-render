@@ -19,8 +19,9 @@ public:
     {
         Vertex_OUT v;
         v.color = _in.color;
-        v.positionModel = Object().model * glm::vec4({ _in.position, 1 });
-        v.positionH = v.positionModel * Pass().viewProj;
+        v.posModel = Object().model * glm::vec4({ _in.position, 1 });
+        v.posH = v.posModel * Pass().viewProj;
+        v.posLightSpace = v.posModel * Pass().lightSpace;
         v.normal = glm::mat3x3(Object().normalMatrix) * _in.normal;
         v.tangent = glm::mat3x3(Object().normalMatrix) * _in.tangent;
         v.uv = _in.uv;
@@ -49,10 +50,23 @@ public:
     SHADER_TEX_OPT(normal, 3)
     SHADER_TEX_OPT(ambient, 4)
     SHADER_TEX_OPT(metal, 5)
+    SHADER_TEX_OPT(shadow, 6)
 
     LitT_BP_PS(GraphicsContext* _ctx) : PixelShader(_ctx) {}
 
     inline float Depth(glm::vec2 _uv) const { return 1.0f - displacement(_uv).x; }
+    
+    inline float ShadowCalc(glm::vec4 posLightSpace) const
+    {
+        vec3 projCoords = vec3(posLightSpace) / posLightSpace.w;
+        projCoords = projCoords * 0.5f + 0.5f;
+        float closestDepth = shadow(glm::vec2(projCoords)).r;
+        float currentDepth = projCoords.z;
+        float shadow = currentDepth > closestDepth ? 1.0f : 0.0f;
+        if(projCoords.z > 1.0)
+            shadow = 0.0;
+        return shadow;
+    }
     
     inline Color Execute(Vertex_OUT const& _in) const override
     {
@@ -62,7 +76,7 @@ public:
         glm::vec3 B = glm::cross(N, T);
         glm::mat3x3 TBN = glm::mat3x3(T, B, N);
         
-        glm::vec3 toEye = glm::normalize(Pass().eyePos - glm::vec3(_in.positionModel));
+        glm::vec3 toEye = glm::normalize(Pass().eyePos - glm::vec3(_in.posModel));
         glm::vec3 viewT = glm::transpose(TBN) * toEye;
         viewT.y = -viewT.y;
         
@@ -107,13 +121,16 @@ public:
             ambientFactor *= glm::vec3(ambient(uv));
         
         BlinnPhongData d = { diffuse, F0, shininess};
-        glm::vec3 shadowFactor = glm::vec3(1.0f, 1.0f, 1.0f);
-        glm::vec4 directLight = ComputeLighting(Light(), d, _in.positionModel, normalW, toEye, shadowFactor);
+        float shadowFactor = 0.0f;
+        if (Has_shadow())
+            shadowFactor = ShadowCalc(_in.posLightSpace);
+        glm::vec4 directLight = ComputeLighting(Light(), d, _in.posModel, normalW, toEye, 0.0f);
 
-        Color litColor = Color::FromVec4(glm::clamp(glm::vec4(ambientFactor, 1.0f) + directLight, 0.0f, 1.0f));
-        litColor.a = (uint8_t)(mat().diffuseAlbedo.a * 255.0f);
-
-        return litColor;
+        vec4 litColor = glm::clamp(glm::vec4(ambientFactor, 1.0f) + directLight * (1.0f - shadowFactor), 0.0f, 1.0f);
+        litColor.a = mat().diffuseAlbedo.a;
+        Color out = Color::FromVec4(litColor);
+        
+        return out;
     }
 };
 

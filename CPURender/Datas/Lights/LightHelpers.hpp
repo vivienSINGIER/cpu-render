@@ -8,6 +8,7 @@
 #include <glm/ext/matrix_transform.hpp>
 
 #include "LightData.hpp"
+#include "../Maths/Frustum.h"
 
 namespace Lighting
 {
@@ -115,7 +116,7 @@ namespace Lighting
         return BlinnPhong(lightStrength, lightVec, _normal, _toEye, _mat) * glm::vec3(_l.color);
     }
 
-    inline glm::vec4 ComputeLighting(LightPassCB _lightData, BlinnPhongData _mat, glm::vec3 _pos, glm::vec3 _normal, glm::vec3 _toEye, glm::vec3 _shadowFactor)
+    inline glm::vec4 ComputeLighting(LightPassCB _lightData, BlinnPhongData _mat, glm::vec3 _pos, glm::vec3 _normal, glm::vec3 _toEye, float _shadowFactor)
     {
         glm::vec3 result = glm::vec4(0.0f);
     
@@ -142,14 +143,14 @@ namespace Lighting
             result += ComputeSpotLight(_lightData.lights[i], _mat, _pos, _normal, _toEye);
         }
     
-        return glm::vec4(result, 0.0f);
+        return glm::vec4(result, 0.0f) * (1.0f - _shadowFactor);
     }
     
     inline glm::mat4x4 ComputeDirLightViewProj(
         glm::mat4x4 const& _camView,
         glm::mat4x4 const& _camProjShadow,
         glm::vec3 _lightDir,
-        uint32_t _shadowMapSize,
+        Frustum _out,
         float _zExtend)     // Extra depth towards the light for off screen caster
     {
         glm::mat4x4 invVP = glm::inverse(_camProjShadow * _camView);
@@ -187,6 +188,7 @@ namespace Lighting
         // lightProj[3][0] += offset.x;
         // lightProj[3][1] += offset.y;
         
+        _out = Frustum(lightView, lightProj);
         return glm::transpose(lightProj * lightView);
     }
 }

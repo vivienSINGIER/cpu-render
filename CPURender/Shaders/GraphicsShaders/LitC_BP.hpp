@@ -19,8 +19,8 @@ public:
     {
         Vertex_OUT v;
         v.color = _in.color;
-        v.positionModel = Object().model * glm::vec4({ _in.position, 1 });
-        v.positionH = Pass().proj * Pass().view * v.positionModel;
+        v.posModel = Object().model * glm::vec4({ _in.position, 1 });
+        v.posH = Pass().proj * Pass().view * v.posModel;
         v.normal = glm::mat3x3(Object().normalMatrix) * _in.normal;
         v.uv = _in.uv;
         return v;
@@ -45,13 +45,13 @@ public:
     {
         glm::vec3 normalW = glm::normalize(_in.normal);
 
-        glm::vec3 toEye = glm::normalize(Pass().eyePos - glm::vec3(_in.positionModel));
+        glm::vec3 toEye = glm::normalize(Pass().eyePos - glm::vec3(_in.posModel));
         glm::vec4 ambient = Light().ambientLight * mat().diffuseAlbedo;
 
         float shininess = 1.0f - mat().roughness;
         BlinnPhongData d = { mat().diffuseAlbedo, mat().fresnelR0, shininess};
-        glm::vec3 shadowFactor = glm::vec3(1.0f, 1.0f, 1.0f);
-        glm::vec4 directLight = ComputeLighting(Light(), d, _in.positionModel, normalW, toEye, shadowFactor);
+        float shadowFactor = 0.0f;
+        glm::vec4 directLight = ComputeLighting(Light(), d, _in.posModel, normalW, toEye, shadowFactor);
 
         Color litColor = Color::FromVec4(glm::clamp(ambient + directLight, 0.0f, 1.0f));
         litColor.a = (uint8_t)(mat().diffuseAlbedo.a * 255.0f);

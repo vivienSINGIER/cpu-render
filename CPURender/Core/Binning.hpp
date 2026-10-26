@@ -42,22 +42,22 @@ namespace Binning
     
     inline BoundingBox GetBoundingBox(Triangle _tri)
     {
-        float minX = _tri.v1.positionH.x;
-        float maxX = _tri.v1.positionH.x;
-        float minY = _tri.v1.positionH.y;
-        float maxY = _tri.v1.positionH.y;
+        float minX = _tri.v1.posH.x;
+        float maxX = _tri.v1.posH.x;
+        float minY = _tri.v1.posH.y;
+        float maxY = _tri.v1.posH.y;
 
-        minX = _tri.v2.positionH.x < minX ? _tri.v2.positionH.x : minX;
-        minX = _tri.v3.positionH.x < minX ? _tri.v3.positionH.x : minX;
+        minX = _tri.v2.posH.x < minX ? _tri.v2.posH.x : minX;
+        minX = _tri.v3.posH.x < minX ? _tri.v3.posH.x : minX;
 
-        maxX = _tri.v2.positionH.x > maxX ? _tri.v2.positionH.x : maxX;
-        maxX = _tri.v3.positionH.x > maxX ? _tri.v3.positionH.x : maxX;
+        maxX = _tri.v2.posH.x > maxX ? _tri.v2.posH.x : maxX;
+        maxX = _tri.v3.posH.x > maxX ? _tri.v3.posH.x : maxX;
 
-        minY = _tri.v2.positionH.y < minY ? _tri.v2.positionH.y : minY;
-        minY = _tri.v3.positionH.y < minY ? _tri.v3.positionH.y : minY;
+        minY = _tri.v2.posH.y < minY ? _tri.v2.posH.y : minY;
+        minY = _tri.v3.posH.y < minY ? _tri.v3.posH.y : minY;
 
-        maxY = _tri.v2.positionH.y > maxY ? _tri.v2.positionH.y : maxY;
-        maxY = _tri.v3.positionH.y > maxY ? _tri.v3.positionH.y : maxY;
+        maxY = _tri.v2.posH.y > maxY ? _tri.v2.posH.y : maxY;
+        maxY = _tri.v3.posH.y > maxY ? _tri.v3.posH.y : maxY;
         
         return BoundingBox{(int)floor(minX), (int)floor(minY), (int)ceil(maxX), (int)ceil(maxY)};
     }

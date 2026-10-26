@@ -403,17 +403,17 @@ void Device::ClipToScreen(std::vector<Vertex_OUT>& _inOut)
 #pragma omp parallel for
 	for (uint32_t v = 0; v < _inOut.size(); v++)
 	{
-		wPreDiv[v] = _inOut[v].positionH.w;
+		wPreDiv[v] = _inOut[v].posH.w;
 
 		// Perspective Divide
-		_inOut[v].positionH /= _inOut[v].positionH.w;
+		_inOut[v].posH /= _inOut[v].posH.w;
 
 		// Ndc
-		_inOut[v].positionH = _inOut[v].positionH * 0.5f + 0.5f; 
+		_inOut[v].posH = _inOut[v].posH * 0.5f + 0.5f; 
 
 		// To Screen
-		_inOut[v].positionH[0] = _inOut[v].positionH[0] * m_viewport[2] + m_viewport[0];
-		_inOut[v].positionH[1] = _inOut[v].positionH[1] * m_viewport[3] + m_viewport[1];
+		_inOut[v].posH[0] = _inOut[v].posH[0] * m_viewport[2] + m_viewport[0];
+		_inOut[v].posH[1] = _inOut[v].posH[1] * m_viewport[3] + m_viewport[1];
 	}
 }
 
@@ -477,13 +477,13 @@ void Device::RasterStep(std::vector<Vertex_OUT> const& _vBuffer, ShaderStages _s
 					if (state.depthWrite && db)
 						db->SetPixelData<float>(x, y, pixelDepth);
 					
-					Vertex_OUT px;
-					px.positionH = posH;
-					InterpolateVertex(px, glm::vec2({ (float)x + 0.5f, (float)y + 0.5f }), tri, baryP);
-					
 					if (writeColor == false)
 						continue;
-	
+					
+					Vertex_OUT px;
+					px.posH = posH;
+					InterpolateVertex(px, glm::vec2({ (float)x + 0.5f, (float)y + 0.5f }), tri, baryP);
+					
 					fb->Store(x, y, _s.ps->Execute(px)); 
 				}
 			}

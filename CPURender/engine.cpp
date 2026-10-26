@@ -48,6 +48,7 @@ void Engine::RotateCamera(float _yaw, float _pitch)
 void Engine::InitLightScene()
 {
     m_lightData.lights[0] = MakeDirectionalLight({1.0f, -1.0f, 1.0f}, 0.8f);
+    m_lightData.ambient = 0.4f;
 }
 
 void Engine::UpdateCamera(float _dt)
@@ -112,13 +113,14 @@ void Engine::init(Texture* _frameBuffer)
 
     m_mat = ShaderFactory::Instance()->CreateMaterial("LitT_BP");
     m_mat->SetParams<LitT_BP_PS::MaterialCB>(LitT_BP_PS::CB_SLOT_mat, cb);
-    // m_mat->SetTexture(LitT_BP_PS::TEX_SLOT_diffuse, diff);
-    // m_mat->SetTexture(LitT_BP_PS::TEX_SLOT_ambient, ambient);
-    // m_mat->SetTexture(LitT_BP_PS::TEX_SLOT_normal, normal);
-    //
-    // m_mat->SetTexture(LitT_BP_PS::TEX_SLOT_roughness, roughness);
-    // m_mat->SetTexture(LitT_BP_PS::TEX_SLOT_displacement, displacement);
-    // m_mat->SetTexture(LitT_BP_PS::TEX_SLOT_metal, metalness);
+    m_mat->SetTexture(LitT_BP_PS::TEX_SLOT_diffuse, diff);
+    m_mat->SetTexture(LitT_BP_PS::TEX_SLOT_ambient, ambient);
+    m_mat->SetTexture(LitT_BP_PS::TEX_SLOT_normal, normal);
+    
+    m_mat->SetTexture(LitT_BP_PS::TEX_SLOT_roughness, roughness);
+    m_mat->SetTexture(LitT_BP_PS::TEX_SLOT_displacement, displacement);
+    m_mat->SetTexture(LitT_BP_PS::TEX_SLOT_metal, metalness);
+    m_mat->SetTexture(LitT_BP_PS::TEX_SLOT_shadow, m_shadowPass.fb.depthBuffer);
 
     // for (int i = -1; i < 2; ++i)
     // {
@@ -169,23 +171,30 @@ void Engine::mainLoop()
 
     mainScene.Update(dt);
     
+    Frustum shadowFrustum;
+    glm::mat4x4 lightSpace = Lighting::ComputeDirLightViewProj(m_shadowPass.view.view, m_camera.GetShadowProj(), 
+                                        m_lightData.lights[0].light.direction, shadowFrustum, 0.0f);
+    
     m_camera.FillData(&m_mainPass.view);
     m_mainPass.view.deltaTime = dt;
     m_mainPass.view.totalTime = static_cast<float>(now);
+    m_mainPass.view.lightSpace = lightSpace;
     
     m_camera.FillData(&m_shadowPass.view);
-    m_shadowPass.view.viewProj = Lighting::ComputeDirLightViewProj(m_shadowPass.view.view, m_camera.GetShadowProj(), 
-                                        m_lightData.lights[0].light.direction, 512, 0.0f);
+    m_shadowPass.view.viewProj = lightSpace;
     
     // Draw //
 
     m_device.BeginFrame();
+    
     m_device.BeginPass(m_shadowPass);
-        mainScene.Draw(&m_device, m_camera.GetFrustum());
+        mainScene.Draw(&m_device, shadowFrustum);
     m_device.EndPass();
+    
     m_device.BeginPass(m_mainPass);
         mainScene.Draw(&m_device, m_camera.GetFrustum());
     m_device.EndPass();
+    
     m_device.EndFrame();
     m_device.Present(m_mainPass.fb.gBuffer[0]);
 }

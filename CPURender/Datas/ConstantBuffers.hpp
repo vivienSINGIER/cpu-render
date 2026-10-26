@@ -21,8 +21,11 @@ struct PerPassCB
     glm::vec2 renderTargetSize;
     glm::vec2 invRenderTargetSize;
 
+    // TODO remove & adapt Lambert Shader
     glm::vec3 lightDirection;
     float lightIntensity;
+    
+    glm::mat4x4 lightSpace;
 };
 
 struct PerObjectCB
