@@ -124,7 +124,7 @@ void Engine::init(Texture* _frameBuffer)
     m_material->SetTexture(LitT_BP_PS::TEX_SLOT_metal, metalness);
 
     TerrainGenerator gen;
-    gen.m_cellSize = 0.1f;
+    gen.m_cellSize = 0.05f;
     gen.m_grid_size = 100;
     gen.GenerateMesh();
     m_terrain = gen.GetTerrainMesh();

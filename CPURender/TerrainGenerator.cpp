@@ -25,39 +25,26 @@ std::vector<Vertex> MakeCell(size_t _index, Texture _heightmap, std::vector<glm:
 	vBuffer.push_back(MakeVertex(x, y, _heightmap, _cellSize, _sideCellCount)); // top left
 	vBuffer.push_back(MakeVertex(x, y+1, _heightmap, _cellSize, _sideCellCount)); // bottom left
 	vBuffer.push_back(MakeVertex(x+1, y, _heightmap, _cellSize, _sideCellCount)); // top right
+
 	vBuffer.push_back(MakeVertex(x, y + 1, _heightmap, _cellSize, _sideCellCount)); // bottom left
 	vBuffer.push_back(MakeVertex(x + 1, y + 1, _heightmap, _cellSize, _sideCellCount)); // bottom right
 	vBuffer.push_back(MakeVertex(x + 1, y, _heightmap, _cellSize, _sideCellCount)); // top right
 
-	glm::vec3 normalA = glm::cross(vBuffer[1].position - vBuffer[0].position, vBuffer[2].position - vBuffer[0].position);
-	glm::vec3 normalB = glm::cross(vBuffer[4].position - vBuffer[3].position, vBuffer[5].position - vBuffer[3].position);
-
-	float dot = glm::dot(normalA, normalB);
-	//if (dot < 0.0f) // Too sharp
-	//{
-	//	vBuffer[0].normal = normalA;
-	//	vBuffer[1].normal = normalA;
-	//	vBuffer[2].normal = normalA;
-	//	vBuffer[3].normal = normalB;
-	//	vBuffer[4].normal = normalB;
-	//	vBuffer[5].normal = normalB;
-	//}
-	//else // smooth
-	//{
-	//	vBuffer[0].normal = normalA;
-	//	vBuffer[1].normal = normalA/2.0f + normalB/2.0f;
-	//	vBuffer[2].normal = normalA / 2.0f + normalB / 2.0f;
-	//	vBuffer[3].normal = normalA / 2.0f + normalB / 2.0f;
-	//	vBuffer[4].normal = normalB;
-	//	vBuffer[5].normal = normalA / 2.0f + normalB / 2.0f;
-	//}
-	
 	vBuffer[0].normal = _normalmap[_index];
 	vBuffer[1].normal = _normalmap[_index + _sideCellCount];
-	vBuffer[2].normal = _normalmap[_index+1];
+	vBuffer[2].normal = _normalmap[_index + 1];
+
 	vBuffer[3].normal = _normalmap[_index + _sideCellCount];
 	vBuffer[4].normal = _normalmap[_index + _sideCellCount + 1];
-	vBuffer[5].normal = _normalmap[_index+1];
+	vBuffer[5].normal = _normalmap[_index + 1];
+
+	//vBuffer[0].normal = _normalmap[_index];
+	//vBuffer[1].normal = _normalmap[_index];
+	//vBuffer[2].normal = _normalmap[_index];
+
+	//vBuffer[3].normal = _normalmap[_index];
+	//vBuffer[4].normal = _normalmap[_index];
+	//vBuffer[5].normal = _normalmap[_index];
 
 	return vBuffer;
 }
@@ -82,54 +69,58 @@ void TerrainGenerator::GenerateMesh()
 		int x = i % sideVertexCount;
 		int y = i / sideVertexCount;
 
-		heightmap.SetPixelData<float>(x, y, 0.8f * PerlinNoise::FractalBrownianMotion(x, y, 0.01f, 8) + 1.0f * PerlinNoise::FractalBrownianMotion(x / 2, y / 2, 0.05f, 5));
+		heightmap.SetPixelData<float>(x, y, 3.0f*PerlinNoise::FractalBrownianMotion(x, y, 0.01f, 8));// +2.0f * PerlinNoise::FractalBrownianMotion(x / 4, y / 4, 0.05f, 5));
+		//heightmap.SetPixelData<float>(x, y, 0.05f * cos(x * 0.8f) + 0.05f* cos(y * 0.8f));// +2.0f * PerlinNoise::FractalBrownianMotion(x / 4, y / 4, 0.05f, 5));
 	}
 
-	for (size_t i = 0; i < pointCount; i++)
+	// Compute cell normals
+	std::vector<glm::vec3> cellNormalMap(m_grid_size * m_grid_size);
+	for (size_t i = 0; i < m_grid_size * m_grid_size; i++)
 	{
-		int x = i % sideVertexCount;
-		int y = i / sideVertexCount;
-		glm::vec3 normal = glm::vec3(0, 1, 0);
-		float height = heightmap.GetPixelData<float>(x, y);
-		glm::vec3 pos = { x, height, y };
+		int x = i % m_grid_size;
+		int y = i / m_grid_size;
+		glm::vec3 pos1 = { x * m_cellSize, heightmap.GetPixelData<float>(x, y), y * m_cellSize };
+		glm::vec3 pos2 = { x * m_cellSize, heightmap.GetPixelData<float>(x, y + 1), (y + 1) * m_cellSize };
+		glm::vec3 pos3 = { (x + 1) * m_cellSize, heightmap.GetPixelData<float>(x + 1, y), y * m_cellSize };
+		glm::vec3 pos4 = { (x + 1) * m_cellSize, heightmap.GetPixelData<float>(x + 1, y + 1), (y + 1) * m_cellSize };
 
-		if (x > 0) // Get left
+		glm::vec3 normalA = glm::cross(pos2 - pos1, pos3 - pos1);
+		glm::vec3 normalB = glm::cross(pos4 - pos2, pos3 - pos2);
+
+		cellNormalMap[i] = glm::normalize(normalA + normalB);
+	}
+	// Vertice normals
+	size_t cellCount = m_grid_size * m_grid_size;
+	for (size_t i = 0; i < cellCount; i++)
+	{
+		int x = i % m_grid_size;
+		int y = i / m_grid_size;
+		glm::vec3 normal = glm::vec3(0, 0, 0);
+
+		if (x > 0 && y > 0) // Get top left
 		{
-			glm::vec3 posLeft = { x-1, heightmap.GetPixelData<float>(x - 1, y), y };
-			float dot = glm::dot(glm::vec3(0, 1, 0), pos - posLeft);
-
-			normal += glm::vec3(-1, 0, 0) * dot;
+			normal += cellNormalMap[i - 1 - m_grid_size];
 		}; 
 
-		if (x < sideVertexCount - 1) // Get right
+		if (x < m_grid_size - 1 && y > 0) // Get top right
 		{
-			glm::vec3 posRight = { x + 1, heightmap.GetPixelData<float>(x + 1, y), y };
-			float dot = glm::dot(glm::vec3(0, 1, 0), pos - posRight);
-
-			normal += glm::vec3(1, 0, 0) * dot;
+			normal += cellNormalMap[i + 1 - m_grid_size];
 		};
 
-		if (y > 0) // Get top
+		if (x > 0 && y < m_grid_size - 1) // Get bottom left
 		{
-			glm::vec3 posRight = { x, heightmap.GetPixelData<float>(x, y-1), y-1 };
-			float dot = glm::dot(glm::vec3(0, 1, 0), pos - posRight);
-
-			normal += glm::vec3(0, 0, -1) * dot;
+			normal += cellNormalMap[i - 1 + m_grid_size];
 		}
 
-		if (y < sideVertexCount - 1) // Get bottom  
+		if (x < m_grid_size - 1 && y < m_grid_size - 1) // Get bottom right
 		{
-			glm::vec3 posRight = { x, heightmap.GetPixelData<float>(x, y+1), y+1 };
-			float dot = glm::dot(glm::vec3(0, 1, 0), pos - posRight);
-
-			normal += glm::vec3(0, 0, 1) * dot;
+			normal += cellNormalMap[i + 1 + m_grid_size];
 		}
 
 		normalmap[i] = glm::normalize(normal);
 	}
 
 	// Fill Vertex and Index buffer
-	size_t cellCount = m_grid_size * m_grid_size;
 	for (size_t i = 0; i < cellCount; i++)
 	{
 		std::vector<Vertex> subVBuff = MakeCell(i, heightmap, normalmap, m_cellSize, m_grid_size);
