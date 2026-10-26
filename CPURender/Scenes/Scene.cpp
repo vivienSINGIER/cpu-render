@@ -77,13 +77,22 @@ void Scene::Update(float dt)
 		m_octTree.UpdateStatic();
 	}
 
+	bool dirty = false;
 	for (Object* o : m_dynamic_objects)
 	{
+		if (o->transform.IsWorldDirty() == false)
+			continue;
+
+		dirty = true;
 		o->transform.UpdateMatrix();
 		o->mesh.world_box = o->mesh.local_box.Transformed(o->transform.GetMatrix());
 	}
 
-	m_octTree.UpdateDynamic();
+	if (dirty)
+	{
+		dirty = false;
+		m_octTree.UpdateDynamic();
+	}
 }
 
 std::vector<Object*>* Scene::GetObjects(ObjectType type)
