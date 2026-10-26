@@ -150,6 +150,7 @@ namespace Lighting
         glm::mat4x4 const& _camView,
         glm::mat4x4 const& _camProjShadow,
         glm::vec3 _lightDir,
+        uint32_t _shadowMapSize,
         Frustum _out,
         float _zExtend)     // Extra depth towards the light for off screen caster
     {
@@ -180,13 +181,13 @@ namespace Lighting
         
         mat4x4 lightProj = glm::orthoLH_NO(-radius, radius, -radius, radius, 0.0f, 2.0f * radius + _zExtend);
         
-        // glm::mat4x4 viewProj = lightProj * lightView;
-        // glm::vec4 origin = viewProj * glm::vec4(0, 0, 0, 1);
-        // origin *= (float)_shadowMapSize * 0.5f;
-        // glm::vec4 rounded = round(origin);
-        // vec4 offset = (rounded - origin) * (2.0f / (float)_shadowMapSize);
-        // lightProj[3][0] += offset.x;
-        // lightProj[3][1] += offset.y;
+        glm::mat4x4 viewProj = lightProj * lightView;
+        glm::vec4 origin = viewProj * glm::vec4(0, 0, 0, 1);
+        origin *= (float)_shadowMapSize * 0.5f;
+        glm::vec4 rounded = round(origin);
+        vec4 offset = (rounded - origin) * (2.0f / (float)_shadowMapSize);
+        lightProj[3][0] += offset.x;
+        lightProj[3][1] += offset.y;
         
         _out = Frustum(lightView, lightProj);
         return glm::transpose(lightProj * lightView);

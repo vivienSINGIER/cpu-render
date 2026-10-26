@@ -85,8 +85,11 @@ void Engine::init(Texture* _frameBuffer)
     InitLightScene();
     
     m_mainPass.fb = m_device.GetDefaultFrameBuffer();
-    m_shadowPass.fb = m_device.CreateFrameBuffer(2048, 2048, 0, true);
+    
+    m_shadowPass.fb = m_device.CreateFrameBuffer(512, 512, 0, true);
     m_shadowPass.state.cullMode = CullMode::FRONT;
+    
+    m_postProcPass.isCompute = true;
     
     m_device.SetRenderTarget(_frameBuffer);
     m_device.SetLightData(m_lightData);
@@ -121,6 +124,9 @@ void Engine::init(Texture* _frameBuffer)
     m_mat->SetTexture(LitT_BP_PS::TEX_SLOT_displacement, displacement);
     m_mat->SetTexture(LitT_BP_PS::TEX_SLOT_metal, metalness);
     m_mat->SetTexture(LitT_BP_PS::TEX_SLOT_shadow, m_shadowPass.fb.depthBuffer);
+    
+    m_groupDebugMat = ShaderFactory::Instance()->CreateComputeMaterial("GroupDebug");
+    m_groupDebugMat->SetRWTexture(GroupDebug_CS::UAV_SLOT_target, m_mainPass.fb.gBuffer[0]);
 
     // for (int i = -1; i < 2; ++i)
     // {
@@ -173,7 +179,7 @@ void Engine::mainLoop()
     
     Frustum shadowFrustum;
     glm::mat4x4 lightSpace = Lighting::ComputeDirLightViewProj(m_shadowPass.view.view, m_camera.GetShadowProj(), 
-                                        m_lightData.lights[0].light.direction, shadowFrustum, 0.0f);
+                                        m_lightData.lights[0].light.direction, m_shadowPass.fb.width, shadowFrustum, 0.0f);
     
     m_camera.FillData(&m_mainPass.view);
     m_mainPass.view.deltaTime = dt;
@@ -194,6 +200,10 @@ void Engine::mainLoop()
     m_device.BeginPass(m_mainPass);
         mainScene.Draw(&m_device, m_camera.GetFrustum());
     m_device.EndPass();
+    
+    // m_device.BeginPass(m_postProcPass);
+    //     m_device.Dispatch(m_groupDebugMat.get(), 64, 64, 1);
+    // m_device.EndPass();
     
     m_device.EndFrame();
     m_device.Present(m_mainPass.fb.gBuffer[0]);

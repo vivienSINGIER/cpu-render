@@ -41,9 +41,12 @@ private:
 	Transform m_camTransform;
 
 	Material m_mat;
+	Material m_groupDebugMat;
 
 	PassDesc m_shadowPass;
 	PassDesc m_mainPass;
+	PassDesc m_postProcPass;
+	
 	LightData m_lightData;
 	
 	void InitLightScene();
