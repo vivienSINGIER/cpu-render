@@ -92,7 +92,7 @@ public:
 protected: 
     ComputeShader(GraphicsContext* _ctx, glm::uvec3 _groupSize);
     
-    CB const& Dispatch() const;
+    DispatchCB const& Dispatch() const;
     
 private:
     glm::uvec3 m_groupSize;

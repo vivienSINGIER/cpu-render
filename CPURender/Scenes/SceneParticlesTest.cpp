@@ -100,8 +100,6 @@ void SceneParticlesTest::OnDraw(Device* _pDevice)
 
     _pDevice->BeginPass(m_particlesPass);
 
-    //_pDevice->Dispatch(m_particleMat.get(), )
-
     size_t count = 0;
     for (int i = 0; i < m_uav_view.count; ++i)
     {
@@ -109,6 +107,8 @@ void SceneParticlesTest::OnDraw(Device* _pDevice)
        
         if (p.lifeTime <= 0.f)
             continue;
+
+        m_pDevice->Dispatch(m_particleMat.get(), );
 
         count++;
     }
