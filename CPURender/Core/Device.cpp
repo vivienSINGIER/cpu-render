@@ -21,7 +21,7 @@ Device::Device() : m_ctx()
 	m_defaultFB.height = HEIGHT;
 	m_defaultFB.gBuffer[0] = m_ctx.textureHeap.Create<Texture>(WIDTH, HEIGHT, Texture::RGBA32, Texture::MORTON, Color::WHITE);
 	m_defaultFB.depthBuffer = m_ctx.textureHeap.Create<Texture>(WIDTH, HEIGHT, Texture::R32F, Texture::MORTON, Color::BLACK);
-	m_defaultFB.clearColor = vec4(0.1f, 0.1, 0.1, 1.0f);
+	m_defaultFB.clearColor = vec4(0.1f, 0.1, 0.2, 1.0f);
 	
 	m_perPassCB = m_ctx.constantBufferHeap.Create(sizeof(PerPassCB));
 	m_lightCB = m_ctx.constantBufferHeap.Create(sizeof(LightPassCB));
@@ -478,7 +478,7 @@ void Device::RasterStep(std::vector<Vertex_OUT> const& _vBuffer, ShaderStages _s
 					px.posH = posH;
 					InterpolateVertex(px, glm::vec2({ (float)x + 0.5f, (float)y + 0.5f }), tri, baryP);
 					
-					if (state.depthWrite && db && px.color.a == 1.0f || state.blendMode == Blending::OPAQUE)
+					if (state.depthWrite && db && px.color.a >= 1.0f || state.blendMode == Blending::OPAQUE)
 						db->Store(x, y, vec4(pixelDepth, 0.0f, 0.0f, 1.0f));
 					
 					if (writeColor == false)

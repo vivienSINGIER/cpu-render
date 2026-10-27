@@ -10,7 +10,7 @@
 
 void TexturedBP_Scene::InitLightScene()
 {
-    m_lightData.lights[0] = MakeDirectionalLight({1.0f, -1.0f, 1.0f}, 0.75f, Color::WHITE);
+    m_lightData.lights[0] = MakeDirectionalLight({1.0f, -1.0f, 1.0f}, 0.8f, Color::WHITE);
     m_lightData.lights[1] = MakePointLight({5.0f, 0.0f, 5.0f}, 0.5f, { 5.0f, 25.0f }, Color::RED);
     m_lightData.ambient = 0.2f;
 }

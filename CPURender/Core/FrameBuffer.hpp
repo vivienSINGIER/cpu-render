@@ -37,7 +37,7 @@ struct PipelineState
     bool depthWrite = true;
     
     CullMode cullMode = CullMode::BACK;
-    Blending::BlendMode blendMode = Blending::BlendMode::ALPHA;
+    Blending::BlendMode blendMode = Blending::BlendMode::OPAQUE;
 };
 
 struct ClearFlags
