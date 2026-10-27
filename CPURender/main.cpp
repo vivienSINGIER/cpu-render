@@ -57,7 +57,7 @@ int main(void) {
 
     texture = SDL_CreateTexture(
         renderer,
-        SDL_PIXELFORMAT_ARGB32,
+        SDL_PIXELFORMAT_RGBA128_FLOAT,
         SDL_TEXTUREACCESS_STREAMING,
         WIDTH,
         HEIGHT
@@ -76,7 +76,7 @@ int main(void) {
     }
 
     Engine engine;
-    Texture frameBuffer(WIDTH, HEIGHT,  Texture::ARGB8, Texture::LINEAR);
+    Texture frameBuffer(WIDTH, HEIGHT,  Texture::RGBA32, Texture::LINEAR);
     engine.Init<Transparency_Scene>(&frameBuffer);
     bool isRunning = true;
     uint32_t frame = 1;
@@ -100,7 +100,7 @@ int main(void) {
             texture,
             NULL,
             frameBuffer.GetData(),
-            (int)(frameBuffer.Width() * sizeof(Color))
+            (int)(frameBuffer.Width() * sizeof(vec4))
         );
 
         /* Render texture and display the renderer */

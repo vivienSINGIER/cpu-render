@@ -22,7 +22,7 @@ enum CullMode
 struct FrameBuffer
 {
     std::array<Handle, MAX_RT> gBuffer;
-    Color clearColor;
+    glm::vec4 clearColor;
     
     Handle depthBuffer;
     bool useDepth = true;
