@@ -52,10 +52,12 @@ void SceneParticlesTest::OnInit(Device* _pDevice)
     m_mat->SetTexture(LitT_BP_PS::TEX_SLOT_displacement, displacement);
     m_mat->SetTexture(LitT_BP_PS::TEX_SLOT_metal, metalness);
 
+    m_unlit = ShaderFactory::Instance()->CreateMaterial("UnlitC");
+
     Object* o = CreateObject(DYNAMIC);
     o->mesh = m;
     o->mat = m_mat.get();
-    o->transform.SetPosition(glm::vec3(0, 0, 0));
+    o->transform.SetPosition(glm::vec3(0, 2, 0));
 
     Object* floor = CreateObject(DYNAMIC);
     floor->mesh = cube;
@@ -63,19 +65,34 @@ void SceneParticlesTest::OnInit(Device* _pDevice)
     floor->transform.SetPosition(glm::vec3(0.0f, -2.f, 0.f));
     floor->transform.SetScale(glm::vec3(25.0f, 0.2f, 25.0f));
 
-    m_uav_buffer = BufferFactory::Instance()->CreateUAVBuffer<Particle>(1'600);
+    m_uav_buffer = BufferFactory::Instance()->CreateUAVBuffer<UavParticle>(MAX_PARTICLES);
     m_CS_handle = ShaderFactory::Instance()->CreateComputeShader<ParticleCS>();
 
     m_uav_view = m_pDevice->m_ctx.uavHeap.GetView(m_uav_buffer);
 
     m_particleMat = ShaderFactory::Instance()->CreateComputeMaterial("Particle");
     m_particleMat->SetUAVBuffer(0, m_uav_buffer);
-    m_particleMat->SetRWTexture(GammaCorr_CS::UAV_SLOT_target, m_mainPass.fb.gBuffer[0]);
 
-    BufferFactory::Instance()->Fill(m_uav_buffer, Particle());
-
+    BufferFactory::Instance()->Fill(m_uav_buffer, UavParticle());
     ParticleManager::Instance()->m_uavBuffer = m_uav_buffer;
-    ParticleManager::Instance()->Spawn(glm::vec3(0, 0, 0), 100, 0, { 0.1f, 0.1f }, 0.1f, 1.f, glm::vec4(1, 1, 1, 1), 1.f, 3.f);
+    ParticleManager::Instance()->Spawn(glm::vec3(0, 0, 0), 64, 0, 0.1f, 0.35f, 0.75f, glm::vec4(1, 1, 1, 1), 3.f, 5.f);
+
+    //TODO CHANGE
+    std::vector<Vertex> vertices;
+    std::vector<uint32_t> indices;
+
+    vertices = {
+        Vertex{glm::vec3(-0.5f, -0.5f, 0.f), glm::vec2(0.0f, 0.0f)},
+        Vertex{glm::vec3(0.5f, -0.5f, 0.f), glm::vec2(1.0f, 0.0f)},
+        Vertex{glm::vec3(-0.5f, 0.5f,  0.f), glm::vec2(0.0f, 1.0f)},
+        Vertex{glm::vec3(0.5f, 0.5f,  0.f), glm::vec2(1.0f, 1.f)},
+    };
+
+    indices = {
+        0, 2, 1,   3, 1, 2
+    };
+
+    mesh_test_particle = GeometryFactory::Instance()->CreateMesh(vertices, indices);
 }
 
 void SceneParticlesTest::OnHandleEvent(const SDL_Event& event)
@@ -100,20 +117,30 @@ void SceneParticlesTest::OnDraw(Device* _pDevice)
 
     _pDevice->BeginPass(m_particlesPass);
 
-    size_t count = 0;
-    for (int i = 0; i < m_uav_view.count; ++i)
+    size_t count = m_uav_view.count;
+    _pDevice->Dispatch(m_particleMat.get(), count / ParticleCS::GROUP_SIZE + 1, 1, 1);
+
+    for (int i = 0; i < count; i++)
     {
-        Particle p = BufferFactory::Instance()->Read<Particle>(m_uav_buffer, i);
-       
+        const UavParticle& p = BufferFactory::Instance()->Read<UavParticle>(m_uav_buffer, i);
+
         if (p.lifeTime <= 0.f)
             continue;
 
-        m_pDevice->Dispatch(m_particleMat.get(), );
+        std::cout << "Draw particle\n";
+        UnlitC_PS::UnlitColor c =
+        {
+            Color(p.color.a * 255.f, p.color.r * 255.f, p.color.g * 255.f, p.color.b * 255.f)
+        };
+        m_unlit->SetParams<UnlitC_PS::UnlitColor>(UnlitC_PS::CB_SLOT_mat, c);
 
-        count++;
+        Transform world = {};
+        world.SetPosition(p.pos);
+        world.SetScale(p.size);
+        world.SetRotationQuaternion(m_camTransform.GetRotation());
+
+        _pDevice->RegisterCommand(mesh_test_particle, world.GetMatrix(), m_unlit.get());
     }
-
-    std::cout << "Particles to draw = " << count << std::endl;
 
     _pDevice->EndPass();
 }

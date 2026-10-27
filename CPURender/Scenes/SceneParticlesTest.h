@@ -18,6 +18,7 @@ protected:
 
 private:
     Material m_mat;
+    Material m_unlit;
 
     PassDesc m_mainPass;
     PassDesc m_particlesPass;
@@ -29,5 +30,7 @@ private:
 
     Handle m_uav_buffer;
     UAVView m_uav_view;
+
+    Mesh mesh_test_particle;
 };
 

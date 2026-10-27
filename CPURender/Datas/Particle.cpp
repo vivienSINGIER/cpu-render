@@ -13,7 +13,7 @@ ParticleManager* ParticleManager::Instance()
 	return m_pInstance;
 }
 
-void ParticleManager::Spawn(glm::vec3 _spawn_pos, size_t _amount, float _radius, glm::vec2 _size, float _min_speed, float _max_speed, glm::vec4 _color, float _min_life_time, float _max_life_time)
+void ParticleManager::Spawn(glm::vec3 _spawn_pos, size_t _amount, float _radius, float _size, float _min_speed, float _max_speed, glm::vec4 _color, float _min_life_time, float _max_life_time)
 {
 	if (m_uavBuffer.IsValid() == false)
 	{
@@ -35,7 +35,7 @@ void ParticleManager::Spawn(glm::vec3 _spawn_pos, size_t _amount, float _radius,
 
 	for (int i = 0; i < _amount; i++)
 	{
-		Particle p;
+		UavParticle p;
 		p.pos = glm::vec3(_spawn_pos.x + rand_range(-_radius, _radius), _spawn_pos.y + rand_range(-_radius, _radius), _spawn_pos.z + rand_range(-_radius, _radius));
 		p.size = _size;
 		p.speed = rand_range(_min_speed, _max_speed);
@@ -43,6 +43,7 @@ void ParticleManager::Spawn(glm::vec3 _spawn_pos, size_t _amount, float _radius,
 		p.lifeTime = rand_range(_min_life_time, _max_life_time);
 
 		//TODO EDIT
+		p.dir = glm::normalize(glm::vec3(rand_range(), rand_range(), rand_range()));
 		p.rotationRad = 0.f;
 
 		BufferFactory::Instance()->Write(m_uavBuffer, i, p);
