@@ -169,6 +169,71 @@ Mesh GeometryFactory::BuildCube(bool _randomColors)
 	return CreateMesh(vertices, indices);
 }
 
+Mesh GeometryFactory::BuildSkybox()
+{
+	std::vector<Vertex> vertices;
+	std::vector<uint32_t> indices;
+
+	const float s = 1.0f/3.0f;
+	const glm::vec2 dFactor = glm::vec2(1*s, 2*s);
+	const glm::vec2 uFactor = glm::vec2(0*s, 2*s);
+	const glm::vec2 lFactor = glm::vec2(0*s, 1*s);
+	const glm::vec2 rFactor = glm::vec2(1*s, 1*s);
+	const glm::vec2 fFactor = glm::vec2(0*s, 0*s);
+	const glm::vec2 bFactor = glm::vec2(1*s, 0*s);
+
+	vertices = {
+		// DOWN  (y = -0.5)
+		Vertex{glm::vec3(-0.5f, -0.5f, -0.5f), glm::vec2(0.0f, 1.0f) * s + dFactor},
+		Vertex{glm::vec3(-0.5f, -0.5f,  0.5f), glm::vec2(0.0f, 0.0f) * s + dFactor},
+		Vertex{glm::vec3(0.5f, -0.5f, -0.5f), glm::vec2(1.0f, 1.0f) * s + dFactor},
+		Vertex{glm::vec3(0.5f, -0.5f,  0.5f), glm::vec2(1.0f, 0.0f) * s + dFactor},
+		// UP    (y = +0.5)
+		Vertex{glm::vec3(-0.5f,  0.5f, -0.5f), glm::vec2(0.0f, 0.0f) * s + uFactor},
+		Vertex{glm::vec3(-0.5f,  0.5f,  0.5f), glm::vec2(0.0f, 1.0f) * s + uFactor},
+		Vertex{glm::vec3(0.5f,  0.5f, -0.5f), glm::vec2(1.0f, 0.0f) * s + uFactor},
+		Vertex{glm::vec3(0.5f,  0.5f,  0.5f), glm::vec2(1.0f, 1.0f) * s + uFactor},
+		// LEFT  (x = -0.5)
+		Vertex{glm::vec3(-0.5f, -0.5f, -0.5f), glm::vec2(0.0f, 1.0f)*s + lFactor},
+		Vertex{glm::vec3(-0.5f, -0.5f,  0.5f), glm::vec2(1.0f, 1.0f)*s + lFactor},
+		Vertex{glm::vec3(-0.5f,  0.5f, -0.5f), glm::vec2(0.0f, 0.0f)*s + lFactor},
+		Vertex{glm::vec3(-0.5f,  0.5f,  0.5f), glm::vec2(1.0f, 0.0f)*s + lFactor},
+		// RIGHT (x = +0.5)
+		Vertex{glm::vec3(0.5f, -0.5f, -0.5f), glm::vec2(1.0f, 1.0f)*s + rFactor},
+		Vertex{glm::vec3(0.5f, -0.5f,  0.5f), glm::vec2(0.0f, 1.0f)*s + rFactor},
+		Vertex{glm::vec3(0.5f,  0.5f, -0.5f), glm::vec2(1.0f, 0.0f)*s + rFactor},
+		Vertex{glm::vec3(0.5f,  0.5f,  0.5f), glm::vec2(0.0f, 0.0f)*s + rFactor},
+		// FRONT (z = -0.5)
+		Vertex{glm::vec3(-0.5f, -0.5f, -0.5f), glm::vec2(1.0f, 1.0f) * s + bFactor},
+		Vertex{glm::vec3(0.5f, -0.5f, -0.5f), glm::vec2(0.0f, 1.0f) * s + bFactor},
+		Vertex{glm::vec3(-0.5f,  0.5f, -0.5f), glm::vec2(1.0f, 0.0f) * s + bFactor},
+		Vertex{glm::vec3(0.5f,  0.5f, -0.5f), glm::vec2(0.0f, 0.0f) * s + bFactor},
+		// BACK  (z = +0.5)
+		Vertex{glm::vec3(-0.5f, -0.5f,  0.5f), glm::vec2(0.0f, 1.0f) * s + fFactor},
+		Vertex{glm::vec3(0.5f, -0.5f,  0.5f), glm::vec2(1.0f, 1.0f) * s + fFactor},
+		Vertex{glm::vec3(-0.5f,  0.5f,  0.5f), glm::vec2(0.0f, 0.0f) * s + fFactor},
+		Vertex{glm::vec3(0.5f,  0.5f,  0.5f), glm::vec2(1.0f, 0.0f) * s + fFactor},
+	};
+
+	indices = {
+		// DOWN
+		0, 1, 2,   3,  2,  1,
+		// UP
+		4,  6,  5,  7,  5,  6,
+		// LEFT
+		8,  10, 9,  9, 10, 11,
+		// RIGHT
+		12, 13, 14,  13, 15, 14,
+		// FRONT
+		16, 17, 18,  17, 19, 18,
+		// BACK
+		20, 22, 21,  21, 22, 23,
+	};
+
+	vertices = CalculateNormalsAndTangents(vertices, indices);
+	return CreateMesh(vertices, indices);
+}
+
 ////////////////////////////////////////////
 //// TRIANGLE
 ////////////////////////////////////////////

@@ -33,6 +33,7 @@ public:
     void SetSize(uint32 _width, uint32 _height);
     
     glm::vec4 SampleNP(glm::vec2 uv) const; // nearest point, format aware
+    glm::vec4 SampleNPCube(glm::vec3 _dir) const; 
     
     // vec4 is always (r, g, b, a)
     glm::vec4   Load(uint32 _x, uint32 _y) const;

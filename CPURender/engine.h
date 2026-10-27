@@ -41,6 +41,7 @@ private:
 	Transform m_camTransform;
 
 	Material m_mat;
+	Material m_mat2;
 	Material m_gammaCorrectMat;
 
 	bool togglePostProc = false;

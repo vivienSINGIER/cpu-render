@@ -20,6 +20,7 @@
 #include "Shaders/Shaders.h"
 #include "Factories/ShaderFactory.h"
 #include "Factories/TextureFactory.h"
+#include "Cubemap.h"
 
 #include "Octree.h"
 
@@ -47,9 +48,12 @@ void Engine::RotateCamera(float _yaw, float _pitch)
 
 void Engine::InitLightScene()
 {
-    m_lightData.lights[0] = MakeDirectionalLight({1.0f, -1.0f, 1.0f}, 0.75f, Color::WHITE);
-    m_lightData.lights[1] = MakePointLight({5.0f, 0.0f, 5.0f}, 0.5f, { 5.0f, 25.0f }, Color::RED);
-    m_lightData.ambient = 0.2f;
+    m_lightData.lights[0] = MakeDirectionalLight({1.0f, -1.0f, 1.0f}, 0.25f, Color::WHITE);/*
+    m_lightData.lights[1] = MakeDirectionalLight({1.0f, -1.0f, -1.0f}, 0.25f, Color::WHITE);
+    m_lightData.lights[2] = MakeDirectionalLight({-1.0f, -1.0f, 1.0f}, 0.25f, Color::WHITE);
+    m_lightData.lights[3] = MakeDirectionalLight({-1.0f, -1.0f, -1.0f}, 0.25f, Color::WHITE);*/
+    //m_lightData.lights[1] = MakePointLight({5.0f, 0.0f, 5.0f}, 0.5f, { 5.0f, 25.0f }, Color::RED);
+    m_lightData.ambient = 0.1f;
 }
 
 void Engine::UpdateCamera(float _dt)
@@ -106,28 +110,37 @@ void Engine::init(Texture* _frameBuffer)
     Handle displacement = TextureFactory::Instance()->CreateTexture("dark_rock_displacement", "Assets/Textures/DarkRock/displacement.png");
     Handle metalness = TextureFactory::Instance()->CreateTexture("dark_rock_metalness", "Assets/Textures/DarkRock/metalness.png");
     
-    LitT_BP_PS::MaterialCB cb = {
+    LitT_BP_Cube_PS::MaterialCB cb = {
         {1.0f, 1.0f, 1.0f, 1.0f}, 
             Lighting::g_fresnelR0Templates[PLASTIC], 
-                0.5f, 0.02f, 0.8f
+                0.5f, 0.02f, 0.3f
     };
 
-    Mesh m = GeometryFactory::Instance()->BuildUVSphere(10, 10, true);
-    Mesh cube = GeometryFactory::Instance()->BuildCube();
+    //Mesh m = GeometryFactory::Instance()->BuildUVSphere(10, 10);
+    Mesh m = GeometryFactory::Instance()->BuildCube();
+    //Mesh cube = GeometryFactory::Instance()->BuildCube();
+    Mesh skybox = GeometryFactory::Instance()->BuildSkybox();
 
-    m_mat = ShaderFactory::Instance()->CreateMaterial("LitT_BP");
-    m_mat->SetParams<LitT_BP_PS::MaterialCB>(LitT_BP_PS::CB_SLOT_mat, cb);
-    m_mat->SetTexture(LitT_BP_PS::TEX_SLOT_diffuse, diff);
-    m_mat->SetTexture(LitT_BP_PS::TEX_SLOT_ambient, ambient);
-    m_mat->SetTexture(LitT_BP_PS::TEX_SLOT_normal, normal);
+    Cubemap cubemap = Cubemap("Assets/Textures/Cubemap/Front.png", "Assets/Textures/Cubemap/Back.png",
+        "Assets/Textures/Cubemap/Left.png", "Assets/Textures/Cubemap/Right.png",
+        "Assets/Textures/Cubemap/Up.png", "Assets/Textures/Cubemap/Down.png");
+
+    m_mat2 = ShaderFactory::Instance()->CreateMaterial("UnlitSkybox");
+    m_mat2->SetTexture(UnlitSkybox_PS::TEX_SLOT_albedo, cubemap.GetTexture());
+    m_mat = ShaderFactory::Instance()->CreateMaterial("LitT_BP_Cube");
+    m_mat->SetParams<LitT_BP_Cube_PS::MaterialCB>(LitT_BP_Cube_PS::CB_SLOT_mat, cb);
+    //m_mat->SetTexture(LitT_BP_Cube_PS::TEX_SLOT_diffuse, diff);
+    //m_mat->SetTexture(LitT_BP_Cube_PS::TEX_SLOT_ambient, ambient);
+    //m_mat->SetTexture(LitT_BP_Cube_PS::TEX_SLOT_normal, normal);
     
-    m_mat->SetTexture(LitT_BP_PS::TEX_SLOT_roughness, roughness);
-    m_mat->SetTexture(LitT_BP_PS::TEX_SLOT_displacement, displacement);
-    m_mat->SetTexture(LitT_BP_PS::TEX_SLOT_metal, metalness);
-    m_mat->SetTexture(LitT_BP_PS::TEX_SLOT_shadow, m_shadowPass.fb.depthBuffer);
-    
-    m_gammaCorrectMat = ShaderFactory::Instance()->CreateComputeMaterial("GammaCorrect");
-    m_gammaCorrectMat->SetRWTexture(GammaCorr_CS::UAV_SLOT_target, m_mainPass.fb.gBuffer[0]);
+    //m_mat->SetTexture(LitT_BP_Cube_PS::TEX_SLOT_roughness, roughness);
+    //m_mat->SetTexture(LitT_BP_Cube_PS::TEX_SLOT_displacement, displacement);
+    //m_mat->SetTexture(LitT_BP_Cube_PS::TEX_SLOT_metal, metalness);
+    //m_mat->SetTexture(LitT_BP_Cube_PS::TEX_SLOT_shadow, m_shadowPass.fb.depthBuffer);
+    m_mat->SetTexture(LitT_BP_Cube_PS::TEX_SLOT_cubemap, cubemap.GetTexture());
+    //
+    //m_gammaCorrectMat = ShaderFactory::Instance()->CreateComputeMaterial("GammaCorrect");
+    //m_gammaCorrectMat->SetRWTexture(GammaCorr_CS::UAV_SLOT_target, m_mainPass.fb.gBuffer[0]);
 
     // for (int i = -1; i < 2; ++i)
     // {
@@ -143,11 +156,11 @@ void Engine::init(Texture* _frameBuffer)
     //     }
     // }
 
-    Object* floor = mainScene.CreateObject(DYNAMIC);
-    floor->mesh = cube;
-    floor->mat = m_mat.get();
-    floor->transform.SetPosition(glm::vec3(0.0f, -5.0f, 0.f));
-    floor->transform.SetScale(glm::vec3(25.0f, 0.2f, 25.0f));
+    Object* floor = mainScene.CreateObject(DYNAMIC); 
+    floor->mesh = skybox;
+    floor->mat = m_mat2.get();
+    floor->transform.SetPosition(glm::vec3(0.0f, 0.0f, 0.0f));
+    floor->transform.SetScale(glm::vec3(50.0f, 50.0f, 50.0f));
     
     
     std::cout << "End Init" << std::endl;
@@ -191,16 +204,16 @@ void Engine::mainLoop()
     m_mainPass.view.totalTime = static_cast<float>(now);
     m_mainPass.view.lightSpace = lightSpace;
     
-    m_camera.FillData(&m_shadowPass.view);
-    m_shadowPass.view.viewProj = lightSpace;
+    //m_camera.FillData(&m_shadowPass.view);
+    //m_shadowPass.view.viewProj = lightSpace;
     
     // Draw //
 
     m_device.BeginFrame();
     
-    m_device.BeginPass(m_shadowPass);
-        mainScene.Draw(&m_device, shadowFrustum);
-    m_device.EndPass();
+    //m_device.BeginPass(m_shadowPass);
+    //    mainScene.Draw(&m_device, shadowFrustum);
+    //m_device.EndPass();
     
     m_device.BeginPass(m_mainPass);
         mainScene.Draw(&m_device, m_camera.GetFrustum());
