@@ -14,14 +14,14 @@ class GeometryFactory
 public:
 	static GeometryFactory* Instance();
 
-	Mesh BuildPyramid();
-	Mesh BuildCube();
-	Mesh BuildTriangle();
-	Mesh BuildIcosphere(int _subdivisions);
-	Mesh BuildUVSphere(uint8_t _sliceCount, uint8_t _stackCount);
-	Mesh BuildCircle(int _stackCount, float _posY, bool _isTop);
-	Mesh BuildCylinder(int _stackCount);
-	Mesh BuildDonut(float _majorRadius, float _minorRadius, uint32_t _majorSlices, uint32_t _minorSlices);
+	Mesh BuildPyramid(bool _randomColors = false);
+	Mesh BuildCube(bool _randomColors = false);
+	Mesh BuildTriangle(bool _randomColors = false);
+	Mesh BuildIcosphere(int _subdivisions, bool _randomColors = false);
+	Mesh BuildUVSphere(uint8_t _sliceCount, uint8_t _stackCount, bool _randomColors = false);
+	Mesh BuildCircle(int _stackCount, float _posY, bool _isTop, bool _randomColors = false);
+	Mesh BuildCylinder(int _stackCount, bool _randomColors = false);
+	Mesh BuildDonut(float _majorRadius, float _minorRadius, uint32_t _majorSlices, uint32_t _minorSlices, bool _randomColors = false);
 	Mesh LoadMesh(std::string const& _path);
 
 private:

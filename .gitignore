@@ -6,6 +6,6 @@
 !*.h
 !*.sln
 !.gitignore
-!Assets/*
+!Assets/**
 !*.vcxproj*
 !*.inl

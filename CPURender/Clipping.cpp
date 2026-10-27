@@ -53,12 +53,12 @@ namespace Clipping
     {
         switch (_side)
         {
-        case NEAR:  return _v.positionH.w + _v.positionH.z;
-        case FAR:   return _v.positionH.w - _v.positionH.z;
-        case DOWN:  return _v.positionH.w + _v.positionH.y;
-        case UP:    return _v.positionH.w - _v.positionH.y;
-        case LEFT:  return _v.positionH.w + _v.positionH.x;
-        case RIGHT: return _v.positionH.w - _v.positionH.x;
+        case NEAR:  return _v.posH.w + _v.posH.z;
+        case FAR:   return _v.posH.w - _v.posH.z;
+        case DOWN:  return _v.posH.w + _v.posH.y;
+        case UP:    return _v.posH.w - _v.posH.y;
+        case LEFT:  return _v.posH.w + _v.posH.x;
+        case RIGHT: return _v.posH.w - _v.posH.x;
         default: return 0.0f;
         }
     }

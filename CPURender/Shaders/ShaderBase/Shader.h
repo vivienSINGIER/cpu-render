@@ -7,58 +7,152 @@
 #include "../../Heaps/Handle.hpp"
 #include "../../Datas/Color.h"
 #include "../../Datas/Mesh.h"
+#include "../../Datas/ConstantBuffers.hpp"
+#include "../../Datas/Lights/LightData.hpp"
 
-#define MAX_CB 8
-#define MAX_TEX 8
-
-// registers declared by every shader
-#define CB_PER_PASS 0
-#define CB_LIGHT_PASS 1
-#define CB_PER_OBJECT 2
-#define CB_CUSTOM 3
+#include "ResourceLayout.hpp"
 
 class Texture;
 class GraphicsContext;
-
-struct CBRegister { uint16_t size; bool isDeclared; };
-struct TexRegister { bool isDeclared; };
-
-struct ShaderResources
-{
-    std::array<uint8_t const*, MAX_CB> cbs{};
-    std::array<Texture const*, MAX_TEX> textures{};
-};
 
 class Shader
 {
 public:
     template <typename T>
-    void AddConstantBuffer(int _slot);
-    void AddTexture(int _slot);
+    void AddConstantBuffer(uint32_t _slot);
+    void AddTexture(uint32_t _slot, bool _optional = false);
+    
+    template <typename T>
+    void AddUAV(uint32_t _slot);
+    void AddRWTexture(uint32_t _slot);
 
     virtual ~Shader() = default;
 
 protected:
-    Shader(GraphicsContext* _ctx);
+    Shader(GraphicsContext* _ctx, uint16_t _cb2Size);
 
     template <typename T>
-    T const& CB(ShaderResources const& _r, int _slot) const;
-    Color Sample(ShaderResources const& _r, int _slot, glm::vec2 _uv) const;
+    T const& CB(uint32_t _slot) const;
+    
+    template <typename T>
+    T const& Load(uint32_t _slot, int _index) const;
+    template <typename T>
+    void Store(uint32_t _slot, int _index, T const& _value) const;
+    
+    PerPassCB const& Pass() const;
+    LightPassCB const& Light() const;
+    PerObjectCB const& Object() const;
+
+    bool HasTexture(uint32_t _slot) const;
+    glm::vec4 Sample(int _slot, glm::vec2 _uv) const;
+    glm::vec4 Load(uint32_t _slot, int _x, int _y) const;
+    
+    glm::vec4 LoadRW(uint32_t _slot, int _x, int _y) const;
+    void StoreRW(uint32_t _slot, int _x, int _y, glm::vec4 _color) const;
 
 private:
     std::array<CBRegister, MAX_CB> m_cb;
     std::array<TexRegister, MAX_TEX> m_tex;
+    std::array<UAVRegister, MAX_UAV> m_uavs;
 
     GraphicsContext* m_ctx;
+    ShaderResources const* m_r = nullptr;
+    
+    void Bind(ShaderResources const* _r);
+    
+    ResourceLayout Layout(bool _isVS = false, bool _isPS = false);
 
+    friend class Device;
     friend class ShaderFactory;
     friend class ShaderGroup;
+    friend struct ShaderBindScope;
+    friend struct ComputeBindScope;
 };
 
 #include "Shader.inl"
 
-class VertexShader : public Shader { public: virtual Vertex_OUT Execute(ShaderResources const& _r, Vertex const& _in) const = 0; protected: using Shader::Shader; };
+class GraphicsShader : public Shader
+{
+protected: 
+    using Shader::Shader;
+    GraphicsShader(GraphicsContext* _ctx);
+};
 
-class PixelShader  : public Shader { public: virtual Color Execute(ShaderResources const& _r, Vertex_OUT const& _in) const = 0; protected: using Shader::Shader; };
+class VertexShader : public GraphicsShader { public: virtual Vertex_OUT Execute(Vertex const& _in) const = 0; protected: using GraphicsShader::GraphicsShader; };
+
+class PixelShader  : public GraphicsShader { public: virtual Color Execute(Vertex_OUT const& _in) const = 0; protected: using GraphicsShader::GraphicsShader; };
+
+class ComputeShader : public Shader
+{
+public: 
+    virtual void Execute(glm::uvec3 _threadId) const = 0; 
+    
+    glm::uvec3 GroupSize() const;
+    
+protected: 
+    ComputeShader(GraphicsContext* _ctx, glm::uvec3 _groupSize);
+    DispatchCB const& Dispatch() const;
+    
+private:
+    glm::uvec3 m_groupSize;
+    
+    using Shader::Object;
+};
+
+struct ShaderStages
+{
+    VertexShader* vs;
+    PixelShader* ps;
+};
+
+struct ShaderBindScope
+{
+    ShaderStages s;
+    ShaderBindScope(ShaderStages _s, ShaderResources const& _r) : s(_s) { s.vs->Bind(&_r); s.ps->Bind(&_r); }
+    ~ShaderBindScope() { s.vs->Bind(nullptr); s.ps->Bind(nullptr); }
+};
+
+struct ComputeBindScope
+{
+    ComputeShader* cs;
+    ComputeBindScope(ComputeShader* _s, ShaderResources const& _r) : cs(_s) { cs->Bind(&_r); }
+    ~ComputeBindScope() { cs->Bind(nullptr); }
+};
+
+#define SHADER_CB(Type, name, slot)                                         \
+    private: int m_bind_##name = (AddConstantBuffer<Type>(slot), slot);     \
+    public: Type const& name() const { return CB<Type>(slot); }             \
+            static constexpr int CB_SLOT_##name = slot;
+
+#define SHADER_TEX(name, slot)                                              \
+    private: int m_bind_##name = (AddTexture(slot), slot);                  \
+    public: glm::vec4 name(glm::vec2 _uv) const { return Sample(slot, _uv); }   \
+            glm::vec4 name(uint32_t _x, uint32_t _y) const                      \
+            { return Load(slot, _x, _y); }                                  \
+            static constexpr int TEX_SLOT_##name = slot;
+
+#define SHADER_TEX_OPT(name, slot)                                          \
+    private: int m_bind_##name = (AddTexture(slot, true), slot);            \
+    public: glm::vec4 name(glm::vec2 _uv) const { return Sample(slot, _uv); }   \
+            glm::vec4 name(uint32_t _x, uint32_t _y) const                      \
+            { return Load(slot, _x, _y); }                                  \
+            bool Has_##name() const { return HasTexture(slot); }            \
+            static constexpr int TEX_SLOT_##name = slot;
+
+#define SHADER_UAV_BUFF(Type, name, slot)                                   \
+    private: int m_bind_##name = (AddUAV<Type>(slot), slot);                \
+    public: Type const& Load_##name(int _index) const                       \
+            { return Load<Type>(slot, _index); }                            \
+            void Store_##name(int _index, Type const& _value)  const        \
+            { Store<Type>(slot, _index, _value); }                          \
+            static constexpr int UAV_SLOT_##name = slot;
+
+#define SHADER_UAV_TEX(name, slot)                                          \
+    private: int m_bind_##name = (AddRWTexture(slot), slot);                \
+    public: glm::vec4 Load_##name(int _x, int _y) const                         \
+            { return LoadRW(slot, _x, _y); }                                \
+            void Store_##name(int _x, int _y, glm::vec4 _color) const           \
+            { StoreRW(slot, _x, _y, _color); }                          \
+            static constexpr int UAV_SLOT_##name = slot;
 
 #endif

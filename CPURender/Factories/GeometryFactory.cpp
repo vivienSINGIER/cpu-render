@@ -36,6 +36,18 @@ Mesh GeometryFactory::CreateMesh(std::vector<Vertex>& _vertices, std::vector<Ind
 	m.indexCount = (uint32_t)_indices.size();
 	m.vertexBuffer = m_ctx->vertexBufferHeap.Create(_vertices.data(), (uint16_t)m.vertexCount);
 	m.indexBuffer = m_ctx->indexBufferHeap.Create(_indices.data(), (uint16_t)m.indexCount);
+
+	glm::vec3& box_min = m.local_box.min;
+	glm::vec3& box_max = m.local_box.max;
+	box_min = _vertices[0].position;
+	box_max = _vertices[0].position;
+
+	for (int i = 1; i < _vertices.size(); ++i)
+	{
+		box_min = glm::min(box_min, _vertices[i].position);
+		box_max = glm::max(box_max, _vertices[i].position);
+	}
+
 	return m;
 }
 
@@ -45,7 +57,7 @@ Mesh GeometryFactory::CreateMesh(std::vector<Vertex>& _vertices, std::vector<Ind
 //// PYRAMID
 ////////////////////////////////////////////
 
-Mesh GeometryFactory::BuildPyramid()
+Mesh GeometryFactory::BuildPyramid(bool _randomColors)
 {
 	std::vector<Vertex> vertices;
 	std::vector<uint32_t> indices;
@@ -87,7 +99,8 @@ Mesh GeometryFactory::BuildPyramid()
 	};
 
 	vertices = CalculateNormalsAndTangents(vertices, indices);
-	ApplyPaletteColors(vertices);
+	if (_randomColors)
+		ApplyPaletteColors(vertices);
 
 	return CreateMesh(vertices, indices);
 }
@@ -96,7 +109,7 @@ Mesh GeometryFactory::BuildPyramid()
 //// CUBE
 ////////////////////////////////////////////
 
-Mesh GeometryFactory::BuildCube()
+Mesh GeometryFactory::BuildCube(bool _randomColors)
 {
 	std::vector<Vertex> vertices;
 	std::vector<uint32_t> indices;
@@ -150,7 +163,8 @@ Mesh GeometryFactory::BuildCube()
    };
 
 	vertices = CalculateNormalsAndTangents(vertices, indices);
-	ApplyPaletteColors(vertices);
+	if (_randomColors)
+		ApplyPaletteColors(vertices);
 
 	return CreateMesh(vertices, indices);
 }
@@ -159,7 +173,7 @@ Mesh GeometryFactory::BuildCube()
 //// TRIANGLE
 ////////////////////////////////////////////
 
-Mesh GeometryFactory::BuildTriangle()
+Mesh GeometryFactory::BuildTriangle(bool _randomColors)
 {
 	std::vector<Vertex> vertices;
 	std::vector<uint32_t> indices;
@@ -172,7 +186,8 @@ Mesh GeometryFactory::BuildTriangle()
 	indices = { 0, 2, 1 };
 
 	vertices = CalculateNormalsAndTangents(vertices, indices);
-	ApplyPaletteColors(vertices);
+	if (_randomColors)
+		ApplyPaletteColors(vertices);
 
 	return CreateMesh(vertices, indices);
 }
@@ -181,7 +196,7 @@ Mesh GeometryFactory::BuildTriangle()
 //// ICOSPHERE
 ////////////////////////////////////////////
 
-Mesh GeometryFactory::BuildIcosphere(int _subdivisions)
+Mesh GeometryFactory::BuildIcosphere(int _subdivisions, bool _randomColors)
 {
 	if (_subdivisions >= 6)
 		_subdivisions = 6;
@@ -285,7 +300,8 @@ Mesh GeometryFactory::BuildIcosphere(int _subdivisions)
 	}
 
 	vertices = CalculateNormalsAndTangentsSeamless(vertices, indices);
-	ApplyGradientColors(vertices);
+	if (_randomColors)
+		ApplyGradientColors(vertices);
 
 	return CreateMesh(vertices, indices);
 }
@@ -294,7 +310,7 @@ Mesh GeometryFactory::BuildIcosphere(int _subdivisions)
 //// UV SPHERE
 ////////////////////////////////////////////
 
-Mesh GeometryFactory::BuildUVSphere(uint8_t _sliceCount, uint8_t _stackCount)
+Mesh GeometryFactory::BuildUVSphere(uint8_t _sliceCount, uint8_t _stackCount, bool _randomColors)
 {
     std::vector<Vertex> vertices;
     std::vector<uint32_t> indices;
@@ -365,7 +381,8 @@ Mesh GeometryFactory::BuildUVSphere(uint8_t _sliceCount, uint8_t _stackCount)
     }
 
     vertices = CalculateNormalsAndTangentsSeamless(vertices, indices);
-	ApplyGradientColors(vertices);
+	if (_randomColors)
+		ApplyGradientColors(vertices);
 
 	return CreateMesh(vertices, indices);
 }
@@ -374,7 +391,7 @@ Mesh GeometryFactory::BuildUVSphere(uint8_t _sliceCount, uint8_t _stackCount)
 //// CIRCLE
 ////////////////////////////////////////////
 
-Mesh GeometryFactory::BuildCircle(int _stackCount, float _posY, bool _isTop)
+Mesh GeometryFactory::BuildCircle(int _stackCount, float _posY, bool _isTop, bool _randomColors)
 {
 	std::vector<Vertex> vertices;
 	std::vector<uint32_t> indices;
@@ -385,7 +402,8 @@ Mesh GeometryFactory::BuildCircle(int _stackCount, float _posY, bool _isTop)
 		std::reverse(indices.begin(), indices.end());
 
 	vertices = CalculateNormalsAndTangentsSeamless(vertices, indices);
-	ApplyGradientColors(vertices);
+	if (_randomColors)
+		ApplyGradientColors(vertices);
 
 	return CreateMesh(vertices, indices);
 }
@@ -394,7 +412,7 @@ Mesh GeometryFactory::BuildCircle(int _stackCount, float _posY, bool _isTop)
 //// Cylinder
 ////////////////////////////////////////////
 
-Mesh GeometryFactory::BuildCylinder(int _stackCount)
+Mesh GeometryFactory::BuildCylinder(int _stackCount, bool _randomColors)
 {
 	std::vector<Vertex> vertices;
 	std::vector<uint32_t> indices;
@@ -428,7 +446,8 @@ Mesh GeometryFactory::BuildCylinder(int _stackCount)
 	}
 
 	vertices = CalculateNormalsAndTangentsSeamless(vertices, indices);
-	ApplyGradientColors(vertices);
+	if (_randomColors)
+		ApplyGradientColors(vertices);
 
 	return CreateMesh(vertices, indices);
 }
@@ -437,7 +456,7 @@ Mesh GeometryFactory::BuildCylinder(int _stackCount)
 //// Donut
 ////////////////////////////////////////////
 
-Mesh GeometryFactory::BuildDonut(float _majorRadius, float _minorRadius, uint32_t _majorSlices, uint32_t _minorSlices)
+Mesh GeometryFactory::BuildDonut(float _majorRadius, float _minorRadius, uint32_t _majorSlices, uint32_t _minorSlices, bool _randomColors)
 {
     std::vector<Vertex> vertices;
 	std::vector<uint32_t> indices;
@@ -482,7 +501,8 @@ Mesh GeometryFactory::BuildDonut(float _majorRadius, float _minorRadius, uint32_
 	}
 
 	vertices = CalculateNormalsAndTangentsSeamless(vertices, indices);
-	ApplyGradientColors(vertices);
+	if (_randomColors)
+		ApplyGradientColors(vertices);
 
 	return CreateMesh(vertices, indices);
 }

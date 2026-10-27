@@ -59,6 +59,7 @@ void Camera::SetFov(float _fov)
 {
     m_fov = _fov;
     m_proj = MakePerspective(m_fov, m_aspectRatio, m_nearPlane, m_farPlane);
+    m_shadowProj = MakePerspective(m_fov, m_aspectRatio, m_nearPlane, m_shadowDistance);
     UpdateMatrices();
 }
 
@@ -66,6 +67,14 @@ void Camera::SetNearDistance(float _nearPlane)
 {
     m_nearPlane = _nearPlane;
     m_proj = MakePerspective(m_fov, m_aspectRatio, m_nearPlane, m_farPlane);
+    m_shadowProj = MakePerspective(m_fov, m_aspectRatio, m_nearPlane, m_shadowDistance);
+    UpdateMatrices();
+}
+
+void Camera::SetShadowDistance(float _shadowDistance)
+{
+    m_shadowDistance = _shadowDistance;
+    m_shadowProj = MakePerspective(m_fov, m_aspectRatio, m_nearPlane, m_shadowDistance);
     UpdateMatrices();
 }
 
@@ -80,6 +89,7 @@ void Camera::SetAspectRatio(float _aspectRatio)
 {
     m_aspectRatio = _aspectRatio;
     m_proj = MakePerspective(m_fov, m_aspectRatio, m_nearPlane, m_farPlane);
+    m_shadowProj = MakePerspective(m_fov, m_aspectRatio, m_nearPlane, m_shadowDistance);
     UpdateMatrices();
 }
 
@@ -103,13 +113,23 @@ float Camera::GetAspectRatio() const
     return m_aspectRatio;
 }
 
+glm::mat4x4 const& Camera::GetShadowProj() const
+{
+    return m_shadowProj;
+}
+
+glm::mat4x4 const& Camera::GetView() const
+{
+    return m_view;
+}
+
 void Camera::UpdateMatrices()
 {
     m_view = glm::inverse(m_world);
 
-    m_viewProj = m_view * m_proj;
+    m_viewProj = m_proj * m_view;
     m_frustum = Frustum(m_viewProj, true);
-    m_viewProj = glm::transpose(m_viewProj); //hlsl
+    m_viewProj = glm::transpose(m_viewProj);
 
     m_pos = glm::vec3(m_world[3][0], m_world[3][1], m_world[3][2]);
 }

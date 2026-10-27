@@ -21,14 +21,26 @@ struct PerPassCB
     glm::vec2 renderTargetSize;
     glm::vec2 invRenderTargetSize;
 
+    // TODO remove & adapt Lambert Shader
     glm::vec3 lightDirection;
     float lightIntensity;
+    
+    glm::mat4x4 lightSpace;
 };
 
 struct PerObjectCB
 {
     glm::mat4x4 model;
     glm::mat4x4 normalMatrix; // Transpose de l'inverse de la matrice model
+};
+
+struct DispatchCB
+{
+    glm::uvec3 groupCount;
+    uint32_t pad0;
+    
+    glm::uvec3 totalThreads;
+    uint32_t pad1;
 };
 
 #endif

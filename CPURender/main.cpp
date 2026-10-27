@@ -6,8 +6,10 @@
 #include <iostream>
 #include <ostream>
 
-#include "engine.h"
+#include "engine.hpp"
+#include "Scenes/TexturedBP_Scene.h"
 #include "Core/Device.h"
+#include "Scenes/Transparency_Scene.h"
 //Students cannot change anything in this file
 
 
@@ -28,8 +30,8 @@ int main(void) {
 
     window = SDL_CreateWindow(
         "Framebuffer",
-        WIDTH * 4,
-        HEIGHT * 4,
+        SCREEN_WIDTH,
+        SCREEN_HEIGHT,
         0
     );
 
@@ -74,8 +76,8 @@ int main(void) {
     }
 
     Engine engine;
-    Texture frameBuffer(WIDTH, HEIGHT, Texture::LINEAR);
-    engine.init(&frameBuffer);
+    Texture frameBuffer(WIDTH, HEIGHT,  Texture::ARGB8, Texture::LINEAR);
+    engine.Init<Transparency_Scene>(&frameBuffer);
     bool isRunning = true;
     uint32_t frame = 1;
 
@@ -91,7 +93,7 @@ int main(void) {
             engine.handleEvent(event);
         }
 
-        engine.renderFrame();
+        engine.mainLoop();
 
         /* Copy contents of the framebuffer to our SDL texture */
         SDL_UpdateTexture(

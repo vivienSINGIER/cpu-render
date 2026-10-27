@@ -5,31 +5,15 @@
 #include "../../Heaps/Handle.hpp"
 #include "Shader.h"
 
-struct CBSlotDesc {uint16_t size; bool isDeclared; bool isVS; bool isPS; };
-struct TexSlotDesc {bool isDeclared; bool isVS; bool isPS; };
-
-struct ShaderStages
-{
-    VertexShader* vs;
-    PixelShader* ps;
-};
-
 class ShaderGroup
 {
 public:
-    void Build();
-    
-    CBSlotDesc CBLayout(int _slot);
-    TexSlotDesc TexLayout(int _slot);
-    
+    ResourceLayout Build();
     ShaderStages Resolve();
     
 private:
     Handle m_vs;
     Handle m_ps;
-    
-    std::array<CBSlotDesc, MAX_CB> m_cbLayout;
-    std::array<TexSlotDesc, MAX_TEX> m_texLayout;
     
     GraphicsContext* m_ctx;
     
