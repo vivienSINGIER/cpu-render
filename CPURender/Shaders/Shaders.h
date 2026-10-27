@@ -10,5 +10,6 @@
 
 #include "ComputeShaders/GroupDebug_CS.hpp"
 #include "ComputeShaders/GammaCorrection_CS.hpp"
+#include "ComputeShaders/ParticleCS.hpp"
 
 #endif

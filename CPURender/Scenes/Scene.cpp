@@ -32,10 +32,13 @@ Scene::~Scene()
 	{
 		delete o;
 	}
+	m_dynamic_objects.clear();
+	m_static_objects.clear();
 }
 
 void Scene::Init(Device* _pDevice)
 {
+	m_pDevice = _pDevice;
 	m_camera.SetAspectRatio((float)WIDTH / (float)HEIGHT);
 
 	OnInit(_pDevice);
@@ -148,6 +151,7 @@ void Scene::RemoveObject(Object* o)
 		m_static_objects.pop_back();
 
 		dirty_static = true;
+		obj_id--;
 	}
 	else if (o->type == DYNAMIC)
 	{
@@ -156,6 +160,7 @@ void Scene::RemoveObject(Object* o)
 
 		m_dynamic_objects[o->id] = o2;
 		m_dynamic_objects.pop_back();
+		obj_id--;
 	}
 }
 

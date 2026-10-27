@@ -23,6 +23,8 @@ struct Mesh;
 class Device
 {
 public:
+	GraphicsContext m_ctx;
+
 	Device();
 	
 	void BeginFrame();
@@ -62,8 +64,6 @@ private:
 	Handle m_dispatchCB;
 	
 	Texture* m_renderTarget;
-	
-	GraphicsContext m_ctx;
 	
 	std::vector<float> wPreDiv;
 	void VertexShaderStep(Mesh const& _mesh, ShaderStages _s, std::vector<Vertex_OUT>& _out);

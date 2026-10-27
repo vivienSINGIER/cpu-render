@@ -40,6 +40,7 @@ protected:
 	float m_deltaTime = 0.0f;
 	float m_totalTime = 0.0f;
 
+	Device* m_pDevice = nullptr;
 private:
 	std::vector<Object*>* GetObjects(ObjectType type);
 

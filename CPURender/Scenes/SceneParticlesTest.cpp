@@ -8,6 +8,9 @@
 #include "../Shaders/Shaders.h"
 #include "../Datas/Lights/LightHelpers.hpp"
 
+#include "../Shaders/ComputeShaders/ParticleCS.hpp"
+#include "../Factories/BufferFactory.h"
+
 void SceneParticlesTest::OnInit(Device* _pDevice)
 {
     m_lightData.lights[0] = MakeDirectionalLight({ 1.0f, -1.0f, 1.0f }, 0.75f, Color::WHITE);
@@ -15,6 +18,9 @@ void SceneParticlesTest::OnInit(Device* _pDevice)
 
     m_mainPass.fb = _pDevice->GetDefaultFrameBuffer();
     m_presentTarget = m_mainPass.fb.gBuffer[0];
+
+    m_particlesPass.fb = _pDevice->GetDefaultFrameBuffer();
+    m_particlesPass.isCompute = true;
 
     _pDevice->SetLightData(m_lightData);
 
@@ -57,16 +63,29 @@ void SceneParticlesTest::OnInit(Device* _pDevice)
     floor->transform.SetPosition(glm::vec3(0.0f, -2.f, 0.f));
     floor->transform.SetScale(glm::vec3(25.0f, 0.2f, 25.0f));
 
-    ShaderFactory::CreateComputeShader()
+    m_uav_buffer = BufferFactory::Instance()->CreateUAVBuffer<Particle>(1'600);
+    m_CS_handle = ShaderFactory::Instance()->CreateComputeShader<ParticleCS>();
 
+    m_uav_view = m_pDevice->m_ctx.uavHeap.GetView(m_uav_buffer);
+
+    m_particleMat = ShaderFactory::Instance()->CreateComputeMaterial("Particle");
+    m_particleMat->SetUAVBuffer(0, m_uav_buffer);
+    m_particleMat->SetRWTexture(GammaCorr_CS::UAV_SLOT_target, m_mainPass.fb.gBuffer[0]);
+
+    BufferFactory::Instance()->Fill(m_uav_buffer, Particle());
+
+    ParticleManager::Instance()->m_uavBuffer = m_uav_buffer;
+    ParticleManager::Instance()->Spawn(glm::vec3(0, 0, 0), 100, 0, { 0.1f, 0.1f }, 0.1f, 1.f, glm::vec4(1, 1, 1, 1), 1.f, 3.f);
 }
 
 void SceneParticlesTest::OnHandleEvent(const SDL_Event& event)
 {
+
 }
 
 void SceneParticlesTest::OnUpdate(float dt)
 {
+    
 }
 
 void SceneParticlesTest::OnDraw(Device* _pDevice)
@@ -77,5 +96,24 @@ void SceneParticlesTest::OnDraw(Device* _pDevice)
    
     _pDevice->BeginPass(m_mainPass);
     DrawObjects(_pDevice, m_camera.GetFrustum());
+    _pDevice->EndPass();
+
+    _pDevice->BeginPass(m_particlesPass);
+
+    //_pDevice->Dispatch(m_particleMat.get(), )
+
+    size_t count = 0;
+    for (int i = 0; i < m_uav_view.count; ++i)
+    {
+        Particle p = BufferFactory::Instance()->Read<Particle>(m_uav_buffer, i);
+       
+        if (p.lifeTime <= 0.f)
+            continue;
+
+        count++;
+    }
+
+    std::cout << "Particles to draw = " << count << std::endl;
+
     _pDevice->EndPass();
 }

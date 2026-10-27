@@ -6,6 +6,8 @@
 #include "../Core/FrameBuffer.hpp"
 #include "../Shaders/ShaderBase/Material.h"
 
+#include "../Datas/Particle.h"
+
 class SceneParticlesTest : public Scene
 {
 protected:
@@ -18,6 +20,14 @@ private:
     Material m_mat;
 
     PassDesc m_mainPass;
+    PassDesc m_particlesPass;
+
     LightData m_lightData;
+
+    Handle m_CS_handle;
+    Material m_particleMat;
+
+    Handle m_uav_buffer;
+    UAVView m_uav_view;
 };
 
