@@ -11,6 +11,7 @@
 #include "../Datas/Triangle.h"
 #include "../Clipping.h"
 #include "../Datas/Lights/LightData.hpp"
+#include "../Datas/Lights/LightHelpers.hpp"
 #include "../Shaders/ShaderBase/Material.h"
 
 Device::Device() : m_ctx()
@@ -130,9 +131,12 @@ void Device::Present(Handle _texH)
 	// assert(width == WIDTH && height == HEIGHT && "Can't present texture not matching final render target format");
 	bool isSingleChannel = fb->GetFormat() == Texture::R32F;
 	
+	double logSum = 0.0;
+	float exposure = m_exposure * 0.18f / m_adaptedLum;
+	
 #pragma omp parallel
-#pragma omp for
-	for (uint32_t i = 0; i < HEIGHT * WIDTH; i++)
+#pragma omp for reduction(+:logSum)
+	for (int32_t i = 0; i < HEIGHT * WIDTH; i++)
 	{
 		uint32_t y = i / WIDTH;
 		uint32_t x = i % WIDTH;
@@ -144,10 +148,27 @@ void Device::Present(Handle _texH)
 		else
 			v = fb->SampleNP({ ((float)x + 0.5f) / (float)WIDTH, ((float)y + 0.5f) / (float)HEIGHT });
 		
+		vec3 mapped;
 		if (isSingleChannel)
-			v = { v.r, v.r, v.r, 1.0f };	
-
-		m_renderTarget->Store(x, HEIGHT - y - 1, v);
+			mapped = { v.r, v.r, v.r };
+		else
+		{
+			vec3 hdr = vec3(v);
+			logSum += glm::log(1e-4f + glm::max(Lighting::Luminance(hdr), 0.0f)); // start at small positive value to avoid inf from log on negative number
+			
+			vec3 c = hdr * exposure * 0.6f;
+			float L = Lighting::Luminance(c);
+			mapped = c * ((L / (1.0f + L)) / glm::max(L, 1e-6f)); // map to [0, 1], prevent division by zero on black pixels <- Reinhard approximation
+			mapped = glm::clamp((c * (2.51f * c + 0.03f)) / (c * (2.43f * c + 0.59f) + 0.14f), 0.0f, 1.0f); // Narkowicz approximation of the ACES film curve
+		}
+		m_renderTarget->Store(x, HEIGHT - y - 1, vec4(mapped, 1.0f));
+	}
+	
+	if (!isSingleChannel)
+	{
+		float avgLum = glm::exp((float)(logSum / (WIDTH * HEIGHT)));
+		m_adaptedLum += (avgLum - m_adaptedLum) * (1 - exp(-0.05)); // TODO use dt
+		m_adaptedLum = glm::clamp(m_adaptedLum, 0.01f, 100.0f); // avoid extreme exposure 
 	}
 }
 
