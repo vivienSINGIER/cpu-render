@@ -59,7 +59,7 @@ ResourceLayout ShaderGroup::Build()
         bool isVs = vs.uav[i].isDeclared;
         bool isPs = ps.uav[i].isDeclared;
 
-        if (isVs || isPs == false)
+        if (!isVs && !isPs)
             continue;
 
         if (isVs && isPs)
