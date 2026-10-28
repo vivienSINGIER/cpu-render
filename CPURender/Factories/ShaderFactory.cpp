@@ -104,11 +104,13 @@ void ShaderFactory::RegisterPrebuilts()
 {
     RegisterGroup<UnlitC_VS, UnlitC_PS>("UnlitC");
     RegisterGroup<UnlitT_VS, UnlitT_PS>("UnlitT");
+    RegisterGroup<UnlitSkybox_VS, UnlitSkybox_PS>("UnlitSkybox");
     RegisterGroup<LitC_VS, LitC_PS>("LitC");
     RegisterGroup<LitC_BP_VS, LitC_BP_PS>("LitC_BP");
     RegisterGroup<LitT_BP_VS, LitT_BP_PS>("LitT_BP");
     
     RegisterGroup<PBR_VS, PBR_PS>("PBR");
+    RegisterGroup<LitT_BP_Cube_VS, LitT_BP_Cube_PS>("LitT_BP_Cube");
 
     RegisterCompute<GroupDebug_CS>("GroupDebug");
     RegisterCompute<GammaCorr_CS>("GammaCorrect");

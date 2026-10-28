@@ -175,6 +175,7 @@ void Device::Present(Handle _texH)
 		m_adaptedLum = glm::clamp(m_adaptedLum, 0.01f, 100.0f); // avoid extreme exposure 
 	}
 	
+
 	m_pendingPasses.clear();
 }
 
