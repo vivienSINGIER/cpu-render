@@ -302,5 +302,8 @@
     <ClInclude Include="Datas\Particle.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Shaders\GraphicsShaders\UnlitParticle.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

@@ -52,8 +52,6 @@ void SceneParticlesTest::OnInit(Device* _pDevice)
     m_mat->SetTexture(LitT_BP_PS::TEX_SLOT_displacement, displacement);
     m_mat->SetTexture(LitT_BP_PS::TEX_SLOT_metal, metalness);
 
-    m_unlit = ShaderFactory::Instance()->CreateMaterial("UnlitC");
-
     Object* o = CreateObject(DYNAMIC);
     o->mesh = m;
     o->mat = m_mat.get();
@@ -75,7 +73,19 @@ void SceneParticlesTest::OnInit(Device* _pDevice)
 
     BufferFactory::Instance()->Fill(m_uav_buffer, UavParticle());
     ParticleManager::Instance()->m_uavBuffer = m_uav_buffer;
-    ParticleManager::Instance()->Spawn(glm::vec3(0, 0, 0), 64, 0, 0.1f, 0.35f, 0.75f, glm::vec4(1, 1, 1, 1), 3.f, 5.f);
+
+
+    ParticleEmitterDesc desc1 =
+    {
+        glm::vec3(0, 0, 0), 100, 0, 0.1f, 100.f, glm::vec3(-1, -1, -1), glm::vec3(1, 1, 1), 0.25f, 1.f, glm::vec4(1, 0, 0, 1), glm::vec4(1, 0, 1, 1), 3.f, 5.f
+    };
+    ParticleManager::Instance()->Spawn(desc1);
+
+    ParticleEmitterDesc desc2 =
+    {
+        glm::vec3(0, 5, 0), 100, 1.f, 0.1f, 100.f, glm::vec3(-0.1f, -1, -0.1f), glm::vec3(0.1f, -0.f, 0.1f), 0.5f, 2.f, glm::vec4(0, 0, 1, 1), glm::vec4(1, 0, 1, 1), 3.f, 5.f
+    };
+    ParticleManager::Instance()->Spawn(desc2);
 
     //TODO CHANGE
     std::vector<Vertex> vertices;
@@ -93,6 +103,14 @@ void SceneParticlesTest::OnInit(Device* _pDevice)
     };
 
     mesh_test_particle = GeometryFactory::Instance()->CreateMesh(vertices, indices);
+
+    UnlitParticle_PS::ParticleColor c =
+    {
+        Color(255, 255, 255, 255)
+    };
+
+    ShaderFactory::Instance()->RegisterGroup<UnlitParticle_VS, UnlitParticle_PS>("UnlitParticle");
+    m_unlitParticle = ShaderFactory::Instance()->CreateMaterial("UnlitParticle");
 }
 
 void SceneParticlesTest::OnHandleEvent(const SDL_Event& event)
@@ -127,19 +145,20 @@ void SceneParticlesTest::OnDraw(Device* _pDevice)
         if (p.lifeTime <= 0.f)
             continue;
 
-        std::cout << "Draw particle\n";
-        UnlitC_PS::UnlitColor c =
-        {
-            Color(p.color.a * 255.f, p.color.r * 255.f, p.color.g * 255.f, p.color.b * 255.f)
-        };
-        m_unlit->SetParams<UnlitC_PS::UnlitColor>(UnlitC_PS::CB_SLOT_mat, c);
-
         Transform world = {};
         world.SetPosition(p.pos);
         world.SetScale(p.size);
         world.SetRotationQuaternion(m_camTransform.GetRotation());
+        world.AddYPR(glm::vec3(0, 0, p.rotationRad));
 
-        _pDevice->RegisterCommand(mesh_test_particle, world.GetMatrix(), m_unlit.get());
+        UnlitParticle_PS::ParticleColor cb =
+        {
+            Color(p.color.a * 255.f, p.color.r * 255.f, p.color.g * 255.f, p.color.b * 255.f)
+        };
+
+        m_unlitParticle->SetParams<UnlitParticle_PS::ParticleColor>(UnlitParticle_PS::CB_SLOT_pcolor, cb);
+
+        _pDevice->RegisterCommand(mesh_test_particle, world.GetMatrix(), m_unlitParticle.get());
     }
 
     _pDevice->EndPass();

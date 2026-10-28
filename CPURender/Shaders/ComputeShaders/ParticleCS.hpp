@@ -3,8 +3,6 @@
 #include "../ShaderBase/Shader.h"
 #include "../../Datas/Particle.h"
 
-#define MAX_PARTICLES 32000
-
 class ParticleCS : public ComputeShader
 {
 	SHADER_UAV_BUFF(UavParticle, data, 0)
@@ -32,7 +30,9 @@ public:
 
 		p.pos += p.dir * p.speed * dt;
 		p.lifeTime -= dt;
-		p.rotationRad += dt;
+		p.rotationRad += p.rotSpeed * dt;
+
+		p.color = p.endColor + (p.beginColor - p.endColor) * (p.lifeTime / p.maxLifeTime);
 
 		Store_data(_id.x, p);
 	}

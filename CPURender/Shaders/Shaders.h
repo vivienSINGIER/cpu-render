@@ -3,6 +3,7 @@
 
 #include "GraphicsShaders/UnlitC.hpp"
 #include "GraphicsShaders/UnlitT.hpp"
+#include "GraphicsShaders/UnlitParticle.hpp"
 
 #include "GraphicsShaders/LitC.hpp"
 #include "GraphicsShaders/LitC_BP.hpp"

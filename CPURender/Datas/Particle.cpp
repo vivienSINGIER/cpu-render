@@ -13,7 +13,7 @@ ParticleManager* ParticleManager::Instance()
 	return m_pInstance;
 }
 
-void ParticleManager::Spawn(glm::vec3 _spawn_pos, size_t _amount, float _radius, float _size, float _min_speed, float _max_speed, glm::vec4 _color, float _min_life_time, float _max_life_time)
+void ParticleManager::Spawn(ParticleEmitterDesc _desc)
 {
 	if (m_uavBuffer.IsValid() == false)
 	{
@@ -33,19 +33,29 @@ void ParticleManager::Spawn(glm::vec3 _spawn_pos, size_t _amount, float _radius,
 			return min + (max - min) * rand_ratio();
 		};
 
-	for (int i = 0; i < _amount; i++)
+	float spawnRadius = _desc.spawnRadius;
+
+	for (int i = 0; i < _desc.maxParticles; i++)
 	{
 		UavParticle p;
-		p.pos = glm::vec3(_spawn_pos.x + rand_range(-_radius, _radius), _spawn_pos.y + rand_range(-_radius, _radius), _spawn_pos.z + rand_range(-_radius, _radius));
-		p.size = _size;
-		p.speed = rand_range(_min_speed, _max_speed);
-		p.color = _color;
-		p.lifeTime = rand_range(_min_life_time, _max_life_time);
+		p.pos = glm::vec3(_desc.spawnPos.x +rand_range(-spawnRadius, spawnRadius), _desc.spawnPos.y + rand_range(-spawnRadius, spawnRadius), _desc.spawnPos.z + rand_range(-spawnRadius, spawnRadius));
+		p.size = _desc.particleSize;
+		p.speed = rand_range(_desc.minSpeed, _desc.maxSpeed);
+		p.beginColor = _desc.beginColor;
+		p.endColor = _desc.endColor;
+
+		p.lifeTime = rand_range(_desc.minLifeTime, _desc.maxLifeTime);
+		p.maxLifeTime = p.lifeTime;
 
 		//TODO EDIT
-		p.dir = glm::normalize(glm::vec3(rand_range(), rand_range(), rand_range()));
+		p.dir = glm::normalize(glm::vec3(rand_range(_desc.floorDir.x, _desc.ceilDir.x), rand_range(_desc.floorDir.y, _desc.ceilDir.y), rand_range(_desc.floorDir.z, _desc.ceilDir.z)));
 		p.rotationRad = 0.f;
+		p.rotSpeed = _desc.rotationSpeed;
 
-		BufferFactory::Instance()->Write(m_uavBuffer, i, p);
+		BufferFactory::Instance()->Write(m_uavBuffer, m_freeOffset, p);
+		m_freeOffset++;
+
+		if(m_freeOffset >= MAX_PARTICLES)
+			m_freeOffset %= MAX_PARTICLES;
 	}
 }

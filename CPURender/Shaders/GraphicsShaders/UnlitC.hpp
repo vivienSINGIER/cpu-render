@@ -30,7 +30,7 @@ public:
     {
         Color color;
     };
-    
+
     SHADER_CB(UnlitColor, mat, CB_CUSTOM)
 
     UnlitC_PS(GraphicsContext* _ctx) : PixelShader(_ctx) {}

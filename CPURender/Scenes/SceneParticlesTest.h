@@ -18,7 +18,7 @@ protected:
 
 private:
     Material m_mat;
-    Material m_unlit;
+    Material m_unlitParticle;
 
     PassDesc m_mainPass;
     PassDesc m_particlesPass;
