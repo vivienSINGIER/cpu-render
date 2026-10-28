@@ -18,10 +18,13 @@ protected:
 
 private:
     void InitLightScene();
+    void UpdateMaterial();
 
     Object* ref = nullptr;
-    
-    Material m_mats[25];
+
+    Material m_mat;
+    float m_metalness = 0.0f;
+    float m_roughness = 0.5f;
 
     bool togglePostProc = false;
     PassDesc m_shadowPass;
