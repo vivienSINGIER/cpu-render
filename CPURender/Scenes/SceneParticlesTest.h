@@ -31,6 +31,6 @@ private:
     Handle m_uav_buffer;
     UAVView m_uav_view;
 
-    Mesh mesh_test_particle;
+    Mesh mesh_particle;
 };
 

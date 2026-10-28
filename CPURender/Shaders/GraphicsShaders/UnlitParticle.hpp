@@ -5,14 +5,22 @@
 
 #include "../../Datas/ConstantBuffers.hpp"
 #include "../ShaderBase/Shader.h"
+#include "../../Datas/Particle.h"
 
 class UnlitParticle_VS : public VertexShader
 {
+    SHADER_UAV_BUFF(UavParticle, data, 0)
+
 public:
     UnlitParticle_VS(GraphicsContext* _ctx) : VertexShader(_ctx) {}
 
     Vertex_OUT Execute(Vertex const& _in) const override
     {
+        size_t quad = _in.id / 6;
+        size_t corner = _in.id % 6; //0, 2, 1,    3, 1, 2 indices
+
+        const UavParticle& p = Load_data(quad);
+
         Vertex_OUT v;
         v.color = _in.color;
         v.posModel = Object().model * glm::vec4({ _in.position, 1 });
@@ -25,6 +33,7 @@ public:
 
 class UnlitParticle_PS : public PixelShader
 {
+
 public:
     struct ParticleColor
     {
@@ -37,7 +46,7 @@ public:
 
     glm::vec4 Execute(Vertex_OUT const& _in) const override
     {
-        return pcolor().color;;
+        return pcolor().color;
 
         //glm::vec4 objColor = Particle().color;
         //return Color(matColor.a * objColor.a, matColor.r * objColor.r, matColor.g * objColor.g, matColor.b * objColor.b);

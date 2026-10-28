@@ -74,7 +74,6 @@ void SceneParticlesTest::OnInit(Device* _pDevice)
     BufferFactory::Instance()->Fill(m_uav_buffer, UavParticle());
     ParticleManager::Instance()->m_uavBuffer = m_uav_buffer;
 
-
     ParticleEmitterDesc desc1 =
     {
         glm::vec3(0, 0, 0), 100, 0, 0.1f, 100.f, glm::vec3(-1, -1, -1), glm::vec3(1, 1, 1), 0.25f, 1.f, glm::vec4(1, 0, 0, 1), glm::vec4(1, 0, 1, 1), 3.f, 5.f
@@ -91,21 +90,30 @@ void SceneParticlesTest::OnInit(Device* _pDevice)
     std::vector<Vertex> vertices;
     std::vector<uint32_t> indices;
 
-    vertices = {
-        Vertex{glm::vec3(-0.5f, -0.5f, 0.f), glm::vec2(0.0f, 0.0f)},
-        Vertex{glm::vec3(0.5f, -0.5f, 0.f), glm::vec2(1.0f, 0.0f)},
-        Vertex{glm::vec3(-0.5f, 0.5f,  0.f), glm::vec2(0.0f, 1.0f)},
-        Vertex{glm::vec3(0.5f, 0.5f,  0.f), glm::vec2(1.0f, 1.f)},
-    };
+    for (int k = 0; k < MAX_PARTICLES; k++)
+    {
+        for (int v = 0; v < 6; v++)
+        {
+            Vertex vert = Vertex();
+            vert.id = size_t(k*6 + v);
 
-    indices = {
-        0, 2, 1,   3, 1, 2
-    };
+            vertices.push_back(vert);
+        }
 
-    mesh_test_particle = GeometryFactory::Instance()->CreateMesh(vertices, indices);
+        indices.push_back(k);
+        indices.push_back(k + 2);
+        indices.push_back(k + 1);
+
+        indices.push_back(k + 3);
+        indices.push_back(k + 1);
+        indices.push_back(k + 2);
+    }
+
+    mesh_particle = GeometryFactory::Instance()->CreateMesh(vertices, indices);
 
     ShaderFactory::Instance()->RegisterGroup<UnlitParticle_VS, UnlitParticle_PS>("UnlitParticle");
     m_unlitParticle = ShaderFactory::Instance()->CreateMaterial("UnlitParticle");
+    m_unlitParticle->SetUAVBuffer(0, m_uav_buffer);
 }
 
 void SceneParticlesTest::OnHandleEvent(const SDL_Event& event)
@@ -133,28 +141,32 @@ void SceneParticlesTest::OnDraw(Device* _pDevice)
     size_t count = m_uav_view.count;
     _pDevice->Dispatch(m_particleMat.get(), count / ParticleCS::GROUP_SIZE + 1, 1, 1);
 
-    for (int i = 0; i < count; i++)
+    Transform world = {};
+    glm::vec3 zero = { 0, 0, 0 };
+    world.SetPosition(zero);
+    UnlitParticle_PS::ParticleColor cb =
+    {
+        glm::vec4(1, 1, 1, 1)
+    };
+
+    m_unlitParticle->SetParams<UnlitParticle_PS::ParticleColor>(UnlitParticle_PS::CB_SLOT_pcolor, cb);
+    _pDevice->RegisterCommand(mesh_particle, world.GetMatrix(), m_unlitParticle.get());
+  
+    /*  for (int i = 0; i < count; i++)
     {
         const UavParticle& p = BufferFactory::Instance()->Read<UavParticle>(m_uav_buffer, i);
 
         if (p.lifeTime <= 0.f)
             continue;
 
-        Transform world = {};
-        world.SetPosition(p.pos);
         world.SetScale(p.size);
         world.SetRotationQuaternion(m_camTransform.GetRotation());
         world.AddYPR(glm::vec3(0, 0, p.rotationRad));
 
-        UnlitParticle_PS::ParticleColor cb =
-        {
-            p.color
-        };
+  
 
-        m_unlitParticle->SetParams<UnlitParticle_PS::ParticleColor>(UnlitParticle_PS::CB_SLOT_pcolor, cb);
-
-        _pDevice->RegisterCommand(mesh_test_particle, world.GetMatrix(), m_unlitParticle.get());
-    }
+      
+    }*/
 
     _pDevice->EndPass();
 }
