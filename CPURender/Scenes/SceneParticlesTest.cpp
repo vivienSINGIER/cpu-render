@@ -71,6 +71,10 @@ void SceneParticlesTest::OnInit(Device* _pDevice)
     m_particleMat = ShaderFactory::Instance()->CreateComputeMaterial("Particle");
     m_particleMat->SetUAVBuffer(0, m_uav_buffer);
 
+    ShaderFactory::Instance()->RegisterGroup<UnlitParticle_VS, UnlitParticle_PS>("UnlitParticle");
+    m_unlitParticle = ShaderFactory::Instance()->CreateMaterial("UnlitParticle");
+    m_unlitParticle->SetUAVBuffer(0, m_uav_buffer);
+
     BufferFactory::Instance()->Fill(m_uav_buffer, UavParticle());
     ParticleManager::Instance()->m_uavBuffer = m_uav_buffer;
 
@@ -110,10 +114,6 @@ void SceneParticlesTest::OnInit(Device* _pDevice)
     }
 
     mesh_particle = GeometryFactory::Instance()->CreateMesh(vertices, indices);
-
-    ShaderFactory::Instance()->RegisterGroup<UnlitParticle_VS, UnlitParticle_PS>("UnlitParticle");
-    m_unlitParticle = ShaderFactory::Instance()->CreateMaterial("UnlitParticle");
-    m_unlitParticle->SetUAVBuffer(0, m_uav_buffer);
 }
 
 void SceneParticlesTest::OnHandleEvent(const SDL_Event& event)
