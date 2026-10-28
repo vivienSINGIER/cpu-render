@@ -49,7 +49,7 @@ struct ClearFlags
 struct PassDesc
 {
     FrameBuffer fb;
-    PerPassCB view;
+    PerPassCB passData;
     PipelineState state;
     ClearFlags clearFlags;
     bool isCompute = false;

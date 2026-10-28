@@ -4,6 +4,7 @@
 #include <bit>
 #include <cassert>
 #include <glm/common.hpp>
+#include <glm/exponential.hpp>
 
 #include "../stb_image.h"
 
@@ -129,7 +130,7 @@ Texture Texture::ToLinear() const
     return t;
 }
 
-void Texture::Load(std::string const& _filePath)
+void Texture::Load(std::string const& _filePath, bool _isSrgb)
 {
     static int nbrChannel;
     int width, height;
@@ -150,6 +151,14 @@ void Texture::Load(std::string const& _filePath)
             m_data[index].g = (float)data[1 + linearized2D * 4] / 255.0f;
             m_data[index].b = (float)data[2 + linearized2D * 4] / 255.0f;
             m_data[index].a = (float)data[3 + linearized2D * 4] / 255.0f;
+            
+            if (_isSrgb)
+            {
+                m_data[index].r = glm::pow(m_data[index].r, 2.2f);
+                m_data[index].g = glm::pow(m_data[index].g, 2.2f);
+                m_data[index].b = glm::pow(m_data[index].b, 2.2f);
+                m_data[index].a = glm::pow(m_data[index].a, 2.2f);
+            }
         }
     }
     

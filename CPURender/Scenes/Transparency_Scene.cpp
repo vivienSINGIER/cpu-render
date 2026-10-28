@@ -107,9 +107,9 @@ void Transparency_Scene::OnUpdate(float dt)
 
 void Transparency_Scene::OnDraw(Device* _pDevice)
 {
-    m_camera.FillData(&m_mainPass.view);
-    m_mainPass.view.deltaTime = m_deltaTime;
-    m_mainPass.view.totalTime = m_totalTime;
+    m_camera.FillData(&m_mainPass.passData);
+    m_mainPass.passData.deltaTime = m_deltaTime;
+    m_mainPass.passData.totalTime = m_totalTime;
 
     _pDevice->BeginPass(m_mainPass);
         DrawObjects(_pDevice, m_camera.GetFrustum());

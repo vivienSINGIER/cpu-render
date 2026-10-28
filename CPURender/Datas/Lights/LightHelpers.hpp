@@ -39,7 +39,7 @@ namespace Lighting
     
     inline float CalcAttenuation(float _d, float _fallOfStart, float _fallOfEnd)
     {
-        return glm::clamp((_fallOfEnd - _d) / (_fallOfEnd - _fallOfStart), 0.0f, 1.0f );
+        return (_fallOfEnd - _d) / (_fallOfEnd - _fallOfStart);
     } 
 
     inline glm::vec3 SchlickFresnel(glm::vec3 _r0, glm::vec3 _normal, glm::vec3 _lightVec)
