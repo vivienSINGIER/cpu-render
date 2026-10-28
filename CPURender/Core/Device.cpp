@@ -116,7 +116,6 @@ void Device::EndFrame()
 			std::visit([this](auto const& _cmd) { ExecCommand(_cmd); }, d);	
 	}
 	
-	m_pendingPasses.clear();
 	m_ctx.SetHeapsState(HeapState::FREE);
 }
 
@@ -174,6 +173,8 @@ void Device::Present(Handle _texH)
 		m_adaptedLum += (avgLum - m_adaptedLum) * (1 - exp(-m_pendingPasses[m_activePass].desc.passData.deltaTime)); // TODO use dt
 		m_adaptedLum = glm::clamp(m_adaptedLum, 0.01f, 100.0f); // avoid extreme exposure 
 	}
+
+	m_pendingPasses.clear();
 }
 
 void Device::ExecCommand(DrawCommand const& _cmd)

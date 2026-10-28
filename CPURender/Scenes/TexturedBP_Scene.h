@@ -25,6 +25,7 @@ private:
     Object* ref = nullptr;
 
     Material m_mat;
+    Material m_skyboxMat;
     Material m_gammaCorrectMat;
 
     bool toggleSkybox = false;
