@@ -30,9 +30,9 @@ public:
 
     UnlitT_PS(GraphicsContext* _ctx) : PixelShader(_ctx) {}
 
-    Color Execute(Vertex_OUT const& _in) const override
+    vec4 Execute(Vertex_OUT const& _in) const override
     {
-        return Color::FromVec4(albedo(_in.uv));
+        return albedo(_in.uv);
     }
 };
 

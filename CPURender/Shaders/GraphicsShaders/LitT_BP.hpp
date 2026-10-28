@@ -54,16 +54,16 @@ public:
 
     LitT_BP_PS(GraphicsContext* _ctx) : PixelShader(_ctx) {}
 
-    inline float Depth(glm::vec2 _uv) const { return 1.0f - displacement(_uv).x; }
+    float Depth(glm::vec2 _uv) const { return 1.0f - displacement(_uv).x; }
     
-    inline float ShadowCalc(glm::vec4 posLightSpace) const
+    float ShadowCalc(glm::vec4 posLightSpace) const
     {
         vec3 projCoords = vec3(posLightSpace) / posLightSpace.w;
         projCoords = projCoords * 0.5f + 0.5f;
         float closestDepth = shadow(glm::vec2(projCoords)).r;
         float currentDepth = projCoords.z;
         
-        float bias = 0.005;
+        float bias = 0.005f;
         float shadow = currentDepth - bias > closestDepth  ? 1.0 : 0.0;
         if(projCoords.z > 1.0)
             shadow = 0.0;
@@ -71,7 +71,7 @@ public:
         return shadow;
     }
     
-    inline Color Execute(Vertex_OUT const& _in) const override
+    vec4 Execute(Vertex_OUT const& _in) const override
     {
         glm::vec3 T = glm::normalize(_in.tangent);
         glm::vec3 N = glm::normalize(_in.normal);
@@ -91,7 +91,7 @@ public:
         if (Has_diffuse())
             albedo = diffuse(uv) * mat().diffuseAlbedo;
         else
-            albedo = Color::ToVec4(_in.color) * mat().diffuseAlbedo;
+            albedo = _in.color * mat().diffuseAlbedo;
         
         glm::vec3 normalW;
         if (Has_normal())
@@ -129,11 +129,10 @@ public:
             shadowFactor = ShadowCalc(_in.posLightSpace);
         glm::vec4 directLight = ComputeLighting(Light(), d, _in.posModel, normalW, toEye, shadowFactor);
 
-        vec4 litColor = glm::clamp(glm::vec4(ambientFactor, 1.0f) + directLight, 0.0f, 1.0f);
+        vec4 litColor = glm::vec4(ambientFactor, 1.0f) + directLight;
         litColor.a = mat().diffuseAlbedo.a;
-        Color out = Color::FromVec4(litColor);
         
-        return out;
+        return litColor;
     }
 };
 

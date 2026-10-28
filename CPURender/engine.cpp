@@ -16,8 +16,7 @@ void Engine::handleEvent(const SDL_Event& event)
         return;
 
     m_mainScene->HandleEvent(event);
-
-    // Let the main loop exit through its usual quit path
+    
     if (m_mainScene->m_running == false)
     {
         SDL_Event quit = {};
@@ -31,8 +30,6 @@ void Engine::mainLoop()
     uint64_t now = SDL_GetPerformanceCounter();
     float dt = m_lastTime == 0 ? 0.0f : (float)(now - m_lastTime) / (float)SDL_GetPerformanceFrequency();
     m_lastTime = now;
-
-    std::cout << "FPS : " << 1 / dt << "\n";
 
     // Update //
     m_mainScene->Update(dt);

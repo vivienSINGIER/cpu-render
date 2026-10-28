@@ -147,7 +147,6 @@
     <ClCompile Include="Clipping.cpp" />
     <ClCompile Include="Core\Device.cpp" />
     <ClCompile Include="Core\GraphicsContext.cpp" />
-    <ClCompile Include="Datas\Color.cpp" />
     <ClCompile Include="Datas\Mesh.cpp" />
     <ClCompile Include="Datas\Object.cpp" />
     <ClCompile Include="Datas\Particle.cpp" />
@@ -167,6 +166,7 @@
     <ClCompile Include="Scenes\Scene.cpp" />
     <ClCompile Include="Scenes\SceneParticlesTest.cpp" />
     <ClCompile Include="Scenes\TexturedBP_Scene.cpp" />
+    <ClCompile Include="Scenes\Transparency_Scene.cpp" />
     <ClCompile Include="Shaders\ShaderBase\Material.cpp" />
     <ClCompile Include="Shaders\ShaderBase\Shader.cpp" />
     <ClCompile Include="Shaders\ShaderBase\ShaderGroup.cpp" />
@@ -180,6 +180,7 @@
     <ClInclude Include="Camera.h" />
     <ClInclude Include="Clipping.h" />
     <ClInclude Include="Core\Binning.hpp" />
+    <ClInclude Include="Core\Blending.hpp" />
     <ClInclude Include="Core\Device.h" />
     <ClInclude Include="Core\FrameBuffer.hpp" />
     <ClInclude Include="Core\GraphicsContext.h" />
@@ -224,6 +225,7 @@
     <ClInclude Include="Scenes\Scene.h" />
     <ClInclude Include="Scenes\SceneParticlesTest.h" />
     <ClInclude Include="Scenes\TexturedBP_Scene.h" />
+    <ClInclude Include="Scenes\Transparency_Scene.h" />
     <ClInclude Include="Shaders\ComputeShaders\GammaCorrection_CS.hpp" />
     <ClInclude Include="Shaders\ComputeShaders\ParticleCS.hpp" />
     <ClInclude Include="Shaders\GraphicsShaders\UnlitParticle.hpp" />
