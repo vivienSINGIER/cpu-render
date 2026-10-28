@@ -104,11 +104,6 @@ void SceneParticlesTest::OnInit(Device* _pDevice)
 
     mesh_test_particle = GeometryFactory::Instance()->CreateMesh(vertices, indices);
 
-    UnlitParticle_PS::ParticleColor c =
-    {
-        Color(255, 255, 255, 255)
-    };
-
     ShaderFactory::Instance()->RegisterGroup<UnlitParticle_VS, UnlitParticle_PS>("UnlitParticle");
     m_unlitParticle = ShaderFactory::Instance()->CreateMaterial("UnlitParticle");
 }
@@ -125,9 +120,9 @@ void SceneParticlesTest::OnUpdate(float dt)
 
 void SceneParticlesTest::OnDraw(Device* _pDevice)
 {
-    m_camera.FillData(&m_mainPass.view);
-    m_mainPass.view.deltaTime = m_deltaTime;
-    m_mainPass.view.totalTime = m_totalTime;
+    m_camera.FillData(&m_mainPass.passData);
+    m_mainPass.passData.deltaTime = m_deltaTime;
+    m_mainPass.passData.totalTime = m_totalTime;
    
     _pDevice->BeginPass(m_mainPass);
     DrawObjects(_pDevice, m_camera.GetFrustum());
@@ -153,7 +148,7 @@ void SceneParticlesTest::OnDraw(Device* _pDevice)
 
         UnlitParticle_PS::ParticleColor cb =
         {
-            Color(p.color.a * 255.f, p.color.r * 255.f, p.color.g * 255.f, p.color.b * 255.f)
+            p.color
         };
 
         m_unlitParticle->SetParams<UnlitParticle_PS::ParticleColor>(UnlitParticle_PS::CB_SLOT_pcolor, cb);

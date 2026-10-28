@@ -28,17 +28,16 @@ class UnlitParticle_PS : public PixelShader
 public:
     struct ParticleColor
     {
-        Color color;
+        glm::vec4 color;
     };
 
     SHADER_CB(ParticleColor, pcolor, CB_CUSTOM)
 
     UnlitParticle_PS(GraphicsContext* _ctx) : PixelShader(_ctx) {}
 
-    Color Execute(Vertex_OUT const& _in) const override
+    glm::vec4 Execute(Vertex_OUT const& _in) const override
     {
-        Color color = pcolor().color;
-        return color;
+        return pcolor().color;;
 
         //glm::vec4 objColor = Particle().color;
         //return Color(matColor.a * objColor.a, matColor.r * objColor.r, matColor.g * objColor.g, matColor.b * objColor.b);

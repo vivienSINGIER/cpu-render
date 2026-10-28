@@ -78,7 +78,7 @@ int main(void) {
     }
 
     Engine engine;
-    Texture frameBuffer(WIDTH, HEIGHT,  Texture::ARGB8, Texture::LINEAR);
+    Texture frameBuffer(WIDTH, HEIGHT,  Texture::RGBA32, Texture::LINEAR);
     engine.Init<SceneParticlesTest>(&frameBuffer);
     
     bool isRunning = true;
