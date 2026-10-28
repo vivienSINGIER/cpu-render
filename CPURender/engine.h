@@ -37,6 +37,8 @@ private:
 
 	Object* ref = nullptr;
 
+	Object* skybox = nullptr;
+
 	Camera m_camera;
 	Transform m_camTransform;
 
@@ -46,6 +48,7 @@ private:
 
 	bool togglePostProc = false;
 	PassDesc m_shadowPass;
+	PassDesc m_skyboxPass;
 	PassDesc m_mainPass;
 	PassDesc m_postProcPass;
 	

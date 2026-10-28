@@ -90,7 +90,12 @@ void Engine::init(Texture* _frameBuffer)
     InitLightScene();
     
     m_mainPass.fb = m_device.GetDefaultFrameBuffer();
+    m_mainPass.clearFlags.clearGBuffer[0] = false;
     
+    m_skyboxPass.fb = m_device.GetDefaultFrameBuffer();
+    m_skyboxPass.state.depthTest = false;
+    m_skyboxPass.state.depthWrite = false;
+
     m_shadowPass.fb = m_device.CreateFrameBuffer(1024, 1024, 0, true);
     m_shadowPass.state.cullMode = CullMode::FRONT;
     
@@ -119,7 +124,7 @@ void Engine::init(Texture* _frameBuffer)
     //Mesh m = GeometryFactory::Instance()->BuildUVSphere(10, 10);
     Mesh m = GeometryFactory::Instance()->BuildCube();
     //Mesh cube = GeometryFactory::Instance()->BuildCube();
-    Mesh skybox = GeometryFactory::Instance()->BuildSkybox();
+    Mesh skyboxMesh = GeometryFactory::Instance()->BuildSkybox();
 
     Cubemap cubemap = Cubemap("Assets/Textures/Cubemap/Front.png", "Assets/Textures/Cubemap/Back.png",
         "Assets/Textures/Cubemap/Left.png", "Assets/Textures/Cubemap/Right.png",
@@ -156,11 +161,10 @@ void Engine::init(Texture* _frameBuffer)
     //     }
     // }
 
-    Object* floor = mainScene.CreateObject(DYNAMIC); 
-    floor->mesh = skybox;
-    floor->mat = m_mat2.get();
-    floor->transform.SetPosition(glm::vec3(0.0f, 0.0f, 0.0f));
-    floor->transform.SetScale(glm::vec3(50.0f, 50.0f, 50.0f));
+    skybox = new Object();// mainScene.CreateObject(DYNAMIC);
+    skybox->mesh = skyboxMesh;
+    skybox->mat = m_mat2.get();
+    skybox->transform.SetScale(glm::vec3(50.f, 50.f, 50.f));
     
     
     std::cout << "End Init" << std::endl;
@@ -199,6 +203,8 @@ void Engine::mainLoop()
     glm::mat4x4 lightSpace = Lighting::ComputeDirLightViewProj(m_shadowPass.view.view, m_camera.GetShadowProj(), 
                                         m_lightData.lights[0].light.direction, m_shadowPass.fb.width, shadowFrustum, 0.0f);
     
+    m_camera.FillData(&m_skyboxPass.view);
+
     m_camera.FillData(&m_mainPass.view);
     m_mainPass.view.deltaTime = dt;
     m_mainPass.view.totalTime = static_cast<float>(now);
@@ -211,6 +217,10 @@ void Engine::mainLoop()
 
     m_device.BeginFrame();
     
+    m_device.BeginPass(m_skyboxPass);
+        m_device.RegisterCommand(skybox->mesh, skybox->transform.GetMatrix(), skybox->mat);
+    m_device.EndPass();
+
     //m_device.BeginPass(m_shadowPass);
     //    mainScene.Draw(&m_device, shadowFrustum);
     //m_device.EndPass();
