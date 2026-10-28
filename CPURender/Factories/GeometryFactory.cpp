@@ -653,7 +653,7 @@ Mesh GeometryFactory::LoadMesh(std::string const& _path)
 
 void GeometryFactory::ApplyPaletteColors(std::vector<Vertex>& _vertices)
 {
-	Color const palette[] = {
+	glm::vec4 const palette[] = {
 		Color::RED, Color::GREEN, Color::BLUE, Color::YELLOW,
 		Color::CYAN, Color::MAGENTA, Color::ORANGE, Color::PURPLE,
 		Color::LIME, Color::PINK, Color::TEAL, Color::BROWN,
@@ -684,10 +684,10 @@ void GeometryFactory::ApplyGradientColors(std::vector<Vertex>& _vertices)
 		for (int k = 0; k < 3; k++)
 			t[k] = extent[k] > 1e-6f ? (v.position[k] - min[k]) / extent[k] : 0.5f;
 		
-		v.color = Color(255,
-			static_cast<glm::uint8>(55.0f + t.x * 200.0f),
-			static_cast<glm::uint8>(55.0f + t.y * 200.0f),
-			static_cast<glm::uint8>(55.0f + t.z * 200.0f));
+		v.color = glm::vec4(0.216f + t.x * 0.784f,
+					0.216f + t.y * 0.784f,
+					0.216f + t.z * 0.784f,
+					1.0f);
 	}
 }
 

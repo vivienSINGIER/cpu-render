@@ -30,6 +30,7 @@ public:
 
     void UpdateMatrices();
     Frustum const& GetFrustum();
+    void FillData(PerPassCB* _passData);
 
 private:
     glm::mat4x4 m_world;
@@ -48,10 +49,8 @@ private:
 
     Frustum m_frustum;
 
-    void FillData(PerPassCB* _passData);
 
     friend class Device;
-    friend class Engine;
 };
 
 #endif

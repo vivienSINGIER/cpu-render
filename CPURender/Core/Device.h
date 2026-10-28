@@ -43,7 +43,7 @@ public:
 	void SetRenderTarget(Texture* _tex);
 	void SetLightData(LightData const& _ld);
 	
-	FrameBuffer CreateFrameBuffer(uint32_t _w, uint32_t _h, uint32_t _colorBuffCount, bool _useDepth, Color _clearColor = Color(255, 20, 20, 20));
+	FrameBuffer CreateFrameBuffer(uint32_t _w, uint32_t _h, uint32_t _colorBuffCount, bool _useDepth, glm::vec4 _clearColor = vec4(0.1f, 0.1f, 0.1f, 1.0f));
 	FrameBuffer const& GetDefaultFrameBuffer();
 
 private:

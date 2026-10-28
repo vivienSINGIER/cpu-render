@@ -21,14 +21,14 @@ namespace
         return t;
     }
     
-    Color EncodeTexel(Texture::Format _format, glm::vec4 _v)
+    vec4 EncodeTexel(Texture::Format _format, glm::vec4 _v)
     {
         switch (_format)
         {
-        case Texture::ARGB8:
-            return Color::FromVec4(glm::clamp(_v, 0.0f, 1.0f));
+        case Texture::RGBA32:
+            return glm::clamp(_v, 0.0f, 1.0f);
         case Texture::R32F:
-            return std::bit_cast<Color>(_v.r);
+            return glm::clamp(vec4{ _v.r, 0.0f, 0.0f, 1.0f }, 0.0f, 1.0f);
         }
 
         assert(false && "Unhandled texture format");
@@ -36,7 +36,7 @@ namespace
     }
 }
 
-Texture::Texture(uint32 _width, uint32 _height, Format _format, Encoding _enc, Color _color) : m_encoding(_enc), m_format(_format)
+Texture::Texture(uint32 _width, uint32 _height, Format _format, Encoding _enc, vec4 _color) : m_encoding(_enc), m_format(_format)
 {
     SetSize(_width, _height);
     
@@ -141,14 +141,14 @@ glm::vec4 Texture::SampleNPCube(glm::vec3 _dir) const
 
 glm::vec4 Texture::Load(uint32 _x, uint32 _y) const
 {
-    Color c = LoadC(_x, _y);
+    vec4 c = m_data[GetIndex(_x, _y)];
 
     switch (m_format)
     {
-    case ARGB8:
-        return Color::ToVec4(c);
+    case RGBA32:
+        return c;
     case R32F:
-        return { std::bit_cast<float>(c), 0.0f, 0.0f, 1.0f };
+        return { c.r, 0.0f, 0.0f, 1.0f };
     }
 
     assert(false && "Unhandled texture format");
@@ -157,12 +157,12 @@ glm::vec4 Texture::Load(uint32 _x, uint32 _y) const
 
 void Texture::Store(uint32 _x, uint32 _y, glm::vec4 _v)
 {
-    Store(_x, _y, EncodeTexel(m_format, _v));
+    m_data[GetIndex(_x, _y)] = EncodeTexel(m_format, _v);;
 }
 
 void Texture::Clear(glm::vec4 _color)
 {
-    Clear(EncodeTexel(m_format, _color));
+    m_data.assign(m_size, EncodeTexel(m_format, _color));
 }
 
 Texture Texture::ToLinear() const
@@ -207,30 +207,12 @@ void Texture::Load(std::string const& _filePath)
     free(data);
 }
 
-void Texture::Clear(Color _color)
-{
-    m_data.assign(m_size, _color);
-}
-
 Texture::Format Texture::GetFormat() const
 {
     return m_format;
 }
 
-void Texture::Store(uint32 _x, uint32 _y, Color _color)
-{
-    uint32 i = GetIndex(_x, _y);
-    
-    m_data[i] = _color;
-}
-
-Color Texture::LoadC(uint32 _x, uint32 _y) const
-{
-    uint32 i = GetIndex(_x, _y);
-    return m_data[i];
-}
-
-Color* Texture::GetData()
+vec4* Texture::GetData()
 {
     return m_data.data();
 }

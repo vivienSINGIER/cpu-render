@@ -28,14 +28,14 @@ class UnlitC_PS : public PixelShader
 public:
     struct UnlitColor
     {
-        Color color;
+        vec4 color;
     };
     
     SHADER_CB(UnlitColor, mat, CB_CUSTOM)
 
     UnlitC_PS(GraphicsContext* _ctx) : PixelShader(_ctx) {}
 
-    Color Execute(Vertex_OUT const& _in) const override
+    vec4 Execute(Vertex_OUT const& _in) const override
     {
         return mat().color;
     }

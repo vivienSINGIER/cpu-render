@@ -81,7 +81,7 @@ protected:
 
 class VertexShader : public GraphicsShader { public: virtual Vertex_OUT Execute(Vertex const& _in) const = 0; protected: using GraphicsShader::GraphicsShader; };
 
-class PixelShader  : public GraphicsShader { public: virtual Color Execute(Vertex_OUT const& _in) const = 0; protected: using GraphicsShader::GraphicsShader; };
+class PixelShader  : public GraphicsShader { public: virtual glm::vec4 Execute(Vertex_OUT const& _in) const = 0; protected: using GraphicsShader::GraphicsShader; };
 
 class ComputeShader : public Shader
 {

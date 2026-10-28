@@ -30,20 +30,20 @@ class LitC_PS : public PixelShader
 public:
     struct MaterialData
     {
-        Color color;
+        vec4 color;
     };
 
     SHADER_CB(MaterialData, mat, CB_CUSTOM)
 
     LitC_PS(GraphicsContext* _ctx) : PixelShader(_ctx) {}
 
-    inline Color Execute(Vertex_OUT const& _in) const override
+    inline vec4 Execute(Vertex_OUT const& _in) const override
     {
         float ambientFactors[3] = { 0.1f, 0.1f, 0.15f };
-        Color ambientColor = { 255,
-            (uint8_t)((float)mat().color.r * ambientFactors[0]) ,
-            (uint8_t)((float)mat().color.g * ambientFactors[1]) ,
-            (uint8_t)((float)mat().color.b * ambientFactors[2]) };
+        vec4 ambientColor = { 1.0,
+            mat().color.r * ambientFactors[0] ,
+            mat().color.g * ambientFactors[1] ,
+            mat().color.b * ambientFactors[2] };
 
         float dot = glm::dot(Pass().lightDirection, _in.normal);
         return mat().color * -((dot + 1) / 2.0f) * Pass().lightIntensity + ambientColor;
