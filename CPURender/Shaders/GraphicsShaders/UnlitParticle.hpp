@@ -7,6 +7,8 @@
 #include "../ShaderBase/Shader.h"
 #include "../../Datas/Particle.h"
 
+#include <iostream>
+
 class UnlitParticle_VS : public VertexShader
 {
     SHADER_UAV_BUFF(UavParticle, data, 0)
@@ -16,16 +18,58 @@ public:
 
     Vertex_OUT Execute(Vertex const& _in) const override
     {
-        size_t quad = _in.id / 6;
-        size_t corner = _in.id % 6; //0, 2, 1,    3, 1, 2 indices
+        int quad = (int)_in.id / 6;
+        int corner = (int)_in.id % 6; //0, 2, 1,    3, 1, 2 indices
 
         const UavParticle& p = Load_data(quad);
 
+        if (p.lifeTime <= 0.f)
+        {
+            Vertex_OUT error;
+            error.color = { -1, -1, -1, -1 };
+            return error;
+        }
+
+        glm::vec3 offset = {};
+
+        switch (corner)
+        {
+        case 0:
+            offset = { -0.5f, -0.5f, 0.f };
+            break;
+        case 3:
+            offset = { 0.5f, 0.5f, 0.f };
+            break;
+        case 1:
+        case 5:
+            offset = { 0.5f, -0.5f, 0.f };
+            break;
+        case 2:
+        case 4:
+            offset = { -0.5f, 0.5f, 0.f };
+            break;
+        }
+
+        offset *= p.size;
+
         Vertex_OUT v;
-        v.color = _in.color;
-        v.posModel = Object().model * glm::vec4({ _in.position, 1 });
-        v.posH = Pass().proj * Pass().view * v.posModel;
-        v.normal = glm::mat3x3(Object().model) * _in.normal;
+        v.color = p.endColor + (p.lifeTime / p.maxLifeTime) * (p.beginColor - p.endColor);
+
+        glm::vec4 viewCenter = Pass().view * glm::vec4(p.pos, 1);
+
+        float c = cos(p.rotationRad);
+        float s = sin(p.rotationRad);
+
+        glm::vec2 rotatedOffset;
+        rotatedOffset.x = offset.x * c - offset.y * s;
+        rotatedOffset.y = offset.x * s + offset.y * c;
+
+        v.posModel = viewCenter;
+        v.posModel.x += rotatedOffset.x;
+        v.posModel.y += rotatedOffset.y;
+
+        v.posH = Pass().proj * v.posModel;
+        v.normal = _in.normal;
         v.uv = _in.uv;
         return v;
     }
@@ -46,10 +90,10 @@ public:
 
     glm::vec4 Execute(Vertex_OUT const& _in) const override
     {
-        return pcolor().color;
+        if (_in.color.a < 0.f)
+            return {};
 
-        //glm::vec4 objColor = Particle().color;
-        //return Color(matColor.a * objColor.a, matColor.r * objColor.r, matColor.g * objColor.g, matColor.b * objColor.b);
+        return pcolor().color * _in.color;
     }
 };
 

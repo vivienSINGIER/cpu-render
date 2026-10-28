@@ -78,17 +78,21 @@ void SceneParticlesTest::OnInit(Device* _pDevice)
     BufferFactory::Instance()->Fill(m_uav_buffer, UavParticle());
     ParticleManager::Instance()->m_uavBuffer = m_uav_buffer;
 
-    ParticleEmitterDesc desc1 =
-    {
-        glm::vec3(0, 0, 0), 100, 0, 0.1f, 100.f, glm::vec3(-1, -1, -1), glm::vec3(1, 1, 1), 0.25f, 1.f, glm::vec4(1, 0, 0, 1), glm::vec4(1, 0, 1, 1), 3.f, 5.f
-    };
-    ParticleManager::Instance()->Spawn(desc1);
+    ParticleDesc desc2;
+    desc2.amount = 250;
+    desc2.spawnRadius = 8.f;
+    desc2.particleSize = 0.025f;
+    desc2.rotationSpeed = 0.f;
+    desc2.floorDir = glm::vec3(-0.15f, -1, -0.15f);
+    desc2.ceilDir = glm::vec3(0.15f, -0.5f, 0.15f);
+    desc2.minSpeed = 1.f;
+    desc2.maxSpeed = 15.f;
+    desc2.beginColor = glm::vec4(1, 1, 1, 1);
+    desc2.endColor = glm::vec4(0, 0, 0, 1);
+    desc2.minLifeTime = 1.f;
+    desc2.maxLifeTime = 1.f;
 
-    ParticleEmitterDesc desc2 =
-    {
-        glm::vec3(0, 5, 0), 100, 1.f, 0.1f, 100.f, glm::vec3(-0.1f, -1, -0.1f), glm::vec3(0.1f, -0.f, 0.1f), 0.5f, 2.f, glm::vec4(0, 0, 1, 1), glm::vec4(1, 0, 1, 1), 3.f, 5.f
-    };
-    ParticleManager::Instance()->Spawn(desc2);
+    rain = ParticleManager::Instance()->CreateEmitter({0, 5, 0}, desc2, 0.1f);
 
     //TODO CHANGE
     std::vector<Vertex> vertices;
@@ -99,18 +103,18 @@ void SceneParticlesTest::OnInit(Device* _pDevice)
         for (int v = 0; v < 6; v++)
         {
             Vertex vert = Vertex();
-            vert.id = size_t(k*6 + v);
+            vert.id = (size_t)(k*6 + v);
 
             vertices.push_back(vert);
         }
 
-        indices.push_back(k);
-        indices.push_back(k + 2);
-        indices.push_back(k + 1);
+        indices.push_back(k*6);
+        indices.push_back(k*6 + 2);
+        indices.push_back(k*6 + 1);
 
-        indices.push_back(k + 3);
-        indices.push_back(k + 1);
-        indices.push_back(k + 2);
+        indices.push_back(k*6 + 3);
+        indices.push_back(k*6 + 1);
+        indices.push_back(k*6 + 2);
     }
 
     mesh_particle = GeometryFactory::Instance()->CreateMesh(vertices, indices);
@@ -118,12 +122,29 @@ void SceneParticlesTest::OnInit(Device* _pDevice)
 
 void SceneParticlesTest::OnHandleEvent(const SDL_Event& event)
 {
+    if (event.type == SDL_EVENT_KEY_DOWN && (event.key.key == SDLK_A))
+    {
+        ParticleDesc desc1;
+        desc1.amount = 100;
+        desc1.spawnRadius = 0.f;
+        desc1.particleSize = 0.1f;
+        desc1.rotationSpeed = 100.f;
+        desc1.floorDir = glm::vec3(-1, -1, -1);
+        desc1.ceilDir = glm::vec3(1, 1, 1);
+        desc1.minSpeed = 0.25f;
+        desc1.maxSpeed = 1.f;
+        desc1.beginColor = glm::vec4(1, 0, 0, 1);
+        desc1.endColor = glm::vec4(1, 1, 0, 1);
+        desc1.minLifeTime = 3.f;
+        desc1.maxLifeTime = 5.f;
 
+        ParticleManager::Instance()->Spawn({0, 0, 0}, desc1);
+    }
 }
 
 void SceneParticlesTest::OnUpdate(float dt)
 {
-    
+    ParticleManager::Instance()->UpdateEmitter(rain, dt);
 }
 
 void SceneParticlesTest::OnDraw(Device* _pDevice)

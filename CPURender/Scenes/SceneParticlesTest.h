@@ -32,5 +32,7 @@ private:
     UAVView m_uav_view;
 
     Mesh mesh_particle;
+
+    ParticleEmitter rain;
 };
 

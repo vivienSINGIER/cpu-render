@@ -13,7 +13,7 @@ ParticleManager* ParticleManager::Instance()
 	return m_pInstance;
 }
 
-void ParticleManager::Spawn(ParticleEmitterDesc _desc)
+void ParticleManager::Spawn(glm::vec3 _center, ParticleDesc _desc)
 {
 	if (m_uavBuffer.IsValid() == false)
 	{
@@ -35,10 +35,10 @@ void ParticleManager::Spawn(ParticleEmitterDesc _desc)
 
 	float spawnRadius = _desc.spawnRadius;
 
-	for (int i = 0; i < _desc.maxParticles; i++)
+	for (int i = 0; i < _desc.amount; i++)
 	{
 		UavParticle p;
-		p.pos = glm::vec3(_desc.spawnPos.x +rand_range(-spawnRadius, spawnRadius), _desc.spawnPos.y + rand_range(-spawnRadius, spawnRadius), _desc.spawnPos.z + rand_range(-spawnRadius, spawnRadius));
+		p.pos = glm::vec3(_center.x +rand_range(-spawnRadius, spawnRadius), _center.y + rand_range(-spawnRadius, spawnRadius), _center.z + rand_range(-spawnRadius, spawnRadius));
 		p.size = _desc.particleSize;
 		p.speed = rand_range(_desc.minSpeed, _desc.maxSpeed);
 		p.beginColor = _desc.beginColor;
@@ -58,4 +58,21 @@ void ParticleManager::Spawn(ParticleEmitterDesc _desc)
 		if(m_freeOffset >= MAX_PARTICLES)
 			m_freeOffset %= MAX_PARTICLES;
 	}
+}
+
+ParticleEmitter ParticleManager::CreateEmitter(glm::vec3 _center, ParticleDesc _desc, float _spawnDelay)
+{
+	return ParticleEmitter(_center, _desc, _spawnDelay);
+}
+
+void ParticleManager::UpdateEmitter(ParticleEmitter& pe, float dt)
+{
+	if (pe.spawnProgress < pe.spawnDelay)
+	{
+		pe.spawnProgress += dt;
+		return;
+	}
+
+	Spawn(pe.center, pe.desc);
+	pe.spawnProgress = 0.f;
 }
