@@ -8,6 +8,8 @@
 #include "GraphicsShaders/LitC_BP.hpp"
 #include "GraphicsShaders/LitT_BP.hpp"
 
+#include "GraphicsShaders/PBR.hpp"
+
 #include "ComputeShaders/GroupDebug_CS.hpp"
 #include "ComputeShaders/GammaCorrection_CS.hpp"
 

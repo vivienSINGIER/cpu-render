@@ -40,7 +40,7 @@ void TexturedBP_Scene::OnInit(Device* _pDevice)
     Handle metalness = TextureFactory::Instance()->CreateTexture("dark_rock_metalness", "Assets/Textures/DarkRock/metalness.png");
     
     LitT_BP_PS::MaterialCB cb = {
-        {1.0f, 1.0f, 1.0f, 1.0f}, 
+        {1.0f, 0.0f, 1.0f, 1.0f}, 
             Lighting::g_fresnelR0Templates[PLASTIC], 
                 0.5f, 0.02f, 0.8f
     };
@@ -50,14 +50,14 @@ void TexturedBP_Scene::OnInit(Device* _pDevice)
 
     m_mat = ShaderFactory::Instance()->CreateMaterial("LitT_BP");
     m_mat->SetParams<LitT_BP_PS::MaterialCB>(LitT_BP_PS::CB_SLOT_mat, cb);
-    m_mat->SetTexture(LitT_BP_PS::TEX_SLOT_diffuse, diff);
-    m_mat->SetTexture(LitT_BP_PS::TEX_SLOT_ambient, ambient);
-    m_mat->SetTexture(LitT_BP_PS::TEX_SLOT_normal, normal);
-    
-    m_mat->SetTexture(LitT_BP_PS::TEX_SLOT_roughness, roughness);
-    m_mat->SetTexture(LitT_BP_PS::TEX_SLOT_displacement, displacement);
-    m_mat->SetTexture(LitT_BP_PS::TEX_SLOT_metal, metalness);
-    m_mat->SetTexture(LitT_BP_PS::TEX_SLOT_shadow, m_shadowPass.fb.depthBuffer);
+    // m_mat->SetTexture(LitT_BP_PS::TEX_SLOT_diffuse, diff);
+    // m_mat->SetTexture(LitT_BP_PS::TEX_SLOT_ambient, ambient);
+    // m_mat->SetTexture(LitT_BP_PS::TEX_SLOT_normal, normal);
+    //
+    // m_mat->SetTexture(LitT_BP_PS::TEX_SLOT_roughness, roughness);
+    // m_mat->SetTexture(LitT_BP_PS::TEX_SLOT_displacement, displacement);
+    // m_mat->SetTexture(LitT_BP_PS::TEX_SLOT_metal, metalness);
+    // m_mat->SetTexture(LitT_BP_PS::TEX_SLOT_shadow, m_shadowPass.fb.depthBuffer);
     
     m_gammaCorrectMat = ShaderFactory::Instance()->CreateComputeMaterial("GammaCorrect");
     m_gammaCorrectMat->SetRWTexture(GammaCorr_CS::UAV_SLOT_target, m_mainPass.fb.gBuffer[0]);
