@@ -1,6 +1,6 @@
 #include "Cubemap.h"
 
-Cubemap::Cubemap(const char* _front, const char* _back, const char* _left, const char* _right, const char* _up, const char* _down)
+Cubemap::Cubemap(const char* _name, const char* _front, const char* _back, const char* _left, const char* _right, const char* _up, const char* _down)
 {
 	// create new texture with 6 combined
 
@@ -17,9 +17,9 @@ Cubemap::Cubemap(const char* _front, const char* _back, const char* _left, const
 	// Check if textures are square + check if same size
 	int width = faceTexs[0].Width(); int height = faceTexs[0].Height();
 
-	texHandle = TextureFactory::Instance()->CreateTexture("Cubemap", width * 3, height * 3);
+	texHandle = TextureFactory::Instance()->CreateTexture(_name, width * 3, height * 3);
 
-	Texture* texture = TextureFactory::Instance()->GetTexture("Cubemap");
+	Texture* texture = TextureFactory::Instance()->GetTexture(_name);
 
 	for (int i = 0; i < 6; i++)
 	{
@@ -33,7 +33,7 @@ Cubemap::Cubemap(const char* _front, const char* _back, const char* _left, const
 		{
 			for (int k = 0; k < width; k++)
 			{
-				texture->SetPixelData(xOffset + k, yOffset + j, faceTexs[i].GetPixelData<uint32_t>(k, j));
+				texture->SetPixelData(xOffset + k, yOffset + j, faceTexs[i].GetPixelData<vec4>(k, j));
 			}
 		}
 	}

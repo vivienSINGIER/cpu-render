@@ -148,7 +148,6 @@
     <ClCompile Include="Core\Device.cpp" />
     <ClCompile Include="Core\GraphicsContext.cpp" />
     <ClCompile Include="Cubemap.cpp" />
-    <ClCompile Include="Datas\Color.cpp" />
     <ClCompile Include="Datas\Mesh.cpp" />
     <ClCompile Include="Datas\Object.cpp" />
     <ClCompile Include="Datas\Texture.cpp" />
