@@ -14,7 +14,7 @@ public:
     static TextureFactory* Instance();
     
     Handle CreateTexture(std::string const& _name, uint32_t _width = 256, uint32_t _height = 256);
-    Handle CreateTexture(std::string const& _name, std::string const& _path);
+    Handle CreateTexture(std::string const& _name, std::string const& _path, bool _isSrgb = false);
     
     Handle GetTextureHandle(std::string const& _name);
     Texture* GetTexture(std::string const& _name);

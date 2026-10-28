@@ -63,6 +63,9 @@ private:
 	
 	Texture* m_renderTarget;
 	
+	float m_adaptedLum = 0.18f;
+	float m_exposure = 1.0f;
+	
 	GraphicsContext m_ctx;
 	
 	std::vector<float> wPreDiv;

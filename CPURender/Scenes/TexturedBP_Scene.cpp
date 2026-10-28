@@ -10,7 +10,7 @@
 
 void TexturedBP_Scene::InitLightScene()
 {
-    m_lightData.lights[0] = MakeDirectionalLight({1.0f, -1.0f, 1.0f}, 0.75f, Color::WHITE);
+    m_lightData.lights[0] = MakeDirectionalLight({1.0f, -1.0f, 1.0f}, 10.0f, Color::WHITE);
     m_lightData.lights[1] = MakePointLight({5.0f, 0.0f, 5.0f}, 0.5f, { 5.0f, 25.0f }, Color::RED);
     m_lightData.ambient = 0.2f;
 }
@@ -37,7 +37,7 @@ void TexturedBP_Scene::OnInit(Device* _pDevice)
     m_camera.SetShadowDistance(25.0f);
     m_camTransform.SetPosition(glm::vec3(0.0f, 0.0f, -10.f));
 
-    Handle diff = TextureFactory::Instance()->CreateTexture("dark_rock_diffuse", "Assets/Textures/DarkRock/diffuse.png");
+    Handle diff = TextureFactory::Instance()->CreateTexture("dark_rock_diffuse", "Assets/Textures/DarkRock/diffuse.png", true);
     Handle ambient = TextureFactory::Instance()->CreateTexture("dark_rock_ambient", "Assets/Textures/DarkRock/ambient.png");
     Handle normal = TextureFactory::Instance()->CreateTexture("dark_rock_normal", "Assets/Textures/DarkRock/normal.png");
     Handle roughness = TextureFactory::Instance()->CreateTexture("dark_rock_roughness", "Assets/Textures/DarkRock/roughness.png");
@@ -97,17 +97,16 @@ void TexturedBP_Scene::OnUpdate(float dt)
 void TexturedBP_Scene::OnDraw(Device* _pDevice)
 {
     Frustum shadowFrustum;
-    glm::mat4x4 lightSpace = Lighting::ComputeDirLightViewProj(m_shadowPass.view.view, m_camera.GetShadowProj(),
+    glm::mat4x4 lightSpace = Lighting::ComputeDirLightViewProj(m_shadowPass.passData.view, m_camera.GetShadowProj(),
                                         m_lightData.lights[0].light.direction, m_shadowPass.fb.width, shadowFrustum, 0.0f);
 
+    m_camera.FillData(&m_mainPass.passData);
+    m_mainPass.passData.deltaTime = m_deltaTime;
+    m_mainPass.passData.totalTime = m_totalTime;
+    m_mainPass.passData.lightSpace = lightSpace;
 
-    m_camera.FillData(&m_mainPass.view);
-    m_mainPass.view.deltaTime = m_deltaTime;
-    m_mainPass.view.totalTime = m_totalTime;
-    m_mainPass.view.lightSpace = lightSpace;
-
-    m_camera.FillData(&m_shadowPass.view);
-    m_shadowPass.view.viewProj = lightSpace;
+    m_camera.FillData(&m_shadowPass.passData);
+    m_shadowPass.passData.viewProj = lightSpace;
 
     //if (toggleSkybox)
     //{

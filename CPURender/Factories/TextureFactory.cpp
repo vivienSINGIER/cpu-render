@@ -18,13 +18,13 @@ Handle TextureFactory::CreateTexture(std::string const& _name, uint32_t _width, 
     return h;
 }
 
-Handle TextureFactory::CreateTexture(std::string const& _name, std::string const& _path)
+Handle TextureFactory::CreateTexture(std::string const& _name, std::string const& _path, bool _isSrgb)
 {
     assert(HasTexture(_name) == false && "A texture is already initialized under this name");
     Handle h = m_ctx->textureHeap.Create<Texture>();
     m_library[_name] = h;
     
-    GetTexture(h)->Load(_path);
+    GetTexture(h)->Load(_path, _isSrgb);
     
     return h;
 }

@@ -37,7 +37,7 @@ struct PipelineState
     bool depthWrite = true;
     
     CullMode cullMode = CullMode::BACK;
-    Blending::BlendMode blendMode = Blending::BlendMode::ALPHA;
+    Blending::BlendMode blendMode = Blending::BlendMode::OPAQUE;
 };
 
 struct ClearFlags
@@ -49,7 +49,7 @@ struct ClearFlags
 struct PassDesc
 {
     FrameBuffer fb;
-    PerPassCB view;
+    PerPassCB passData;
     PipelineState state;
     ClearFlags clearFlags;
     bool isCompute = false;

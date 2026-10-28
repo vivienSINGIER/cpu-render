@@ -11,6 +11,7 @@
 #include "../Datas/Triangle.h"
 #include "../Clipping.h"
 #include "../Datas/Lights/LightData.hpp"
+#include "../Datas/Lights/LightHelpers.hpp"
 #include "../Shaders/ShaderBase/Material.h"
 
 Device::Device() : m_ctx()
@@ -21,7 +22,7 @@ Device::Device() : m_ctx()
 	m_defaultFB.height = HEIGHT;
 	m_defaultFB.gBuffer[0] = m_ctx.textureHeap.Create<Texture>(WIDTH, HEIGHT, Texture::RGBA32, Texture::MORTON, Color::WHITE);
 	m_defaultFB.depthBuffer = m_ctx.textureHeap.Create<Texture>(WIDTH, HEIGHT, Texture::R32F, Texture::MORTON, Color::BLACK);
-	m_defaultFB.clearColor = vec4(0.1f, 0.1, 0.1, 1.0f);
+	m_defaultFB.clearColor = vec4(0.0f, 0.0f, 0.0f, 1.0f);
 	
 	m_perPassCB = m_ctx.constantBufferHeap.Create(sizeof(PerPassCB));
 	m_lightCB = m_ctx.constantBufferHeap.Create(sizeof(LightPassCB));
@@ -104,9 +105,9 @@ void Device::EndFrame()
 			m_boundFB = pass.desc.fb;
 			m_viewport = { 0.0f, 0.0f, m_boundFB.width, m_boundFB.height };
 			Binning::InitTiles(m_tiles, m_boundFB.width, m_boundFB.height);
-			pass.desc.view.renderTargetSize = { m_boundFB.width, m_boundFB.height };
+			pass.desc.passData.renderTargetSize = { m_boundFB.width, m_boundFB.height };
 		
-			m_ctx.constantBufferHeap.Write<PerPassCB>(m_perPassCB, pass.desc.view);
+			m_ctx.constantBufferHeap.Write<PerPassCB>(m_perPassCB, pass.desc.passData);
 			
 			Clear(m_boundFB, pass.desc.clearFlags);
 		}
@@ -130,9 +131,13 @@ void Device::Present(Handle _texH)
 	// assert(width == WIDTH && height == HEIGHT && "Can't present texture not matching final render target format");
 	bool isSingleChannel = fb->GetFormat() == Texture::R32F;
 	
+	double logSum = 0.0;
+	int32_t count = 0;
+	float exposure = m_exposure * 0.18f / m_adaptedLum;
+	
 #pragma omp parallel
-#pragma omp for
-	for (uint32_t i = 0; i < HEIGHT * WIDTH; i++)
+#pragma omp for reduction(+:logSum, count)
+	for (int32_t i = 0; i < HEIGHT * WIDTH; i++)
 	{
 		uint32_t y = i / WIDTH;
 		uint32_t x = i % WIDTH;
@@ -144,10 +149,30 @@ void Device::Present(Handle _texH)
 		else
 			v = fb->SampleNP({ ((float)x + 0.5f) / (float)WIDTH, ((float)y + 0.5f) / (float)HEIGHT });
 		
+		bool isClear = v == m_boundFB.clearColor; 
+			
+		vec3 mapped = vec3(v);
 		if (isSingleChannel)
-			v = { v.r, v.r, v.r, 1.0f };	
-
-		m_renderTarget->Store(x, HEIGHT - y - 1, v);
+			mapped = { v.r, v.r, v.r };
+		else if (isClear == false)
+		{
+			vec3 hdr = vec3(v);
+			logSum += glm::log(1e-4f + glm::max(Lighting::Luminance(hdr), 0.0f)); // start at small positive value to avoid inf from log on negative number
+			
+			vec3 c = hdr * exposure * 0.6f;
+			float L = Lighting::Luminance(c);
+			// mapped = c * ((L / (1.0f + L)) / glm::max(L, 1e-6f)); // map to [0, 1], prevent division by zero on black pixels <- Reinhard approximation
+			mapped = glm::clamp((c * (2.51f * c + 0.03f)) / (c * (2.43f * c + 0.59f) + 0.14f), 0.0f, 1.0f); // Narkowicz approximation of the ACES film curve
+		}
+		m_renderTarget->Store(x, HEIGHT - y - 1, vec4(mapped, 1.0f));
+		count++;
+	}
+	
+	if (!isSingleChannel)
+	{
+		float avgLum = glm::exp((float)(logSum / count));
+		m_adaptedLum += (avgLum - m_adaptedLum) * (1 - exp(-m_pendingPasses[m_activePass].desc.passData.deltaTime)); // TODO use dt
+		m_adaptedLum = glm::clamp(m_adaptedLum, 0.01f, 100.0f); // avoid extreme exposure 
 	}
 }
 
@@ -478,7 +503,7 @@ void Device::RasterStep(std::vector<Vertex_OUT> const& _vBuffer, ShaderStages _s
 					px.posH = posH;
 					InterpolateVertex(px, glm::vec2({ (float)x + 0.5f, (float)y + 0.5f }), tri, baryP);
 					
-					if (state.depthWrite && db && px.color.a == 1.0f || state.blendMode == Blending::OPAQUE)
+					if (state.depthWrite && db && px.color.a >= 1.0f || state.blendMode == Blending::OPAQUE)
 						db->Store(x, y, vec4(pixelDepth, 0.0f, 0.0f, 1.0f));
 					
 					if (writeColor == false)

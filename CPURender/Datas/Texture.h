@@ -23,7 +23,7 @@ public:
 
     Texture ToLinear() const;
     
-    void Load(std::string const& _filePath);
+    void Load(std::string const& _filePath, bool _isSrgb = false);
     
     Format GetFormat()                              const;
     uint32 Size()                                   const;

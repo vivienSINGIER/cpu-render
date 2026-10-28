@@ -4,6 +4,7 @@
 #include <bit>
 #include <cassert>
 #include <glm/common.hpp>
+#include <glm/exponential.hpp>
 
 #include "../stb_image.h"
 
@@ -26,9 +27,9 @@ namespace
         switch (_format)
         {
         case Texture::RGBA32:
-            return glm::clamp(_v, 0.0f, 1.0f);
+            return _v;
         case Texture::R32F:
-            return glm::clamp(vec4{ _v.r, 0.0f, 0.0f, 1.0f }, 0.0f, 1.0f);
+            return vec4{ _v.r, 0.0f, 0.0f, 1.0f };
         }
 
         assert(false && "Unhandled texture format");
@@ -180,7 +181,7 @@ Texture Texture::ToLinear() const
     return t;
 }
 
-void Texture::Load(std::string const& _filePath)
+void Texture::Load(std::string const& _filePath, bool _isSrgb)
 {
     static int nbrChannel;
     int width, height;
@@ -197,10 +198,18 @@ void Texture::Load(std::string const& _filePath)
             int linearized2D = x + y * width;
             uint32_t index = GetIndex(x, y);
             
-            m_data[index].a = data[3 + linearized2D * 4];
-            m_data[index].r = data[0 + linearized2D * 4];
-            m_data[index].g = data[1 + linearized2D * 4];
-            m_data[index].b = data[2 + linearized2D * 4];
+            m_data[index].r = (float)data[0 + linearized2D * 4] / 255.0f;
+            m_data[index].g = (float)data[1 + linearized2D * 4] / 255.0f;
+            m_data[index].b = (float)data[2 + linearized2D * 4] / 255.0f;
+            m_data[index].a = (float)data[3 + linearized2D * 4] / 255.0f;
+            
+            if (_isSrgb)
+            {
+                m_data[index].r = glm::pow(m_data[index].r, 2.2f);
+                m_data[index].g = glm::pow(m_data[index].g, 2.2f);
+                m_data[index].b = glm::pow(m_data[index].b, 2.2f);
+                m_data[index].a = glm::pow(m_data[index].a, 2.2f);
+            }
         }
     }
     
