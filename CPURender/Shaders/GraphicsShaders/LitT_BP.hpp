@@ -80,7 +80,7 @@ public:
         glm::mat3x3 TBN = glm::mat3x3(T, B, N);
         
         glm::vec3 toEye = glm::normalize(Pass().eyePos - glm::vec3(_in.posModel));
-        glm::vec3 viewT = glm::transpose(TBN) * toEye;
+        glm::vec3 viewT = glm::normalize(glm::transpose(TBN) * toEye);
         viewT.y = -viewT.y;
         
         glm::vec2 uv = _in.uv;

@@ -66,11 +66,6 @@
     <ClCompile Include="Factories\ShaderFactory.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-
-    <ClCompile Include="Heaps\BufferHeap.inl">
-      <Filter>Header Files</Filter>
-    </ClCompile>
-	  
     <ClCompile Include="Maths\PerlinNoise.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -104,6 +99,12 @@
     <ClCompile Include="Datas\Scene.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Cubemap.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Factories\TextureFactory.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="main.h">
@@ -134,7 +135,7 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Heaps\Heap.inl">
-          <Filter>Header Files</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Camera.h">
       <Filter>Header Files</Filter>
@@ -197,7 +198,7 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Heaps\BufferHeap.inl">
-              <Filter>Header Files</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Heaps\Heaps.h">
       <Filter>Header Files</Filter>
@@ -241,16 +242,55 @@
     <ClInclude Include="Shaders\Shaders.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Shaders\Shaders\UnlitC.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Shaders\Shaders\LitC.hpp">
-	  <Filter>Header Files</Filter>
-	</ClInclude>
     <ClInclude Include="Octree.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Datas\Scene.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\Binning.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\FrameBuffer.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Cubemap.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Datas\Lights\LightData.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Datas\Lights\LightHelpers.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Factories\TextureFactory.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Shaders\ComputeShaders\GammaCorrection_CS.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Shaders\ShaderBase\ResourceLayout.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Shaders\GraphicsShaders\LitC.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Shaders\GraphicsShaders\LitC_BP.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Shaders\GraphicsShaders\LitT_BP.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Shaders\GraphicsShaders\UnlitC.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Shaders\GraphicsShaders\UnlitT.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Shaders\GraphicsShaders\UnlitSkybox.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Shaders\GraphicsShaders\LitT_BP_Cube.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

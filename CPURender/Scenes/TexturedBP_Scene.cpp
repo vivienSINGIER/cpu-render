@@ -10,9 +10,9 @@
 
 void TexturedBP_Scene::InitLightScene()
 {
-    m_lightData.lights[0] = MakeDirectionalLight({1.0f, -1.0f, 1.0f}, 10.0f, Color::WHITE);
-    m_lightData.lights[1] = MakePointLight({5.0f, 0.0f, 5.0f}, 0.5f, { 5.0f, 25.0f }, Color::RED);
-    m_lightData.ambient = 0.2f;
+    //m_lightData.lights[0] = MakeDirectionalLight({1.0f, -1.0f, 1.0f}, 10.0f, Color::WHITE);
+    //m_lightData.lights[1] = MakePointLight({5.0f, 0.0f, 5.0f}, 0.5f, { 5.0f, 25.0f }, Color::RED);
+    m_lightData.ambient = 10.0f;
 }
 
 void TexturedBP_Scene::OnInit(Device* _pDevice)
@@ -22,6 +22,11 @@ void TexturedBP_Scene::OnInit(Device* _pDevice)
     m_mainPass.fb = _pDevice->GetDefaultFrameBuffer();
     m_presentTarget = m_mainPass.fb.gBuffer[0];
     
+    m_skyboxPass.fb = _pDevice->GetDefaultFrameBuffer();
+    m_skyboxPass.state.depthTest = false;
+    m_skyboxPass.state.depthWrite = false;
+
+
     m_shadowPass.fb = _pDevice->CreateFrameBuffer(1024, 1024, 0, true);
     m_shadowPass.state.cullMode = CullMode::FRONT;
     
@@ -38,29 +43,42 @@ void TexturedBP_Scene::OnInit(Device* _pDevice)
     Handle roughness = TextureFactory::Instance()->CreateTexture("dark_rock_roughness", "Assets/Textures/DarkRock/roughness.png");
     Handle displacement = TextureFactory::Instance()->CreateTexture("dark_rock_displacement", "Assets/Textures/DarkRock/displacement.png");
     Handle metalness = TextureFactory::Instance()->CreateTexture("dark_rock_metalness", "Assets/Textures/DarkRock/metalness.png");
+
+    //Handle diff = TextureFactory::Instance()->CreateTexture("dark_rock_diffuse", "Assets/Textures/Gold/diffuse.png", true);
+    //Handle ambient = TextureFactory::Instance()->CreateTexture("dark_rock_ambient", "Assets/Textures/Gold/ambient.png");
+    //Handle normal = TextureFactory::Instance()->CreateTexture("dark_rock_normal", "Assets/Textures/Gold/normal.png");
+    ////Handle roughness = TextureFactory::Instance()->CreateTexture("dark_rock_roughness", "Assets/Textures/Gold/roughness.png");
+    //Handle displacement = TextureFactory::Instance()->CreateTexture("dark_rock_displacement", "Assets/Textures/Gold/displacement.png");
+    ////Handle metalness = TextureFactory::Instance()->CreateTexture("dark_rock_metalness", "Assets/Textures/Gold/metalness.png");
     
-    LitT_BP_PS::MaterialCB cb = {
+    LitT_BP_Cube_PS::MaterialCB cb = {
         {1.0f, 1.0f, 1.0f, 1.0f}, 
             Lighting::g_fresnelR0Templates[PLASTIC], 
-                0.5f, 0.02f, 0.8f
+                0.9f, 0.02f, 0.9f
     };
+
+    //Cubemap cubemap = Cubemap("Skybox", "Assets/Textures/Cubemap/Front.png", "Assets/Textures/Cubemap/Back.png",
+    //    "Assets/Textures/Cubemap/Left.png", "Assets/Textures/Cubemap/Right.png",
+    //    "Assets/Textures/Cubemap/Up.png", "Assets/Textures/Cubemap/Down.png");
+
+    Cubemap cubemap = Cubemap("Skybox", "Assets/Textures/Cubemap/FishPond/posz.jpg", "Assets/Textures/Cubemap/FishPond/negz.jpg",
+        "Assets/Textures/Cubemap/FishPond/negx.jpg", "Assets/Textures/Cubemap/FishPond/posx.jpg",
+        "Assets/Textures/Cubemap/FishPond/posy.jpg", "Assets/Textures/Cubemap/FishPond/negy.jpg", true);
 
     Mesh m = GeometryFactory::Instance()->BuildUVSphere(10, 10, true);
     Mesh cube = GeometryFactory::Instance()->BuildCube();
 
-    m_mat = ShaderFactory::Instance()->CreateMaterial("LitT_BP");
-    m_mat->SetParams<LitT_BP_PS::MaterialCB>(LitT_BP_PS::CB_SLOT_mat, cb);
-    m_mat->SetTexture(LitT_BP_PS::TEX_SLOT_diffuse, diff);
-    m_mat->SetTexture(LitT_BP_PS::TEX_SLOT_ambient, ambient);
-    m_mat->SetTexture(LitT_BP_PS::TEX_SLOT_normal, normal);
+    m_mat = ShaderFactory::Instance()->CreateMaterial("LitT_BP_Cube");
+    m_mat->SetParams<LitT_BP_Cube_PS::MaterialCB>(LitT_BP_Cube_PS::CB_SLOT_mat, cb);
+    m_mat->SetTexture(LitT_BP_Cube_PS::TEX_SLOT_diffuse, diff);
+    m_mat->SetTexture(LitT_BP_Cube_PS::TEX_SLOT_ambient, ambient);
+    m_mat->SetTexture(LitT_BP_Cube_PS::TEX_SLOT_normal, normal);
     
-    m_mat->SetTexture(LitT_BP_PS::TEX_SLOT_roughness, roughness);
-    m_mat->SetTexture(LitT_BP_PS::TEX_SLOT_displacement, displacement);
-    m_mat->SetTexture(LitT_BP_PS::TEX_SLOT_metal, metalness);
-    m_mat->SetTexture(LitT_BP_PS::TEX_SLOT_shadow, m_shadowPass.fb.depthBuffer);
-    
-    m_gammaCorrectMat = ShaderFactory::Instance()->CreateComputeMaterial("GammaCorrect");
-    m_gammaCorrectMat->SetRWTexture(GammaCorr_CS::UAV_SLOT_target, m_mainPass.fb.gBuffer[0]);
+    //m_mat->SetTexture(LitT_BP_Cube_PS::TEX_SLOT_roughness, roughness);
+    m_mat->SetTexture(LitT_BP_Cube_PS::TEX_SLOT_displacement, displacement);
+    //m_mat->SetTexture(LitT_BP_Cube_PS::TEX_SLOT_metal, metalness);
+    m_mat->SetTexture(LitT_BP_Cube_PS::TEX_SLOT_shadow, m_shadowPass.fb.depthBuffer);
+    m_mat->SetTexture(LitT_BP_Cube_PS::TEX_SLOT_cubemap, cubemap.GetTexture());
 	
     Object* o = CreateObject(DYNAMIC);
     o->mesh = m;
@@ -72,6 +90,8 @@ void TexturedBP_Scene::OnInit(Device* _pDevice)
     floor->mat = m_mat.get();
     floor->transform.SetPosition(glm::vec3(0.0f, -5.0f, 0.f));
     floor->transform.SetScale(glm::vec3(25.0f, 0.2f, 25.0f));
+
+    SetSkybox(cubemap);
 }
 
 void TexturedBP_Scene::OnHandleEvent(const SDL_Event& event)
@@ -100,6 +120,14 @@ void TexturedBP_Scene::OnDraw(Device* _pDevice)
     m_camera.FillData(&m_shadowPass.passData);
     m_shadowPass.passData.viewProj = lightSpace;
 
+    if (toggleSkybox)
+    {
+        m_camera.FillData(&m_skyboxPass.passData);
+        _pDevice->BeginPass(m_skyboxPass);
+            _pDevice->RegisterCommand(skyboxObject->mesh, skyboxObject->transform.GetMatrix(), skyboxObject->mat);
+        _pDevice->EndPass();
+    }
+
     _pDevice->BeginPass(m_shadowPass);
         DrawObjects(_pDevice, shadowFrustum);
     _pDevice->EndPass();
@@ -113,5 +141,18 @@ void TexturedBP_Scene::OnDraw(Device* _pDevice)
         _pDevice->BeginPass(m_postProcPass);
         _pDevice->EndPass();
     }
+}
+
+void TexturedBP_Scene::SetSkybox(Cubemap _cubemap)
+{
+    skyboxObject = new Object();
+    m_skyboxMat = ShaderFactory::Instance()->CreateMaterial("UnlitSkybox");
+    m_skyboxMat->SetTexture(UnlitSkybox_PS::TEX_SLOT_albedo, _cubemap.GetTexture());
+
+    skyboxObject->mat = m_skyboxMat.get();
+    skyboxObject->mesh = GeometryFactory::Instance()->BuildSkybox();
+    skyboxObject->transform.SetScale(50.0f);
+    toggleSkybox = true;
+    m_mainPass.clearFlags.clearGBuffer[0] = false;
 }
 

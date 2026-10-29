@@ -64,7 +64,8 @@ namespace Blending
         glm::vec4 color = Op(_src * GetFactor(_src, _dst, _type.sourceFactor), _dst * GetFactor(_src, _dst, _type.destFactor), _type.opp);
         float alpha = Op(_src * GetFactor(_src, _dst, _type.sourceAlphaFactor), _dst * GetFactor(_src, _dst, _type.destAlphaFactor), _type.alphaOpp).a;
 
-        return glm::clamp(glm::vec4(glm::vec3(color), alpha), 0.0f, 1.0f);
+        // color is HDR, only keep it positive, clamping to 1 would clip highlights before tonemapping
+        return glm::vec4(glm::max(glm::vec3(color), 0.0f), glm::clamp(alpha, 0.0f, 1.0f));
     }
     
     inline glm::vec4 BlendOpaque(glm::vec4 _src, glm::vec4 _dst)        { return Blend(_src, _dst, { One, Zero, Add,            One, Zero, Add } ); }

@@ -89,6 +89,61 @@ glm::vec4 Texture::SampleNP(glm::vec2 uv) const
     return Load(x, y);
 }
 
+glm::vec4 Texture::SampleNPCube(glm::vec3 _dir) const
+{
+    enum Side { FRONT = 0, BACK, LEFT, RIGHT, UP, DOWN };
+    Side cubemapSide;
+    float absX = abs(_dir.x);
+    float absY = abs(_dir.y);
+    float absZ = abs(_dir.z);
+
+    if (absX >= absY && absX >= absZ) // x major
+    {
+        cubemapSide = _dir.x < 0 ? LEFT : RIGHT;
+    }
+    else if (absY >= absX && absY >= absZ) // y major
+    {
+        cubemapSide = _dir.y < 0 ? DOWN : UP;
+    }
+    else // z major
+    {
+        cubemapSide = _dir.z < 0 ? BACK : FRONT;
+    }
+
+    const float s = 1.0f / 3.0f;
+    int xOffset = (cubemapSide % 2);
+    int yOffset = (cubemapSide / 2);
+    glm::vec2 uvOffset = glm::vec2(xOffset * s, yOffset * s);
+    glm::vec2 uv;
+    
+    float maxAbs = glm::max(absX, glm::max(absY, absZ));
+    vec3 d = _dir / maxAbs;
+    
+    switch (cubemapSide)
+    {
+    case FRONT:
+        uv = { (d.x + 1) / 2 , 1 - ((d.y + 1) / 2) };
+        break;
+    case BACK:
+        uv = { (-d.x + 1) / 2 , 1 - ((d.y + 1) / 2) };
+        break;
+    case LEFT:
+        uv = { (d.z + 1) / 2 , 1 - ((d.y + 1) / 2) };
+        break;
+    case RIGHT:
+        uv = { (-d.z + 1) / 2 , 1 - ((d.y + 1) / 2) };
+        break;
+    case UP:
+        uv = { (d.x + 1) / 2 , 1 - ((-d.z + 1) / 2) };
+        break;
+    case DOWN:
+        uv = { (d.x + 1) / 2 , 1 - ((d.z + 1) / 2) };
+        break;
+    }
+
+    return SampleNP(uv*s + uvOffset);
+}
+
 glm::vec4 Texture::Load(uint32 _x, uint32 _y) const
 {
     vec4 c = m_data[GetIndex(_x, _y)];
