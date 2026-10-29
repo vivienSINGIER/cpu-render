@@ -9,6 +9,7 @@
 #include "GraphicsShaders/LitC_BP.hpp"
 #include "GraphicsShaders/LitT_BP.hpp"
 #include "GraphicsShaders/LitT_BP_Cube.hpp"
+#include "GraphicsShaders/LitC_BP_Cube.hpp"
 
 #include "GraphicsShaders/PBR.hpp"
 

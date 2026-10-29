@@ -163,7 +163,7 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Maths\PerlinNoise.cpp" />
     <ClCompile Include="Octree.cpp" />
-    <ClCompile Include="Scenes\PBR_Scene.cpp"/>
+    <ClCompile Include="Scenes\PBR_Scene.cpp" />
     <ClCompile Include="Scenes\Scene.cpp" />
     <ClCompile Include="Scenes\TexturedBP_Scene.cpp" />
     <ClCompile Include="Scenes\Transparency_Scene.cpp" />
@@ -228,6 +228,7 @@
     <ClInclude Include="Scenes\TexturedBP_Scene.h" />
     <ClInclude Include="Scenes\Transparency_Scene.h" />
     <ClInclude Include="Shaders\ComputeShaders\GammaCorrection_CS.hpp" />
+    <ClInclude Include="Shaders\GraphicsShaders\LitC_BP_Cube.hpp" />
     <ClInclude Include="Shaders\GraphicsShaders\PBR.hpp" />
     <ClInclude Include="Shaders\GraphicsShaders\LitT_BP_Cube.hpp" />
     <ClInclude Include="Shaders\GraphicsShaders\UnlitSkybox.hpp" />
