@@ -47,7 +47,7 @@ void PBR_Scene::OnInit(Device* _pDevice)
     
     Cubemap cubemap = Cubemap("Skybox", "Assets/Textures/Cubemap/FishPond/posz.jpg", "Assets/Textures/Cubemap/FishPond/negz.jpg",
         "Assets/Textures/Cubemap/FishPond/negx.jpg", "Assets/Textures/Cubemap/FishPond/posx.jpg",
-        "Assets/Textures/Cubemap/FishPond/posy.jpg", "Assets/Textures/Cubemap/FishPond/negy.jpg", true, 64);
+        "Assets/Textures/Cubemap/FishPond/posy.jpg", "Assets/Textures/Cubemap/FishPond/negy.jpg", true, 32);
     
     Mesh m = GeometryFactory::Instance()->BuildUVSphere(32, 32, true);
 
@@ -140,7 +140,7 @@ void PBR_Scene::SetSkybox(Cubemap _cubemap)
 {
     skyboxObject = new Object();
     m_skyboxMat = ShaderFactory::Instance()->CreateMaterial("UnlitSkybox");
-    m_skyboxMat->SetTexture(UnlitSkybox_PS::TEX_SLOT_albedo, _cubemap.GetTexture());
+    m_skyboxMat->SetTexture(UnlitSkybox_PS::TEX_SLOT_albedo, _cubemap.GetIrradianceTexture());
 
     skyboxObject->mat = m_skyboxMat.get();
     skyboxObject->mesh = GeometryFactory::Instance()->BuildSkybox();
