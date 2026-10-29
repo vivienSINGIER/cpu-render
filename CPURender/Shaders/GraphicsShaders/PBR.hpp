@@ -43,7 +43,7 @@ public:
     };
     
     SHADER_CB(MaterialCB, mat, CB_CUSTOM)
-    SHADER_TEX_OPT(env, 0)
+    SHADER_TEX_OPT(irradience, 0)
 
     PBR_PS(GraphicsContext* _ctx) : PixelShader(_ctx) {}
     
@@ -55,10 +55,20 @@ public:
         vec3 F0 = vec3(0.04f);
         F0 = glm::mix(F0, mat().albedo, mat().metalness);
         
+        vec3 ambient;
+        if (Has_irradience())
+        {
+            vec3 kS = fresnelSchlickRoughness(max(dot(normal, V), 0.0f), F0, mat().roughness);
+            vec3 kD = (1.0f - kS); //  * (1.0f - mat().metalness)
+            vec3 irradience = vec3(Sample_Cube_irradience(normal));
+            ambient = kD * irradience * mat().albedo * mat().ambientOcc;
+        }
+        else
+            ambient = vec3(Light().ambientLight) * mat().albedo * mat().ambientOcc;
+        
         PBRData d = { mat().albedo, mat().metalness, F0, mat().roughness, mat().ambientOcc };
         vec3 Lo = Lighting::ComputePBR(Light(), d, _in.posModel, normal, V);
         
-        vec3 ambient = vec3(Light().ambientLight) * mat().albedo * mat().ambientOcc;
         vec3 color = ambient + Lo;
         
         return vec4(color, 1.0f);

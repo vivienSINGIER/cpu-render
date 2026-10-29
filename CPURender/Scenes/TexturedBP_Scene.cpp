@@ -25,8 +25,7 @@ void TexturedBP_Scene::OnInit(Device* _pDevice)
     m_skyboxPass.fb = _pDevice->GetDefaultFrameBuffer();
     m_skyboxPass.state.depthTest = false;
     m_skyboxPass.state.depthWrite = false;
-
-
+    
     m_shadowPass.fb = _pDevice->CreateFrameBuffer(1024, 1024, 0, true);
     m_shadowPass.state.cullMode = CullMode::FRONT;
     

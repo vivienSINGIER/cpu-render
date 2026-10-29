@@ -158,12 +158,8 @@ void Device::Present(Handle _texH)
 		{
 			vec3 hdr = vec3(v);
 			
-			bool isSky = match && depth && depth->Load(x, y).r >= 0.0f;
-			if (!isSky)
-			{
-				logSum += glm::log(1e-4f + glm::max(Lighting::Luminance(hdr), 0.0f)); // start at small positive value to avoid inf from log on negative number
-				count++;
-			}
+			logSum += glm::log(1e-4f + glm::max(Lighting::Luminance(hdr), 0.0f)); // start at small positive value to avoid inf from log on negative number
+			count++;
 			
 			vec3 c = hdr * exposure;
 			// float L = Lighting::Luminance(c);

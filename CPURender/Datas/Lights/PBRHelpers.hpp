@@ -57,6 +57,11 @@ namespace Lighting
         return F0 + (1.0f - F0) * pow(clamp(1.0f - cosTheta, 0.0f, 1.0f), 5.0f);
     }  
     
+    inline vec3 fresnelSchlickRoughness(float cosTheta, vec3 F0, float roughness)
+    {
+        return F0 + (glm::max(vec3(1.0f - roughness), F0) - F0) * pow(clamp(1.0f - cosTheta, 0.0f, 1.0f), 5.0f);
+    }
+    
     inline vec3 ComputePointPBR(Light _l, PBRData _mat, vec3 _pos, vec3 _normal, vec3 _toEye)
     {
         vec3 L = normalize(_l.position - _pos);

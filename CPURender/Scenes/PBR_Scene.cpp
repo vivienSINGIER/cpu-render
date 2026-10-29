@@ -10,7 +10,7 @@
 
 void PBR_Scene::InitLightScene()
 {
-    m_lightData.lights[0] = MakePointLight({5.0f, 5.0f, -5.0f}, 100.0f, { 5.0f, 25.0f }, Color::WHITE);
+    m_lightData.lights[0] = MakePointLight({5.0f, 5.0f, -5.0f}, 10.0f, { 5.0f, 25.0f }, Color::WHITE);
     // m_lightData.lights[1] = MakePointLight({3.0f, 3.0f, -5.0f}, 10.0f, { 5.0f, 25.0f }, Color::WHITE);
     // m_lightData.lights[2] = MakePointLight({-3.0f, 3.0f, -5.0f}, 10.0f, { 5.0f, 25.0f }, Color::WHITE);
     // m_lightData.lights[3] = MakePointLight({-3.0f, -3.0f, -5.0f}, 10.0f, { 5.0f, 25.0f }, Color::WHITE);
@@ -27,6 +27,10 @@ void PBR_Scene::OnInit(Device* _pDevice)
     m_shadowPass.fb = _pDevice->CreateFrameBuffer(1024, 1024, 0, true);
     m_shadowPass.state.cullMode = CullMode::FRONT;
     
+    m_skyboxPass.fb = _pDevice->GetDefaultFrameBuffer();
+    m_skyboxPass.state.depthTest = false;
+    m_skyboxPass.state.depthWrite = false;
+    
     m_postProcPass.isCompute = true;
     
     _pDevice->SetLightData(m_lightData);
@@ -41,9 +45,14 @@ void PBR_Scene::OnInit(Device* _pDevice)
     Handle displacement = TextureFactory::Instance()->CreateTexture("dark_rock_displacement", "Assets/Textures/DarkRock/displacement.png");
     Handle metalness = TextureFactory::Instance()->CreateTexture("dark_rock_metalness", "Assets/Textures/DarkRock/metalness.png");
     
+    Cubemap cubemap = Cubemap("Skybox", "Assets/Textures/Cubemap/FishPond/posz.jpg", "Assets/Textures/Cubemap/FishPond/negz.jpg",
+        "Assets/Textures/Cubemap/FishPond/negx.jpg", "Assets/Textures/Cubemap/FishPond/posx.jpg",
+        "Assets/Textures/Cubemap/FishPond/posy.jpg", "Assets/Textures/Cubemap/FishPond/negy.jpg", true, 64);
+    
     Mesh m = GeometryFactory::Instance()->BuildUVSphere(32, 32, true);
 
     m_mat = ShaderFactory::Instance()->CreateMaterial("PBR");
+    m_mat->SetTexture(PBR_PS::TEX_SLOT_irradience, cubemap.GetIrradianceTexture());
     UpdateMaterial();
 
     Object* o = CreateObject(DYNAMIC);
@@ -51,6 +60,8 @@ void PBR_Scene::OnInit(Device* _pDevice)
     o->mesh = m;
     o->transform.SetPosition(glm::vec3(0.0f));
     o->transform.SetScale(3.0f);
+    
+    SetSkybox(cubemap);
 }
 
 void PBR_Scene::UpdateMaterial()
@@ -59,7 +70,7 @@ void PBR_Scene::UpdateMaterial()
     m_roughness = glm::clamp(m_roughness, 0.05f, 1.0f);
     m_metalness = glm::clamp(m_metalness, 0.0f, 1.0f);
 
-    PBR_PS::MaterialCB cb = { {0.5f, 0.0f, 0.0f}, m_metalness, m_roughness, 0.2f };
+    PBR_PS::MaterialCB cb = { {0.5f, 0.0f, 0.0f}, m_metalness, m_roughness, 1.0f };
     m_mat->SetParams<PBR_PS::MaterialCB>(PBR_PS::CB_SLOT_mat, cb);
 
     std::cout << "Roughness : " << m_roughness << " | Metalness : " << m_metalness << std::endl;
@@ -99,8 +110,23 @@ void PBR_Scene::OnDraw(Device* _pDevice)
     m_mainPass.passData.totalTime = m_totalTime;
     m_mainPass.passData.lightSpace = lightSpace;
 
+    m_camera.FillData(&m_shadowPass.passData);
+    m_shadowPass.passData.viewProj = lightSpace;
+
+    if (toggleSkybox)
+    {
+        m_camera.FillData(&m_skyboxPass.passData);
+        _pDevice->BeginPass(m_skyboxPass);
+        _pDevice->RegisterCommand(skyboxObject->mesh, skyboxObject->transform.GetMatrix(), skyboxObject->mat);
+        _pDevice->EndPass();
+    }
+
+    _pDevice->BeginPass(m_shadowPass);
+    DrawObjects(_pDevice, shadowFrustum);
+    _pDevice->EndPass();
+
     _pDevice->BeginPass(m_mainPass);
-        DrawObjects(_pDevice, m_camera.GetFrustum());
+    DrawObjects(_pDevice, m_camera.GetFrustum());
     _pDevice->EndPass();
 
     if (togglePostProc)
@@ -108,5 +134,18 @@ void PBR_Scene::OnDraw(Device* _pDevice)
         _pDevice->BeginPass(m_postProcPass);
         _pDevice->EndPass();
     }
+}
+
+void PBR_Scene::SetSkybox(Cubemap _cubemap)
+{
+    skyboxObject = new Object();
+    m_skyboxMat = ShaderFactory::Instance()->CreateMaterial("UnlitSkybox");
+    m_skyboxMat->SetTexture(UnlitSkybox_PS::TEX_SLOT_albedo, _cubemap.GetTexture());
+
+    skyboxObject->mat = m_skyboxMat.get();
+    skyboxObject->mesh = GeometryFactory::Instance()->BuildSkybox();
+    skyboxObject->transform.SetScale(50.0f);
+    toggleSkybox = true;
+    m_mainPass.clearFlags.clearGBuffer[0] = false;
 }
 
