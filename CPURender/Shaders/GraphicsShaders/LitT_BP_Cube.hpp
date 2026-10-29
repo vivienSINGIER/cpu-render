@@ -64,7 +64,7 @@ public:
         float closestDepth = shadow(glm::vec2(projCoords)).r;
         float currentDepth = projCoords.z;
 
-        float bias = 0.005;
+        float bias = 0.005f;
         float shadow = currentDepth - bias > closestDepth ? 1.0 : 0.0;
         if (projCoords.z > 1.0)
             shadow = 0.0;

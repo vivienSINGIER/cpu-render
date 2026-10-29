@@ -51,7 +51,7 @@ void TexturedBP_Scene::OnInit(Device* _pDevice)
     //Handle displacement = TextureFactory::Instance()->CreateTexture("dark_rock_displacement", "Assets/Textures/Gold/displacement.png");
     ////Handle metalness = TextureFactory::Instance()->CreateTexture("dark_rock_metalness", "Assets/Textures/Gold/metalness.png");
     
-    LitT_BP_PS::MaterialCB cb = {
+    LitT_BP_Cube_PS::MaterialCB cb = {
         {1.0f, 0.0f, 1.0f, 1.0f}, 
             Lighting::g_fresnelR0Templates[PLASTIC], 
                 0.9f, 0.02f, 0.9f
@@ -69,7 +69,7 @@ void TexturedBP_Scene::OnInit(Device* _pDevice)
     Mesh cube = GeometryFactory::Instance()->BuildCube();
 
     m_mat = ShaderFactory::Instance()->CreateMaterial("LitT_BP_Cube");
-    m_mat->SetParams<LitT_BP_Cube_PS::MaterialCB>(LitT_BP_PS::CB_SLOT_mat, cb);
+    m_mat->SetParams<LitT_BP_Cube_PS::MaterialCB>(LitT_BP_Cube_PS::CB_SLOT_mat, cb);
     m_mat->SetTexture(LitT_BP_Cube_PS::TEX_SLOT_diffuse, diff);
     m_mat->SetTexture(LitT_BP_Cube_PS::TEX_SLOT_ambient, ambient);
     m_mat->SetTexture(LitT_BP_Cube_PS::TEX_SLOT_normal, normal);

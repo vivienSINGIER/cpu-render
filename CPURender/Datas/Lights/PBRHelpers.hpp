@@ -85,16 +85,16 @@ namespace Lighting
     
     inline vec3 ComputePBR(LightPassCB _lightData, PBRData _mat, vec3 _pos, vec3 _normal, vec3 _toEye)
     {
-        vec3 result = vec4(0.0f);
+        vec3 result = vec3(0.0f);
     
         int i = 0;
     
         int limit = _lightData.dirLightCount;
     
-        for (i = 0; i < limit; i++)
-        {
-            // TODO
-        }
+        // for (i = 0; i < limit; i++)
+        // {
+        //     // TODO
+        // }
     
         limit += _lightData.pointLightCount;
     
@@ -105,10 +105,10 @@ namespace Lighting
     
         limit += _lightData.spotLightCount;
     
-        for (i = _lightData.dirLightCount + _lightData.pointLightCount; i < limit; i++)
-        {
-            // TODO
-        }
+        // for (i = _lightData.dirLightCount + _lightData.pointLightCount; i < limit; i++)
+        // {
+        //     // TODO
+        // }
     
         return result;
     }

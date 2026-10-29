@@ -23,7 +23,7 @@ private:
     Object* ref = nullptr;
 
     Material m_mat;
-    float m_metalness = 0.0f;
+    float m_metalness = 1.0f;
     float m_roughness = 0.5f;
 
     bool togglePostProc = false;

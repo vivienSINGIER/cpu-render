@@ -10,10 +10,10 @@
 
 void PBR_Scene::InitLightScene()
 {
-    m_lightData.lights[0] = MakePointLight({3.0f, -3.0f, -5.0f}, 10.0f, { 5.0f, 25.0f }, Color::WHITE);
-    m_lightData.lights[1] = MakePointLight({3.0f, 3.0f, -5.0f}, 10.0f, { 5.0f, 25.0f }, Color::WHITE);
-    m_lightData.lights[2] = MakePointLight({-3.0f, 3.0f, -5.0f}, 10.0f, { 5.0f, 25.0f }, Color::WHITE);
-    m_lightData.lights[3] = MakePointLight({-3.0f, -3.0f, -5.0f}, 10.0f, { 5.0f, 25.0f }, Color::WHITE);
+    m_lightData.lights[0] = MakePointLight({5.0f, 5.0f, -5.0f}, 100.0f, { 5.0f, 25.0f }, Color::WHITE);
+    // m_lightData.lights[1] = MakePointLight({3.0f, 3.0f, -5.0f}, 10.0f, { 5.0f, 25.0f }, Color::WHITE);
+    // m_lightData.lights[2] = MakePointLight({-3.0f, 3.0f, -5.0f}, 10.0f, { 5.0f, 25.0f }, Color::WHITE);
+    // m_lightData.lights[3] = MakePointLight({-3.0f, -3.0f, -5.0f}, 10.0f, { 5.0f, 25.0f }, Color::WHITE);
     m_lightData.ambient = 0.03f;
 }
 

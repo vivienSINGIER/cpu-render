@@ -11,8 +11,6 @@
 #include "../../Datas/Lights/LightHelpers.hpp"
 #include "../../Datas/Lights/PBRHelpers.hpp"
 
-using namespace Lighting;
-
 class PBR_VS : public VertexShader
 {
 public:
@@ -45,6 +43,7 @@ public:
     };
     
     SHADER_CB(MaterialCB, mat, CB_CUSTOM)
+    SHADER_TEX_OPT(env, 0)
 
     PBR_PS(GraphicsContext* _ctx) : PixelShader(_ctx) {}
     
