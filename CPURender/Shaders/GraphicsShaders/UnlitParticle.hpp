@@ -18,8 +18,8 @@ public:
 
     Vertex_OUT Execute(Vertex const& _in) const override
     {
-        int quad = (int)_in.id / 6;
-        int corner = (int)_in.id % 6; //0, 2, 1,    3, 1, 2 indices
+        size_t quad = (int)_in.id / 6;
+        size_t corner = (int)_in.id % 6; //0, 2, 1,    3, 1, 2 indices
 
         const UavParticle& p = Load_data(quad);
 

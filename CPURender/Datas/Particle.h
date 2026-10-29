@@ -5,7 +5,7 @@
 
 #include "../Heaps/Handle.hpp"
 
-#define MAX_PARTICLES 10'000
+#define MAX_PARTICLES 100'000
 
 struct alignas(128) UavParticle
 {

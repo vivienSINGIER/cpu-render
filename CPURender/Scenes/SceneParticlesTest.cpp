@@ -79,7 +79,7 @@ void SceneParticlesTest::OnInit(Device* _pDevice)
     ParticleManager::Instance()->m_uavBuffer = m_uav_buffer;
 
     ParticleDesc desc2;
-    desc2.amount = 250;
+    desc2.amount = 1000;
     desc2.spawnRadius = 8.f;
     desc2.particleSize = 0.025f;
     desc2.rotationSpeed = 0.f;
