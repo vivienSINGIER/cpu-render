@@ -1,6 +1,6 @@
 #include "Cubemap.h"
 
-Cubemap::Cubemap(const char* _name, const char* _front, const char* _back, const char* _left, const char* _right, const char* _up, const char* _down, bool _isSrgb)
+Cubemap::Cubemap(const char* _name, const char* _front, const char* _back, const char* _left, const char* _right, const char* _up, const char* _down, bool _isSrgb, uint32_t _irradianceFaceSize)
 {
 	// create new texture with 6 combined
 
@@ -17,7 +17,7 @@ Cubemap::Cubemap(const char* _name, const char* _front, const char* _back, const
 	// Check if textures are square + check if same size
 	int width = faceTexs[0].Width(); int height = faceTexs[0].Height();
 
-	texHandle = TextureFactory::Instance()->CreateTexture(_name, width * 3, height * 3);
+	m_texHandle = TextureFactory::Instance()->CreateTexture(_name, width * 3, height * 3);
 
 	Texture* texture = TextureFactory::Instance()->GetTexture(_name);
 
@@ -29,6 +29,7 @@ Cubemap::Cubemap(const char* _name, const char* _front, const char* _back, const
 		int xOffset = (i%2) * width;
 		int yOffset = (i/2) * height;
 
+#pragma omp parallel for
 		for (int j = 0; j < height; j++)
 		{
 			for (int k = 0; k < width; k++)
@@ -37,10 +38,20 @@ Cubemap::Cubemap(const char* _name, const char* _front, const char* _back, const
 			}
 		}
 	}
+	
+	std::string irrName = std::string(_name) + "_irradiance";
+	m_irradianceHandle = TextureFactory::Instance()->CreateTexture(irrName, _irradianceFaceSize * 3, _irradianceFaceSize * 3);
+	Texture* irr = TextureFactory::Instance()->GetTexture(irrName);
+	Texture::BakeIrradiance(texture, irr, _irradianceFaceSize);
 }
 
 Handle Cubemap::GetTexture()
 {
-	return texHandle;
+	return m_texHandle;
+}
+
+Handle Cubemap::GetIrradianceTexture()
+{
+	return m_irradianceHandle;
 }
 

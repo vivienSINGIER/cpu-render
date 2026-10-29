@@ -47,6 +47,9 @@ public:
     
     vec4* GetData();
     
+    static void BakeIrradiance(Texture* _src, Texture* _dst, uint32_t _faceSize);
+    static bool TexelToCubeDir(uint32_t _x, uint32_t _y, uint32_t _faceSize, vec3& _outDir);
+    
 private:
     std::vector<vec4> m_data;
     uint32 m_width;

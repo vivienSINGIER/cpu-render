@@ -64,7 +64,7 @@ private:
 	Texture* m_renderTarget;
 	
 	float m_adaptedLum = 0.18f;
-	float m_exposure = 0.5f;
+	float m_exposure = 1.0f;
 	
 	GraphicsContext m_ctx;
 	
