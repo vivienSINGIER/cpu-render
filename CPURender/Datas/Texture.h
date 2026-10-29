@@ -41,6 +41,10 @@ public:
     glm::vec4   Load(uint32 _x, uint32 _y) const;
     void        Store(uvec2 _c, glm::vec4 _v);
     void        Store(uint32 _x, uint32 _y, glm::vec4 _v);
+    
+    void StoreCube(uint32 _lod, uint32 _face, uint32 _x, uint32 _y, vec4 _c);
+    void StoreCube(uint32 _lod, uint32 _face, uvec2 _uv, vec4 _c);
+    
     void        Clear(glm::vec4 _color);
     
     template <typename T>
@@ -51,9 +55,10 @@ public:
     vec4* GetData();
     
     void GenerateCubeMips();
+    vec3 CubeFaceUVToDir(uint32 _face, vec2 _uv);
+    bool TexelToCubeDir(uint32_t _x, uint32_t _y, vec3& _outDir);
     
     static void BakeIrradiance(Texture* _src, Texture* _dst, uint32_t _faceSize);
-    static bool TexelToCubeDir(uint32_t _x, uint32_t _y, uint32_t _faceSize, vec3& _outDir);
     
 private:
     std::vector<vec4> m_data;

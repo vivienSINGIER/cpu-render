@@ -17,6 +17,44 @@ namespace Lighting
         float ambientOcc;
     };
     
+    inline float RadicalInverse_VdC(uint32 bits)
+    {
+        bits = (bits << 16) | (bits >> 16);
+        bits = ((bits & 0x55555555) << 1) | ((bits & 0xAAAAAAAA) >> 1);
+        bits = ((bits & 0x33333333) << 2) | ((bits & 0xCCCCCCCC) >> 2);
+        bits = ((bits & 0x0F0F0F0F) << 4) | ((bits & 0xF0F0F0F0) >> 4);
+        bits = ((bits & 0x00FF00FF) << 8) | ((bits & 0xFF00FF00) >> 8);
+        return (float)bits * 2.3283064365386963e-10f;
+    }
+    
+    inline vec2 Hammersley(uint32 i, uint32 N)
+    {
+        return vec2((float)i / (float)N, RadicalInverse_VdC(i));
+    }
+    
+    inline vec3 ImportanceSampleGGX(vec2 Xi, vec3 N, float roughness)
+    {
+        float a = roughness * roughness;
+        
+        float phi = 2.0f * glm::pi<float>() * Xi.x;
+        float cosTheta = glm::sqrt((1.0f - Xi.y) / (1.0f + (a*a - 1.0f) * Xi.y));
+        float sinTheta = glm::sqrt(1.0f - cosTheta*cosTheta);
+        
+        vec3 H;
+        H.x = cos(phi) * sinTheta;
+        H.y = sin(phi) * sinTheta;
+        H.z = cosTheta;
+	
+        // from tangent-space vector to world-space sample vector
+        vec3 up        = abs(N.z) < 0.999f ? vec3(0.0f, 0.0f, 1.0f) : vec3(1.0f, 0.0f, 0.0f);
+        vec3 tangent   = normalize(cross(up, N));
+        vec3 bitangent = cross(N, tangent);
+	
+        vec3 sampleVec = tangent * H.x + bitangent * H.y + N * H.z;
+        return normalize(sampleVec);
+    }
+    
+    
     inline float DistributionGGX(vec3 N, vec3 H, float _roughness)
     {
         float a      = _roughness * _roughness;
@@ -31,6 +69,27 @@ namespace Lighting
         return num / denom;
     }
 
+    inline float GeometrySchlickGGX_IBL(float NdotV, float roughness)
+    {
+        float r = roughness + 1.0f;
+        float k = (r*r) / 2.0f;
+
+        float num   = NdotV;
+        float denom = NdotV * (1.0f - k) + k;
+	
+        return num / denom;
+    }
+    
+    inline float GeometrySmith_IBL(vec3 N, vec3 V, vec3 L, float roughness)
+    {
+        float NdotV = max(dot(N, V), 0.0f);
+        float NdotL = max(dot(N, L), 0.0f);
+        float ggx2  = GeometrySchlickGGX_IBL(NdotV, roughness);
+        float ggx1  = GeometrySchlickGGX_IBL(NdotL, roughness);
+	
+        return ggx1 * ggx2;
+    }
+    
     inline float GeometrySchlickGGX(float NdotV, float roughness)
     {
         float r = roughness + 1.0f;

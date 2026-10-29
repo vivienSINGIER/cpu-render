@@ -158,6 +158,16 @@ void Texture::Store(uint32 _x, uint32 _y, glm::vec4 _v)
     m_data[GetIndex(_x, _y)] = EncodeTexel(m_format, _v);;
 }
 
+void Texture::StoreCube(uint32 _lod, uint32 _face, uint32 _x, uint32 _y, vec4 _c)
+{
+    Store(CubeTexel(_lod, _face, _x, _y), _c);
+}
+
+void Texture::StoreCube(uint32 _lod, uint32 _face, uvec2 _uv, vec4 _c)
+{
+    Store(CubeTexel(_lod, _face, _uv.x, _uv.y), _c);
+}
+
 void Texture::Clear(glm::vec4 _color)
 {
     m_data.assign(m_size, EncodeTexel(m_format, _color));
@@ -190,7 +200,7 @@ void Texture::BakeIrradiance(Texture* _src, Texture* _dst, uint32_t _faceSize)
         for (int32_t x = 0; x < _dst->Width(); ++x)
         {
             vec3 N;
-            if (!TexelToCubeDir(x, y, _faceSize, N))
+            if (!_src->TexelToCubeDir(x, y, N))
                 continue;
             
             vec3 up = glm::abs(N.y) < 0.999f ? glm::vec3(0.0f, 1.0f, 0.0f) : glm::vec3(1.0f, 0.0f, 0.0f);
@@ -293,18 +303,30 @@ void Texture::GenerateCubeMips()
     }
 }
 
-bool Texture::TexelToCubeDir(uint32_t _x, uint32_t _y, uint32_t _faceSize, vec3& _outDir)
+vec3 Texture::CubeFaceUVToDir(uint32 _face, vec2 _uv)
 {
-    uint32_t col = _x / _faceSize;
-    uint32_t row = _y / _faceSize;
+    uint32 faceSize = CubeFaceSize();
+    
+    uint32 col = _face % 2;
+    uint32 row = _face / 2;
+    
+    
+}
+
+bool Texture::TexelToCubeDir(uint32_t _x, uint32_t _y, vec3& _outDir)
+{
+    uint32 faceSize = CubeFaceSize();
+    
+    uint32_t col = _x / faceSize;
+    uint32_t row = _y / faceSize;
     
     if (col > 1 || row > 2)
         return false;
     
     uint32_t face = col + row * 2;
     
-    float a = ((float)(_x % _faceSize) + 0.5f) / (float)_faceSize;
-    float b = ((float)(_y % _faceSize) + 0.5f) / (float)_faceSize;
+    float a = ((float)(_x % faceSize) + 0.5f) / (float)faceSize;
+    float b = ((float)(_y % faceSize) + 0.5f) / (float)faceSize;
     float u = 2.0f * a - 1.0f;
     float v = 1.0f - b * 2.0f; // inverted uv.y
     
