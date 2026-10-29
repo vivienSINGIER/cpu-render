@@ -27,6 +27,9 @@ private:
     Material m_tintedMat;
     Material m_metalMat;
 
+    Material m_transparentMat;
+    Material m_postProcMat;
+
     Material m_skyboxMat;
     bool m_toggleSkybox = false;
     Object* skyboxObject = nullptr;
@@ -34,6 +37,10 @@ private:
 
     int m_blendIndex = Blending::ALPHA;
     PassDesc m_mainPass;
+
+    PassDesc m_refractionPass;
+
+    PassDesc m_postProcPass;
 
     LightData m_lightData;
 };

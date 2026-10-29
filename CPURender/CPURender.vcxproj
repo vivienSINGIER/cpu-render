@@ -229,6 +229,7 @@
     <ClInclude Include="Scenes\Transparency_Scene.h" />
     <ClInclude Include="Shaders\ComputeShaders\GammaCorrection_CS.hpp" />
     <ClInclude Include="Shaders\GraphicsShaders\LitC_BP_Cube.hpp" />
+    <ClInclude Include="Shaders\GraphicsShaders\LitC_BP_Transparent.hpp" />
     <ClInclude Include="Shaders\GraphicsShaders\PBR.hpp" />
     <ClInclude Include="Shaders\GraphicsShaders\LitT_BP_Cube.hpp" />
     <ClInclude Include="Shaders\GraphicsShaders\UnlitSkybox.hpp" />

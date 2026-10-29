@@ -47,7 +47,7 @@ void Scene::Draw(Device* _pDevice)
 	OnDraw(_pDevice);
 }
 
-void Scene::DrawObjects(Device* _device, Frustum const& _frustum)
+void Scene::DrawObjects(Device* _device, Frustum const& _frustum, uint8_t _drawMask)
 {
 	std::vector<Object*> to_draw = {};
 
@@ -55,7 +55,7 @@ void Scene::DrawObjects(Device* _device, Frustum const& _frustum)
 
 	for (Object* o : to_draw)
 	{
-		_device->RegisterCommand(o->mesh, o->transform.GetMatrix(), o->mat);
+		if(_drawMask & o->drawMask) _device->RegisterCommand(o->mesh, o->transform.GetMatrix(), o->mat);
 	}
 }
 
