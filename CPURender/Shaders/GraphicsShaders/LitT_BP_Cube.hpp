@@ -122,7 +122,7 @@ public:
 
         glm::vec3 ambientFactor = Light().ambientLight * (glm::vec3(diffuse) + F0);
         if (Has_cubemap())
-            ambientFactor *= glm::vec3(Sample_Cube_cubemap(glm::reflect(-toEye, normalW)));
+            ambientFactor *= glm::vec3(Sample_Cube_cubemap(glm::reflect(-toEye, N)));
         if (Has_ambient())
             ambientFactor *= glm::vec3(ambient(uv));
 
@@ -132,7 +132,7 @@ public:
             shadowFactor = ShadowCalc(_in.posLightSpace);
         glm::vec4 directLight = ComputeLighting(Light(), d, _in.posModel, normalW, toEye, shadowFactor);
 
-        vec4 litColor = glm::clamp(glm::vec4(ambientFactor, 1.0f) + directLight, 0.0f, 1.0f);
+        vec4 litColor = glm::vec4(ambientFactor, 1.0f) + directLight;
         litColor.a = mat().diffuseAlbedo.a;
 
         return litColor;

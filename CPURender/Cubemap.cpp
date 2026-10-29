@@ -1,18 +1,18 @@
 #include "Cubemap.h"
 
-Cubemap::Cubemap(const char* _name, const char* _front, const char* _back, const char* _left, const char* _right, const char* _up, const char* _down)
+Cubemap::Cubemap(const char* _name, const char* _front, const char* _back, const char* _left, const char* _right, const char* _up, const char* _down, bool _isSrgb)
 {
 	// create new texture with 6 combined
 
 	// Get 6 textures
 	Texture faceTexs[6];
 
-	faceTexs[0].Load(_front);
-	faceTexs[1].Load(_back);
-	faceTexs[2].Load(_left);
-	faceTexs[3].Load(_right);
-	faceTexs[4].Load(_up);
-	faceTexs[5].Load(_down);
+	faceTexs[0].Load(_front, _isSrgb);
+	faceTexs[1].Load(_back, _isSrgb);
+	faceTexs[2].Load(_left, _isSrgb);
+	faceTexs[3].Load(_right, _isSrgb);
+	faceTexs[4].Load(_up, _isSrgb);
+	faceTexs[5].Load(_down, _isSrgb);
 
 	// Check if textures are square + check if same size
 	int width = faceTexs[0].Width(); int height = faceTexs[0].Height();

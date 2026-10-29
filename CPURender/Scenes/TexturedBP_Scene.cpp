@@ -12,7 +12,7 @@ void TexturedBP_Scene::InitLightScene()
 {
     //m_lightData.lights[0] = MakeDirectionalLight({1.0f, -1.0f, 1.0f}, 10.0f, Color::WHITE);
     //m_lightData.lights[1] = MakePointLight({5.0f, 0.0f, 5.0f}, 0.5f, { 5.0f, 25.0f }, Color::RED);
-    m_lightData.ambient = 0.9f;
+    m_lightData.ambient = 10.0f;
 }
 
 void TexturedBP_Scene::OnInit(Device* _pDevice)
@@ -52,7 +52,7 @@ void TexturedBP_Scene::OnInit(Device* _pDevice)
     ////Handle metalness = TextureFactory::Instance()->CreateTexture("dark_rock_metalness", "Assets/Textures/Gold/metalness.png");
     
     LitT_BP_Cube_PS::MaterialCB cb = {
-        {1.0f, 0.0f, 1.0f, 1.0f}, 
+        {1.0f, 1.0f, 1.0f, 1.0f}, 
             Lighting::g_fresnelR0Templates[PLASTIC], 
                 0.9f, 0.02f, 0.9f
     };
@@ -63,7 +63,7 @@ void TexturedBP_Scene::OnInit(Device* _pDevice)
 
     Cubemap cubemap = Cubemap("Skybox", "Assets/Textures/Cubemap/FishPond/posz.jpg", "Assets/Textures/Cubemap/FishPond/negz.jpg",
         "Assets/Textures/Cubemap/FishPond/negx.jpg", "Assets/Textures/Cubemap/FishPond/posx.jpg",
-        "Assets/Textures/Cubemap/FishPond/posy.jpg", "Assets/Textures/Cubemap/FishPond/negy.jpg");
+        "Assets/Textures/Cubemap/FishPond/posy.jpg", "Assets/Textures/Cubemap/FishPond/negy.jpg", true);
 
     Mesh m = GeometryFactory::Instance()->BuildUVSphere(10, 10, true);
     Mesh cube = GeometryFactory::Instance()->BuildCube();

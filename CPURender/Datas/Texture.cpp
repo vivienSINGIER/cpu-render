@@ -97,11 +97,11 @@ glm::vec4 Texture::SampleNPCube(glm::vec3 _dir) const
     float absY = abs(_dir.y);
     float absZ = abs(_dir.z);
 
-    if (absX > absY && absX > absZ) // x major
+    if (absX >= absY && absX >= absZ) // x major
     {
         cubemapSide = _dir.x < 0 ? LEFT : RIGHT;
     }
-    else if (absY > absX && absY > absZ) // y major
+    else if (absY >= absX && absY >= absZ) // y major
     {
         cubemapSide = _dir.y < 0 ? DOWN : UP;
     }
@@ -115,25 +115,29 @@ glm::vec4 Texture::SampleNPCube(glm::vec3 _dir) const
     int yOffset = (cubemapSide / 2);
     glm::vec2 uvOffset = glm::vec2(xOffset * s, yOffset * s);
     glm::vec2 uv;
+    
+    float maxAbs = glm::max(absX, glm::max(absY, absZ));
+    vec3 d = _dir / maxAbs;
+    
     switch (cubemapSide)
     {
     case FRONT:
-        uv = { (_dir.x + 1) / 2 , 1 - ((_dir.y + 1) / 2) };
+        uv = { (d.x + 1) / 2 , 1 - ((d.y + 1) / 2) };
         break;
     case BACK:
-        uv = { (-_dir.x + 1) / 2 , 1 - ((_dir.y + 1) / 2) };
+        uv = { (-d.x + 1) / 2 , 1 - ((d.y + 1) / 2) };
         break;
     case LEFT:
-        uv = { (_dir.z + 1) / 2 , 1 - ((_dir.y + 1) / 2) };
+        uv = { (d.z + 1) / 2 , 1 - ((d.y + 1) / 2) };
         break;
     case RIGHT:
-        uv = { (-_dir.z + 1) / 2 , 1 - ((_dir.y + 1) / 2) };
+        uv = { (-d.z + 1) / 2 , 1 - ((d.y + 1) / 2) };
         break;
     case UP:
-        uv = { (_dir.x + 1) / 2 , 1 - ((-_dir.z + 1) / 2) };
+        uv = { (d.x + 1) / 2 , 1 - ((-d.z + 1) / 2) };
         break;
     case DOWN:
-        uv = { (_dir.x + 1) / 2 , 1 - ((_dir.z + 1) / 2) };
+        uv = { (d.x + 1) / 2 , 1 - ((d.z + 1) / 2) };
         break;
     }
 
