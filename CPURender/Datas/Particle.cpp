@@ -2,6 +2,8 @@
 #include <iostream>
 
 #include "../Factories/BufferFactory.h"
+#include <random>
+#include <omp.h>
 
 ParticleManager* ParticleManager::m_pInstance = nullptr;
 
@@ -35,10 +37,14 @@ void ParticleManager::Spawn(glm::vec3 _center, ParticleDesc _desc)
 
 	float spawnRadius = _desc.spawnRadius;
 
+	#pragma omp parallel
+	#pragma omp for
 	for (int i = 0; i < _desc.amount; i++)
 	{
+		int current_index = (m_freeOffset + i) % MAX_PARTICLES;
+
 		UavParticle p;
-		p.pos = glm::vec3(_center.x +rand_range(-spawnRadius, spawnRadius), _center.y + rand_range(-spawnRadius, spawnRadius), _center.z + rand_range(-spawnRadius, spawnRadius));
+		p.pos = glm::vec3(_center.x + rand_range(-spawnRadius, spawnRadius), _center.y + rand_range(-spawnRadius, spawnRadius), _center.z + rand_range(-spawnRadius, spawnRadius));
 		p.beginSize = _desc.particleBeginSize;
 		p.endSize = _desc.particleEndSize;
 
@@ -54,12 +60,10 @@ void ParticleManager::Spawn(glm::vec3 _center, ParticleDesc _desc)
 		p.rotationRad = 0.f;
 		p.rotSpeed = _desc.rotationSpeed;
 
-		BufferFactory::Instance()->Write(m_uavBuffer, m_freeOffset, p);
-		m_freeOffset++;
-
-		if(m_freeOffset >= MAX_PARTICLES)
-			m_freeOffset %= MAX_PARTICLES;
+		BufferFactory::Instance()->Write(m_uavBuffer, current_index, p);
 	}
+
+	m_freeOffset = (m_freeOffset + _desc.amount) % MAX_PARTICLES;
 }
 
 ParticleEmitter ParticleManager::CreateEmitter(glm::vec3 _center, ParticleDesc _desc, float _spawnDelay)

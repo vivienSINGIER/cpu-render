@@ -79,7 +79,7 @@ void SceneParticlesTest::OnInit(Device* _pDevice)
     ParticleManager::Instance()->m_uavBuffer = m_uav_buffer;
 
     ParticleDesc fireDesc;
-    fireDesc.amount = 200;
+    fireDesc.amount = 0;
     fireDesc.spawnRadius = 0.9f;
     fireDesc.particleBeginSize = 0.15f;
     fireDesc.particleEndSize = 0.f;
@@ -97,7 +97,7 @@ void SceneParticlesTest::OnInit(Device* _pDevice)
     fire = ParticleManager::Instance()->CreateEmitter({ 0, 2, 0 }, fireDesc, 0.2f);
 
     ParticleDesc rainDesc;
-    rainDesc.amount = 750;
+    rainDesc.amount = 0;
     rainDesc.spawnRadius = 12.5f;
     rainDesc.particleBeginSize = 0.025f;
     rainDesc.particleEndSize = 0.025f;
@@ -137,10 +137,33 @@ void SceneParticlesTest::OnInit(Device* _pDevice)
     }
 
     mesh_particle = GeometryFactory::Instance()->CreateMesh(vertices, indices);
+
+    UnlitParticle_PS::ParticleColor color = { glm::vec4(1, 1, 1, 1) };
+    m_unlitParticle->SetParams<UnlitParticle_PS::ParticleColor>(UnlitParticle_PS::CB_SLOT_pcolor, color);
 }
 
 void SceneParticlesTest::OnHandleEvent(const SDL_Event& event)
 {
+    if (event.type == SDL_EVENT_KEY_DOWN && (event.key.key == SDLK_A))
+    {
+        ParticleDesc fireDesc;
+        fireDesc.amount = 100;
+        fireDesc.spawnRadius = 0.9f;
+        fireDesc.particleBeginSize = 0.15f;
+        fireDesc.particleEndSize = 0.f;
+
+        fireDesc.rotationSpeed = 10.f;
+        fireDesc.floorDir = glm::vec3(-0.25f, 0.5f, -0.25f);
+        fireDesc.ceilDir = glm::vec3(0.25f, 1, 0.25f);
+        fireDesc.minSpeed = 0.33f;
+        fireDesc.maxSpeed = 3.f;
+        fireDesc.beginColor = glm::vec4(1, 0, 0, 1);
+        fireDesc.endColor = glm::vec4(1, 1, 0, 1);
+        fireDesc.minLifeTime = 1.f;
+        fireDesc.maxLifeTime = 3.f;
+
+        ParticleManager::Instance()->Spawn({ 0, 0, 0 }, fireDesc);
+    }
 }
 
 void SceneParticlesTest::OnUpdate(float dt)
@@ -168,14 +191,7 @@ void SceneParticlesTest::OnDraw(Device* _pDevice)
     _pDevice->Dispatch(m_particleMat.get(), count / ParticleCS::GROUP_SIZE + 1, 1, 1);
 
     Transform world = {};
-    glm::vec3 zero = { 0, 0, 0 };
-    world.SetPosition(zero);
-    UnlitParticle_PS::ParticleColor cb =
-    {
-        glm::vec4(1, 1, 1, 1)
-    };
-
-    m_unlitParticle->SetParams<UnlitParticle_PS::ParticleColor>(UnlitParticle_PS::CB_SLOT_pcolor, cb);
+    world.SetIdentity();
     _pDevice->RegisterCommand(mesh_particle, world.GetMatrix(), m_unlitParticle.get());
     _pDevice->EndPass();
 }
