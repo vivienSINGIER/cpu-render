@@ -61,6 +61,7 @@ public:
     
     static void BakeIrradiance(Texture* _src, Texture* _dst, uint32_t _faceSize);
     static void BakePrefilter(Texture* _src, Texture* _dst);
+    static void BakeBRDFLookup(Texture* _src, uint32_t _sampleCount = 256);
     
 private:
     std::vector<vec4> m_data;

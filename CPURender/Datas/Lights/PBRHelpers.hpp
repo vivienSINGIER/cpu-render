@@ -17,6 +17,22 @@ namespace Lighting
         float ambientOcc;
     };
     
+    inline uint32 PCGHash(uint32 _v)
+    {
+        uint32 state = _v * 747796405u + 2891336453u;
+        uint32 word  = ((state >> ((state >> 28u) + 4u)) ^ state) * 277803737u;
+        return (word >> 22u) ^ word;
+    }
+    
+    inline float HashToFloat(uint32 _face, uint32 _mip, uint32 _x, uint32 _y)
+    {
+        uint32 h = PCGHash(_x);
+        h = PCGHash(h ^ _y);
+        h = PCGHash(h ^ _mip);
+        h = PCGHash(h ^ _face);
+        return (float)(h >> 8) * (1.0f / 16777216.0f);
+    }
+    
     inline float RadicalInverse_VdC(uint32 bits)
     {
         bits = (bits << 16) | (bits >> 16);

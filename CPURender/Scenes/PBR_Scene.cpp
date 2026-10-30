@@ -49,10 +49,15 @@ void PBR_Scene::OnInit(Device* _pDevice)
         "Assets/Textures/Cubemap/FishPond/negx.jpg", "Assets/Textures/Cubemap/FishPond/posx.jpg",
         "Assets/Textures/Cubemap/FishPond/posy.jpg", "Assets/Textures/Cubemap/FishPond/negy.jpg", true, 32);
     
+    Handle brdfLookup = TextureFactory::Instance()->CreateTexture("BRDF_Lookup", 512, 512);
+    Texture::BakeBRDFLookup(TextureFactory::Instance()->GetTexture("BRDF_Lookup"));
+    
     Mesh m = GeometryFactory::Instance()->BuildUVSphere(32, 32, true);
 
     m_mat = ShaderFactory::Instance()->CreateMaterial("PBR");
     m_mat->SetTexture(PBR_PS::TEX_SLOT_irradience, cubemap.GetIrradianceTexture());
+    m_mat->SetTexture(PBR_PS::TEX_SLOT_prefilter, cubemap.GetPrefilterTexture());
+    m_mat->SetTexture(PBR_PS::TEX_SLOT_brdfLUT, brdfLookup);
     UpdateMaterial();
 
     Object* o = CreateObject(DYNAMIC);
@@ -140,7 +145,7 @@ void PBR_Scene::SetSkybox(Cubemap _cubemap)
 {
     skyboxObject = new Object();
     m_skyboxMat = ShaderFactory::Instance()->CreateMaterial("UnlitSkybox");
-    m_skyboxMat->SetTexture(UnlitSkybox_PS::TEX_SLOT_albedo, _cubemap.GetPrefilterTexture());
+    m_skyboxMat->SetTexture(UnlitSkybox_PS::TEX_SLOT_albedo, _cubemap.GetTexture());
 
     skyboxObject->mat = m_skyboxMat.get();
     skyboxObject->mesh = GeometryFactory::Instance()->BuildSkybox();

@@ -35,7 +35,7 @@ public:
     vec4 Execute(Vertex_OUT const& _in) const override
     {
         vec3 dir = glm::normalize(glm::vec3(_in.posModel));
-        return Sample_Cube_Lod_albedo(dir, 2.0f);
+        return Sample_Cube_Lod_albedo(dir, 1.0f);
     }
 };
 

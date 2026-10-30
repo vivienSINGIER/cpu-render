@@ -77,4 +77,3 @@ Handle Cubemap::GetPrefilterTexture()
 {
 	return m_prefilterHandle;
 }
-

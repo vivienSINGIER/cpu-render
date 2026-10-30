@@ -236,7 +236,7 @@ void Texture::BakePrefilter(Texture* _src, Texture* _dst)
     int envSize = (int)_src->CubeFaceSize();
     int outSize = (int)_dst->CubeFaceSize();
     
-    constexpr int SAMPLE_COUNT = 1024;
+    constexpr int SAMPLE_COUNT = 256;
     constexpr int MIP_COUNT = 5;
     
     uint32 lodLvl = (uint32)floor(log2(float(envSize) / float(outSize)));
@@ -300,23 +300,79 @@ void Texture::BakePrefilter(Texture* _src, Texture* _dst)
                     uvec2 tx = _dst->CubeTexel(m, i, x, y);
                     
                     vec3 Nt;
-                    Nt = _dst->CubeFaceUVToDir(i, vec2(x, y) / (float)mipSize);
+                    Nt = _dst->CubeFaceUVToDir(i, vec2(x + 0.5f, y + 0.5f) / (float)mipSize);
+                    Nt = normalize(Nt);
                     
                     vec3 up    = glm::abs(Nt.y) < 0.999f ? vec3(0, 1, 0) : vec3(1, 0, 0);
                     vec3 right = normalize(cross(up, Nt));
                     up         = cross(Nt, right);
                     
+                    // float a = 2.0f * pi<float>() * Lighting::HashToFloat(i, m, x, y);
+                    // float c = cos(a);
+                    // float s = sin(a);
+                    
                     vec3 color(0.0f);
-                    for (auto& s : samples)
+                    for (auto& smp : samples)
                     {
-                        vec3 l = normalize(right * s.L.x + up * s.L.y + Nt * s.L.z);
-                        color += _src->SampleNPCubeLod(l, s.lod) * s.weight;
+                        // float lx = c * smp.L.x - s * smp.L.y;
+                        // float ly = c * smp.L.z - s * smp.L.x;
+                        
+                        vec3 l = normalize(right * smp.L.x + up * smp.L.y + Nt * smp.L.z);
+                        color += _src->SampleNPCubeLod(l, smp.lod) * smp.weight;
                     }
                     color = color * invTotalWeight;
                     
                     _dst->Store(tx, vec4(color, 1.0f));
                 }
             }
+        }
+    }
+}
+
+void Texture::BakeBRDFLookup(Texture* _src, uint32_t _sampleCount)
+{
+    uint32 w = _src->Width();
+    uint32 h = _src->Height();
+    
+#pragma omp parallel for collapse(2)
+    for (int y = 0; y < (int)h; ++y)
+    {
+        for (int x = 0; x < (int)w; ++x)
+        {
+            float NdotV = ((float)x + 0.5f) / (float)w;
+            float roughness = ((float)y + 0.5f) / (float)h;
+            
+            vec3 V = { sqrt(1.0f - NdotV*NdotV), 0.0f, NdotV };
+            float A = 0.0f;
+            float B = 0.0f;
+            
+            vec3 N = vec3(0.0f, 0.0f, 1.0f);
+            
+            for (uint32 i = 0; i < _sampleCount; ++i)
+            {
+                vec2 Xi = Lighting::Hammersley(i, _sampleCount);
+                vec3 H = Lighting::ImportanceSampleGGX(Xi, N, roughness);
+                vec3 L = normalize(2.0f * dot(V, H) * H - V);
+                
+                float NdotL = max(L.z, 0.0f);
+                float NdotH = max(H.z, 0.0f);
+                float VdotH = max(dot(V, H), 0.0f);
+                
+                if (NdotL > 0.0f)
+                {
+                    float G = Lighting::GeometrySmith_IBL(N, V, L, roughness);
+                    float G_vis = (G * VdotH) / (NdotH * NdotV);
+                    float Fc = pow(1.0f - VdotH, 5.0f);
+                    
+                    A += (1.0f - Fc) * G_vis;
+                    B += Fc * G_vis;
+                }
+            }
+            
+            A /= (float)_sampleCount;
+            B /= (float)_sampleCount;
+            
+            _src->Store(x, y, vec4(A, B, 0.0f, 1.0f));
         }
     }
 }

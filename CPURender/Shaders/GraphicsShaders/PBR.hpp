@@ -43,7 +43,9 @@ public:
     };
     
     SHADER_CB(MaterialCB, mat, CB_CUSTOM)
-    SHADER_TEX_OPT(irradience, 0)
+    SHADER_TEX(irradience, 0)
+    SHADER_TEX(prefilter, 1)
+    SHADER_TEX(brdfLUT, 2)
 
     PBR_PS(GraphicsContext* _ctx) : PixelShader(_ctx) {}
     
@@ -52,22 +54,29 @@ public:
         vec3 normal = glm::normalize(_in.normal);
         vec3 V = normalize(Pass().eyePos - vec3(_in.posModel));
         
+        vec3 R = reflect(-V, normal);
+        
         vec3 F0 = vec3(0.04f);
         F0 = glm::mix(F0, mat().albedo, mat().metalness);
         
-        vec3 ambient;
-        if (Has_irradience())
-        {
-            vec3 kS = fresnelSchlickRoughness(max(dot(normal, V), 0.0f), F0, mat().roughness);
-            vec3 kD = (1.0f - kS); //  * (1.0f - mat().metalness)
-            vec3 irradience = vec3(Sample_Cube_irradience(normal));
-            ambient = kD * irradience * mat().albedo * mat().ambientOcc;
-        }
-        else
-            ambient = vec3(Light().ambientLight) * mat().albedo * mat().ambientOcc;
+        vec3 F = fresnelSchlickRoughness(max(dot(normal, V), 0.0f), F0, mat().roughness);
+        
+        vec3 kS = F;
+        vec3 kD = 1.0f - kS;
+        kD *= 1.0f - mat().metalness;
+        
+        vec3 irradience = vec3(Sample_Cube_irradience(normal));
+        vec3 diffuse = irradience * mat().albedo;
+        
+        const float MAX_REFLECTION_LOD = 4.0f;
+        vec3 prefiltered = Sample_Cube_Lod_prefilter(R, mat().roughness * MAX_REFLECTION_LOD);
+        vec2 envBRDF = brdfLUT(vec2(max(dot(normal, V), 0.0f), mat().roughness));
+        vec3 specular = prefiltered * (F0 * envBRDF.x + envBRDF.y);
+        
+        vec3 ambient = (kD * diffuse + specular) * mat().ambientOcc;
         
         PBRData d = { mat().albedo, mat().metalness, F0, mat().roughness, mat().ambientOcc };
-        vec3 Lo = Lighting::ComputePBR(Light(), d, _in.posModel, normal, V);
+        vec3 Lo = ComputePBR(Light(), d, _in.posModel, normal, V);
         
         vec3 color = ambient + Lo;
         
