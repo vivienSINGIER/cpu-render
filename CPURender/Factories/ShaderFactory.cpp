@@ -119,4 +119,5 @@ void ShaderFactory::RegisterPrebuilts()
     RegisterCompute<GroupDebug_CS>("GroupDebug");
     RegisterCompute<GammaCorr_CS>("GammaCorrect");
     RegisterCompute<TexCopy_CS>("TexCopy");
+    RegisterCompute<ParticleCS>("Particle");
 }

@@ -3,6 +3,7 @@
 
 #include "GraphicsShaders/UnlitC.hpp"
 #include "GraphicsShaders/UnlitT.hpp"
+#include "GraphicsShaders/UnlitParticle.hpp"
 #include "GraphicsShaders/UnlitSkybox.hpp"
 
 #include "GraphicsShaders/LitC.hpp"
@@ -18,5 +19,6 @@
 #include "ComputeShaders/GroupDebug_CS.hpp"
 #include "ComputeShaders/GammaCorrection_CS.hpp"
 #include "ComputeShaders/TexCopy_CS.hpp"
+#include "ComputeShaders/ParticleCS.hpp"
 
 #endif

@@ -93,6 +93,9 @@
     <ClCompile Include="Octree.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Factories\TextureFactory.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="Cubemap.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -108,6 +111,10 @@
     <ClCompile Include="Scenes\TexturedBP_Scene.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Scenes\SceneParticlesTest.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Datas\Particle.cpp">
     <ClCompile Include="Scenes\Transparency_Scene.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -269,6 +276,12 @@
     <ClInclude Include="Factories\TextureFactory.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Scenes\Scene.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Scenes\TexturedBP_Scene.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="Shaders\ComputeShaders\GammaCorrection_CS.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -290,6 +303,16 @@
     <ClInclude Include="Shaders\GraphicsShaders\UnlitT.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Scenes\SceneParticlesTest.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Shaders\ComputeShaders\ParticleCS.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Datas\Particle.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Shaders\GraphicsShaders\UnlitParticle.hpp">
     <ClInclude Include="Shaders\GraphicsShaders\UnlitSkybox.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>

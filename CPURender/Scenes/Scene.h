@@ -40,6 +40,7 @@ protected:
 	float m_deltaTime = 0.0f;
 	float m_totalTime = 0.0f;
 
+	Device* m_pDevice = nullptr;
 private:
 	std::vector<Object*>* GetObjects(ObjectType type);
 
@@ -53,7 +54,7 @@ private:
 	float m_camYaw = 0.0f;
 	float m_camPitch = 0.0f;
 
-	bool m_showFps = false; // toggled with F
+	bool m_showFps = true; // toggled with F
 	float m_fpsTimer = 0.0f;
 	uint32_t m_fpsFrames = 0;
 

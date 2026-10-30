@@ -51,7 +51,7 @@ void Shader::Store(uint32_t _slot, int _index, T const& _value) const
     assert(m_r->uavs[_slot].stride == sizeof(T) && "Buffer data type doesn't match T");
     assert(m_r->uavs[_slot].data != nullptr && "Can't access constant buffer data");
     assert(_index >= 0 && _index < m_r->uavs[_slot].count && "index out of bounds");
-    return *reinterpret_cast<T*>(static_cast<uint8_t*>(m_r->uavs[_slot].data) + sizeof(T) * _index) = _value;
+    *reinterpret_cast<T*>(static_cast<uint8_t*>(m_r->uavs[_slot].data) + sizeof(T) * _index) = _value;
 }
 
 #endif

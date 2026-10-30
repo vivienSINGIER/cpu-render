@@ -56,13 +56,25 @@ ResourceLayout ShaderGroup::Build()
     {
         UAVSlotDesc& d = res.uav[i];
         
-        bool eqDec = vs.uav[i].isDeclared == ps.uav[i].isDeclared;
-        bool eqType = vs.uav[i].type == ps.uav[i].type;
-        bool eqStride = vs.uav[i].stride == ps.uav[i].stride;
-        
-        assert(eqDec && eqType && eqStride && "Uav register don't match between group members");
-        
-        d = vs.uav[i];
+        bool isVs = vs.uav[i].isDeclared;
+        bool isPs = ps.uav[i].isDeclared;
+
+        if (!isVs && !isPs)
+            continue;
+
+        if (isVs && isPs)
+        {
+            bool eqDec = vs.uav[i].isDeclared == ps.uav[i].isDeclared;
+            bool eqType = vs.uav[i].type == ps.uav[i].type;
+            bool eqStride = vs.uav[i].stride == ps.uav[i].stride;
+            assert(eqDec && eqType && eqStride && "Uav register don't match between group members");
+
+            d = vs.uav[i];
+        }
+        else if (isVs)
+            d = vs.uav[i];
+        else
+            d = ps.uav[i];
     }
     
     return res;

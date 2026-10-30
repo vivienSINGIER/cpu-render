@@ -150,6 +150,7 @@
     <ClCompile Include="Cubemap.cpp" />
     <ClCompile Include="Datas\Mesh.cpp" />
     <ClCompile Include="Datas\Object.cpp" />
+    <ClCompile Include="Datas\Particle.cpp" />
     <ClCompile Include="Datas\Texture.cpp" />
     <ClCompile Include="Datas\Triangle.cpp" />
     <ClCompile Include="engine.cpp" />
@@ -165,6 +166,7 @@
     <ClCompile Include="Octree.cpp" />
     <ClCompile Include="Scenes\PBR_Scene.cpp" />
     <ClCompile Include="Scenes\Scene.cpp" />
+    <ClCompile Include="Scenes\SceneParticlesTest.cpp" />
     <ClCompile Include="Scenes\TexturedBP_Scene.cpp" />
     <ClCompile Include="Scenes\Transparency_Scene.cpp" />
     <ClCompile Include="Shaders\ShaderBase\Material.cpp" />
@@ -194,6 +196,7 @@
     <ClInclude Include="Datas\Mesh.h" />
     <ClInclude Include="Datas\Morton.hpp" />
     <ClInclude Include="Datas\Object.h" />
+    <ClInclude Include="Datas\Particle.h" />
     <ClInclude Include="Datas\Texture.h" />
     <ClInclude Include="Datas\Texture.inl" />
     <ClInclude Include="Datas\Triangle.h" />
@@ -225,11 +228,14 @@
     <ClInclude Include="Octree.h" />
     <ClInclude Include="Scenes\PBR_Scene.h" />
     <ClInclude Include="Scenes\Scene.h" />
+    <ClInclude Include="Scenes\SceneParticlesTest.h" />
     <ClInclude Include="Scenes\TexturedBP_Scene.h" />
     <ClInclude Include="Scenes\Transparency_Scene.h" />
     <ClInclude Include="Shaders\ComputeShaders\FB_Fusion_CS.hpp" />
     <ClInclude Include="Shaders\ComputeShaders\GammaCorrection_CS.hpp" />
     <ClInclude Include="Shaders\ComputeShaders\TexCopy_CS.hpp" />
+    <ClInclude Include="Shaders\ComputeShaders\ParticleCS.hpp" />
+    <ClInclude Include="Shaders\GraphicsShaders\UnlitParticle.hpp" />
     <ClInclude Include="Shaders\GraphicsShaders\LitC_BP_Cube.hpp" />
     <ClInclude Include="Shaders\GraphicsShaders\LitC_BP_Transparent.hpp" />
     <ClInclude Include="Shaders\GraphicsShaders\PBR.hpp" />
