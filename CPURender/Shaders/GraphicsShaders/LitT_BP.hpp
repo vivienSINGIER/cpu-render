@@ -127,9 +127,9 @@ public:
         float shadowFactor = 0.0f;
         if (Has_shadow())
             shadowFactor = ShadowCalc(_in.posLightSpace);
-        glm::vec4 directLight = ComputeLighting(Light(), d, _in.posModel, normalW, toEye, shadowFactor);
+        // glm::vec4 directLight = ComputeLighting(Light(), d, _in.posModel, normalW, toEye, shadowFactor);
 
-        vec4 litColor = glm::vec4(ambientFactor, 1.0f) + directLight;
+        vec4 litColor = glm::vec4(ambientFactor, 1.0f);
         litColor.a = mat().diffuseAlbedo.a;
         
         return litColor;
