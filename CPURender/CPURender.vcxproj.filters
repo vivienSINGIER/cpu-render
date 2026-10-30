@@ -326,7 +326,7 @@
     <ClInclude Include="Shaders\ComputeShaders\FB_Fusion_CS.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Shaders\ComputeShaders\TestComputeShader.hpp">
+    <ClInclude Include="Shaders\ComputeShaders\TexCopy_CS.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

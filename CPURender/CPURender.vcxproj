@@ -167,7 +167,6 @@
     <ClCompile Include="Scenes\Scene.cpp" />
     <ClCompile Include="Scenes\TexturedBP_Scene.cpp" />
     <ClCompile Include="Scenes\Transparency_Scene.cpp" />
-    <ClCompile Include="Shaders\ComputeShaders\TexCopy_CS.cpp" />
     <ClCompile Include="Shaders\ShaderBase\Material.cpp" />
     <ClCompile Include="Shaders\ShaderBase\Shader.cpp" />
     <ClCompile Include="Shaders\ShaderBase\ShaderGroup.cpp" />

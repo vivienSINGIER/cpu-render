@@ -65,8 +65,6 @@ void Transparency_Scene::OnInit(Device* _pDevice)
 
     LitC_BP_Cube_PS::MaterialCB floorCB = { {0.6f, 0.6f, 0.6f, 1.0f}, Lighting::g_fresnelR0Templates[PLASTIC], 0.8f, 0.0f, 0.0f, 1.7f, false };
     LitC_BP_Cube_PS::MaterialCB opaqueCB = { {0.9f, 0.2f, 0.2f, 1.0f}, Lighting::g_fresnelR0Templates[PLASTIC], 0.5f, 0.0f, 0.0f, 1.7f, false };
-    LitC_BP_Cube_PS::MaterialCB glassCB = { {0.2f, 0.4f, 0.9f, 1.0f}, Lighting::g_fresnelR0Templates[GLASS],   0.1f, 0.0f, 1.0f, 1.7f, true };
-    LitC_BP_Cube_PS::MaterialCB tintedCB = { {1.0f, 1.0f, 1.0f, 1.0f}, Lighting::g_fresnelR0Templates[PLASTIC], 0.4f, 0.0f, 0.95f, 1.7f, true };
     LitC_BP_Transparent_PS::MaterialCB transparentCB = { {1.0f, 1.0f, 1.0f, 1.0f}, Lighting::g_fresnelR0Templates[CRYSTAL], 0.2f, 0.5f, 0.8f, 1.02f, true, {WIDTH, HEIGHT} };
 
     m_postProcMat = ShaderFactory::Instance()->CreateComputeMaterial("FBFusion");
@@ -90,18 +88,6 @@ void Transparency_Scene::OnInit(Device* _pDevice)
     m_opaqueMat = ShaderFactory::Instance()->CreateMaterial("LitC_BP_Cube");
     m_opaqueMat->SetParams<LitC_BP_Cube_PS::MaterialCB>(LitC_BP_Cube_PS::CB_SLOT_mat, opaqueCB);
     m_opaqueMat->SetTexture(LitC_BP_Cube_PS::TEX_SLOT_cubemap, cubemap.GetTexture());
-
-    m_glassMat = ShaderFactory::Instance()->CreateMaterial("LitC_BP_Cube");
-    m_glassMat->SetParams<LitC_BP_Cube_PS::MaterialCB>(LitC_BP_Cube_PS::CB_SLOT_mat, glassCB);
-    m_glassMat->SetTexture(LitC_BP_Cube_PS::TEX_SLOT_cubemap, cubemap.GetTexture());
-
-    m_tintedMat = ShaderFactory::Instance()->CreateMaterial("LitC_BP_Cube");
-    m_tintedMat->SetParams<LitC_BP_Cube_PS::MaterialCB>(LitC_BP_Cube_PS::CB_SLOT_mat, tintedCB);
-    m_tintedMat->SetTexture(LitC_BP_Cube_PS::TEX_SLOT_cubemap, cubemap.GetTexture());
-
-    //m_metalMat = ShaderFactory::Instance()->CreateMaterial("LitC_BP_Cube");
-    //m_metalMat->SetParams<LitC_BP_Transparent_PS::MaterialCB>(LitC_BP_Cube_PS::CB_SLOT_mat, transparentCB);
-    //m_metalMat->SetTexture(LitC_BP_Transparent_PS::TEX_SLOT_cubemap, cubemap.GetTexture());
 
     m_transparentMat = ShaderFactory::Instance()->CreateMaterial("LitC_BP_Transparent");
     m_transparentMat->SetParams<LitC_BP_Transparent_PS::MaterialCB>(LitC_BP_Transparent_PS::CB_SLOT_mat, transparentCB);
