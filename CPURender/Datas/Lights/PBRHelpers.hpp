@@ -53,25 +53,10 @@ namespace Lighting
         vec3 sampleVec = tangent * H.x + bitangent * H.y + N * H.z;
         return normalize(sampleVec);
     }
-    
-    
-    inline float DistributionGGX(vec3 N, vec3 H, float _roughness)
-    {
-        float a      = _roughness * _roughness;
-        float a2     = a * a;
-        float NdotH  = max(dot(N, H), 0.0f);
-        float NdotH2 = NdotH * NdotH;
-	
-        float num   = a2;
-        float denom = glm::max(NdotH2 * (a2 - 1.0f) + 1.0f, 0.0001f);
-        denom = glm::pi<float>() * denom * denom;
-	
-        return num / denom;
-    }
 
     inline float GeometrySchlickGGX_IBL(float NdotV, float roughness)
     {
-        float r = roughness + 1.0f;
+        float r = roughness;
         float k = (r*r) / 2.0f;
 
         float num   = NdotV;
@@ -88,6 +73,20 @@ namespace Lighting
         float ggx1  = GeometrySchlickGGX_IBL(NdotL, roughness);
 	
         return ggx1 * ggx2;
+    }
+    
+    inline float DistributionGGX(vec3 N, vec3 H, float _roughness)
+    {
+        float a      = _roughness * _roughness;
+        float a2     = a * a;
+        float NdotH  = max(dot(N, H), 0.0f);
+        float NdotH2 = NdotH * NdotH;
+	
+        float num   = a2;
+        float denom = glm::max(NdotH2 * (a2 - 1.0f) + 1.0f, 0.0001f);
+        denom = glm::pi<float>() * denom * denom;
+	
+        return num / denom;
     }
     
     inline float GeometrySchlickGGX(float NdotV, float roughness)

@@ -55,10 +55,12 @@ public:
     vec4* GetData();
     
     void GenerateCubeMips();
-    vec3 CubeFaceUVToDir(uint32 _face, vec2 _uv);
+    vec3 CubeFaceUVToDir(uint32 _face, vec2 _uv) const;
+    vec2 GetCubeSampleUV(vec3 _dir, uint32& _faceIndex) const;
     bool TexelToCubeDir(uint32_t _x, uint32_t _y, vec3& _outDir);
     
     static void BakeIrradiance(Texture* _src, Texture* _dst, uint32_t _faceSize);
+    static void BakePrefilter(Texture* _src, Texture* _dst);
     
 private:
     std::vector<vec4> m_data;
@@ -69,7 +71,7 @@ private:
     Encoding m_encoding;
     Format m_format;
     
-    int m_mipMapLast = 6;
+    int m_mipMapLast = 9;
     
     uint32 GetIndex(uint32 _x, uint32 _y) const;
     
@@ -77,7 +79,6 @@ private:
     uint32 LodCount() const;
     uint32 MaxCubeLod() const;
     uvec2 CubeTexel(uint32 _lod, uint32 _face, uint32 _x, uint32 _y) const;
-    vec2 GetCubeSampleUV(vec3 _dir, uint32& _faceIndex) const;
 };
 
 #include "Texture.inl"

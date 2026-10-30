@@ -140,7 +140,7 @@ void PBR_Scene::SetSkybox(Cubemap _cubemap)
 {
     skyboxObject = new Object();
     m_skyboxMat = ShaderFactory::Instance()->CreateMaterial("UnlitSkybox");
-    m_skyboxMat->SetTexture(UnlitSkybox_PS::TEX_SLOT_albedo, _cubemap.GetIrradianceTexture());
+    m_skyboxMat->SetTexture(UnlitSkybox_PS::TEX_SLOT_albedo, _cubemap.GetPrefilterTexture());
 
     skyboxObject->mat = m_skyboxMat.get();
     skyboxObject->mesh = GeometryFactory::Instance()->BuildSkybox();
