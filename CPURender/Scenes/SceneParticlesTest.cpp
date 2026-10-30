@@ -79,7 +79,7 @@ void SceneParticlesTest::OnInit(Device* _pDevice)
     ParticleManager::Instance()->m_uavBuffer = m_uav_buffer;
 
     ParticleDesc fireDesc;
-    fireDesc.amount = 0;
+    fireDesc.amount = 100;
     fireDesc.spawnRadius = 0.9f;
     fireDesc.particleBeginSize = 0.15f;
     fireDesc.particleEndSize = 0.f;
@@ -97,7 +97,7 @@ void SceneParticlesTest::OnInit(Device* _pDevice)
     fire = ParticleManager::Instance()->CreateEmitter({ 0, 2, 0 }, fireDesc, 0.2f);
 
     ParticleDesc rainDesc;
-    rainDesc.amount = 0;
+    rainDesc.amount = 1000;
     rainDesc.spawnRadius = 12.5f;
     rainDesc.particleBeginSize = 0.025f;
     rainDesc.particleEndSize = 0.025f;

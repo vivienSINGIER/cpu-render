@@ -24,15 +24,19 @@ void ParticleManager::Spawn(glm::vec3 _center, ParticleDesc _desc)
 	}
 
 	//return a random val between 0 and 1
-	auto rand_ratio = [&]() -> float
+	auto rand_ratio = [&](int i) -> float
 		{
-			return (float)((float)rand() / (float)RAND_MAX);
+			thread_local std::mt19937 t(i);
+			std::uniform_real_distribution<float> d(0.f, 1.f);
+
+			return d(t);
 		};
 
 	//return a random val in [min, max]
-	auto rand_range = [&](float min = -1.f, float max = 1.f) -> float
+	auto rand_range = [&](int i, float min = -1.f, float max = 1.f) -> float
 		{
-			return min + (max - min) * rand_ratio();
+			thread_local std::mt19937 t(i);
+			return min + (max - min) * rand_ratio(i);
 		};
 
 	float spawnRadius = _desc.spawnRadius;
@@ -44,19 +48,19 @@ void ParticleManager::Spawn(glm::vec3 _center, ParticleDesc _desc)
 		int current_index = (m_freeOffset + i) % MAX_PARTICLES;
 
 		UavParticle p;
-		p.pos = glm::vec3(_center.x + rand_range(-spawnRadius, spawnRadius), _center.y + rand_range(-spawnRadius, spawnRadius), _center.z + rand_range(-spawnRadius, spawnRadius));
+		p.pos = glm::vec3(_center.x + rand_range(i, -spawnRadius, spawnRadius), _center.y + rand_range(i, -spawnRadius, spawnRadius), _center.z + rand_range(i, -spawnRadius, spawnRadius));
 		p.beginSize = _desc.particleBeginSize;
 		p.endSize = _desc.particleEndSize;
 
-		p.speed = rand_range(_desc.minSpeed, _desc.maxSpeed);
+		p.speed = rand_range(i, _desc.minSpeed, _desc.maxSpeed);
 		p.beginColor = _desc.beginColor;
 		p.endColor = _desc.endColor;
 
-		p.lifeTime = rand_range(_desc.minLifeTime, _desc.maxLifeTime);
+		p.lifeTime = rand_range(i, _desc.minLifeTime, _desc.maxLifeTime);
 		p.maxLifeTime = p.lifeTime;
 
 		//TODO EDIT
-		p.dir = glm::normalize(glm::vec3(rand_range(_desc.floorDir.x, _desc.ceilDir.x), rand_range(_desc.floorDir.y, _desc.ceilDir.y), rand_range(_desc.floorDir.z, _desc.ceilDir.z)));
+		p.dir = glm::normalize(glm::vec3(rand_range(i, _desc.floorDir.x, _desc.ceilDir.x), rand_range(i, _desc.floorDir.y, _desc.ceilDir.y), rand_range(i, _desc.floorDir.z, _desc.ceilDir.z)));
 		p.rotationRad = 0.f;
 		p.rotSpeed = _desc.rotationSpeed;
 
