@@ -1,5 +1,5 @@
 ﻿#include "GeometryFactory.h"
-
+#include <iostream>
 #include <algorithm>
 #include <cassert>
 #include <cmath>
@@ -12,7 +12,7 @@
 #include <glm/gtc/constants.hpp>
 
 #include "../Core/GraphicsContext.h"
-
+ 
 void GeometryFactory::Init(GraphicsContext* _pContext)
 {
 	assert(g_instance == nullptr && "GeometryFactory already initialized");
@@ -644,6 +644,30 @@ Mesh GeometryFactory::LoadMesh(std::string const& _path)
 
 	vertices = CalculateNormalsAndTangents(vertices, indices);
 
+	for (Vertex& v : vertices)
+	{
+		const auto& p = v.position;
+		const auto& uv = v.uv;
+		const auto& c = v.color;
+		const auto& n = v.normal;
+		const auto& t = v.tangent;
+
+		if (p.x != p.x || p.y != p.y || p.z != p.z)
+			std::cout << "NaN Position !!!\n";
+
+		if (uv.x != uv.x || uv.y != uv.y)
+			std::cout << "NaN UV !!!\n";
+
+		if (c.x != c.x || c.y != c.y || c.z != c.z)
+			std::cout << "NaN Color !!!\n";
+
+		if (t.x != t.x || t.y != t.y || t.z != t.z)
+			std::cout << "NaN Tangente !!!\n";
+
+		if (n.x != n.x || n.y != n.y || n.z != n.z)
+			std::cout << "NaN Normal !!!\n";
+	}
+
 	return CreateMesh(vertices, indices);
 }
 
@@ -802,7 +826,13 @@ std::vector<Vertex> GeometryFactory::CalculateNormalsAndTangents(std::vector<Ver
 		// Tangente
 		float du1 = v1.uv.x - v0.uv.x, dv1 = v1.uv.y - v0.uv.y;
 		float du2 = v2.uv.x - v0.uv.x, dv2 = v2.uv.y - v0.uv.y;
-		float f = 1.0f / (du1 * dv2 - du2 * dv1);
+
+		float det = (du1 * dv2 - du2 * dv1);
+
+		if (det == 0)
+			det = 1e-8f;
+
+		float f = 1.0f / det;
 	
 		glm::vec3 faceTangent = f * (dv2 * e1 - dv1 * e2);
 	
@@ -825,7 +855,7 @@ std::vector<Vertex> GeometryFactory::CalculateNormalsAndTangents(std::vector<Ver
 		// On stocke souvent la tangente en float4 (x, y, z, w) pour la bitangente
 		_vertices[i].tangent = T; 
 	}
-	
+
 	return _vertices;
 }
 

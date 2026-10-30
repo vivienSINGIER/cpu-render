@@ -149,7 +149,8 @@ glm::vec4 Texture::SampleNPCube(glm::vec3 _dir) const
 
 glm::vec4 Texture::Load(uint32 _x, uint32 _y) const
 {
-    vec4 c = m_data[GetIndex(_x, _y)];
+    uint32_t index = GetIndex(_x, _y);
+    vec4 c = m_data[index];
 
     switch (m_format)
     {

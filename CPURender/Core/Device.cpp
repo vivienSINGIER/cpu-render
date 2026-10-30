@@ -143,12 +143,12 @@ void Device::Present(Handle _texH)
 		uint32_t x = i % WIDTH;
 		
 		glm::vec4 v;
-		
+
 		if (match)
 			v = fb->Load(x, y);
 		else
 			v = fb->SampleNP({ ((float)x + 0.5f) / (float)WIDTH, ((float)y + 0.5f) / (float)HEIGHT });
-		
+
 		bool isClear = v == m_boundFB.clearColor; 
 			
 		vec3 mapped = vec3(v);

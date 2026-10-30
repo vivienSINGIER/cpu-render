@@ -28,13 +28,15 @@ private:
     Handle m_CS_handle;
     Material m_particleMat;
 
+    Material m_unlit;
+
     Handle m_uav_buffer;
     UAVView m_uav_view;
 
     Mesh mesh_particle;
 
 
-    Object* sphere = nullptr;
+    Object* obj = nullptr;
     ParticleEmitter fire;
     ParticleEmitter rain;
 };
