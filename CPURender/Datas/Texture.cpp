@@ -5,6 +5,9 @@
 #include <cassert>
 #include <glm/common.hpp>
 #include <glm/exponential.hpp>
+#include <glm/geometric.hpp>
+#include <glm/trigonometric.hpp>
+#include <glm/ext/scalar_constants.hpp>
 
 #include "../stb_image.h"
 
@@ -89,6 +92,61 @@ glm::vec4 Texture::SampleNP(glm::vec2 uv) const
     return Load(x, y);
 }
 
+glm::vec4 Texture::SampleNPCube(glm::vec3 _dir) const
+{
+    enum Side { FRONT = 0, BACK, LEFT, RIGHT, UP, DOWN };
+    Side cubemapSide;
+    float absX = abs(_dir.x);
+    float absY = abs(_dir.y);
+    float absZ = abs(_dir.z);
+
+    if (absX >= absY && absX >= absZ) // x major
+    {
+        cubemapSide = _dir.x < 0 ? LEFT : RIGHT;
+    }
+    else if (absY >= absX && absY >= absZ) // y major
+    {
+        cubemapSide = _dir.y < 0 ? DOWN : UP;
+    }
+    else // z major
+    {
+        cubemapSide = _dir.z < 0 ? BACK : FRONT;
+    }
+
+    const float s = 1.0f / 3.0f;
+    int xOffset = (cubemapSide % 2);
+    int yOffset = (cubemapSide / 2);
+    glm::vec2 uvOffset = glm::vec2(xOffset * s, yOffset * s);
+    glm::vec2 uv;
+    
+    float maxAbs = glm::max(absX, glm::max(absY, absZ));
+    vec3 d = _dir / maxAbs;
+    
+    switch (cubemapSide)
+    {
+    case FRONT:
+        uv = { (d.x + 1) / 2 , 1 - ((d.y + 1) / 2) };
+        break;
+    case BACK:
+        uv = { (-d.x + 1) / 2 , 1 - ((d.y + 1) / 2) };
+        break;
+    case LEFT:
+        uv = { (d.z + 1) / 2 , 1 - ((d.y + 1) / 2) };
+        break;
+    case RIGHT:
+        uv = { (-d.z + 1) / 2 , 1 - ((d.y + 1) / 2) };
+        break;
+    case UP:
+        uv = { (d.x + 1) / 2 , 1 - ((-d.z + 1) / 2) };
+        break;
+    case DOWN:
+        uv = { (d.x + 1) / 2 , 1 - ((d.z + 1) / 2) };
+        break;
+    }
+
+    return SampleNP(uv*s + uvOffset);
+}
+
 glm::vec4 Texture::Load(uint32 _x, uint32 _y) const
 {
     vec4 c = m_data[GetIndex(_x, _y)];
@@ -130,6 +188,43 @@ Texture Texture::ToLinear() const
     return t;
 }
 
+void Texture::BakeIrradiance(Texture* _src, Texture* _dst, uint32_t _faceSize)
+{
+#pragma omp parallel for
+    for (int32_t y = 0; y < _dst->Height(); ++y)
+    {
+        for (int32_t x = 0; x < _dst->Width(); ++x)
+        {
+            vec3 N;
+            if (!TexelToCubeDir(x, y, _faceSize, N))
+                continue;
+            
+            vec3 up = glm::abs(N.y) < 0.999f ? glm::vec3(0.0f, 1.0f, 0.0f) : glm::vec3(1.0f, 0.0f, 0.0f);
+            vec3 right = normalize(cross(up, N));
+            up = cross(N, right);
+            
+            vec3 irradience(0.0f);
+            
+            float sampleDelta = 0.05f;
+            float nrSamples = 0.0f;
+            
+            for (float phi = 0.0f; phi < 2.0f * pi<float>(); phi += sampleDelta)
+            {
+                for (float theta = 0.0f; theta < 0.5f * pi<float>(); theta += sampleDelta)
+                {
+                    vec3 ts = vec3(sin(theta) * cos(phi), sin(theta) * sin(phi), cos(theta));
+                    vec3 sampleDir = ts.x * right + ts.y * up + ts.z * N;
+                    
+                    irradience += _src->SampleNPCube(sampleDir) * cos(theta) * sin(theta);
+                    nrSamples += 1.0f;
+                }
+            }
+            irradience = pi<float>() * irradience * (1.0f / nrSamples);
+            _dst->Store(x, y, vec4(irradience, 1.0f));
+        }
+    }
+}
+
 void Texture::Load(std::string const& _filePath, bool _isSrgb)
 {
     static int nbrChannel;
@@ -157,7 +252,6 @@ void Texture::Load(std::string const& _filePath, bool _isSrgb)
                 m_data[index].r = glm::pow(m_data[index].r, 2.2f);
                 m_data[index].g = glm::pow(m_data[index].g, 2.2f);
                 m_data[index].b = glm::pow(m_data[index].b, 2.2f);
-                m_data[index].a = glm::pow(m_data[index].a, 2.2f);
             }
         }
     }
@@ -173,6 +267,34 @@ Texture::Format Texture::GetFormat() const
 vec4* Texture::GetData()
 {
     return m_data.data();
+}
+
+bool Texture::TexelToCubeDir(uint32_t _x, uint32_t _y, uint32_t _faceSize, vec3& _outDir)
+{
+    uint32_t col = _x / _faceSize;
+    uint32_t row = _y / _faceSize;
+    
+    if (col > 1 || row > 2)
+        return false;
+    
+    uint32_t face = col + row * 2;
+    
+    float a = ((float)(_x % _faceSize) + 0.5f) / (float)_faceSize;
+    float b = ((float)(_y % _faceSize) + 0.5f) / (float)_faceSize;
+    float u = 2.0f * a - 1.0f;
+    float v = 1.0f - b * 2.0f; // inverted uv.y
+    
+    switch (face)
+    {
+        case 0: _outDir = { u, v, 1.0f }; break;    // FRONT
+        case 1: _outDir = { -u, v, -1.0f }; break;  // BACK
+        case 2: _outDir = { -1.0f, v, u }; break;   // LEFT
+        case 3: _outDir = { 1.0f, v, -u  }; break;  // RIGHT
+        case 4: _outDir = { u, 1.0f, -v }; break;   // UP
+        case 5: _outDir = { u, -1.0f, v }; break;   // DOWN
+    }
+    _outDir = glm::normalize(_outDir);
+    return true;
 }
 
 uint32 Texture::GetIndex(uint32 _x, uint32 _y) const

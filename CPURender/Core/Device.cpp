@@ -116,13 +116,13 @@ void Device::EndFrame()
 			std::visit([this](auto const& _cmd) { ExecCommand(_cmd); }, d);	
 	}
 	
-	
 	m_ctx.SetHeapsState(HeapState::FREE);
 }
 
 void Device::Present(Handle _texH)
 {
 	Texture* fb = m_ctx.textureHeap.Get(_texH);
+	Texture* depth = m_boundFB.useDepth ? m_ctx.textureHeap.Get(m_boundFB.depthBuffer) : nullptr;
 	
 	uint32_t width = fb->Width();
 	uint32_t height = fb->Height();
@@ -157,15 +157,19 @@ void Device::Present(Handle _texH)
 		else if (isClear == false)
 		{
 			vec3 hdr = vec3(v);
-			logSum += glm::log(1e-4f + glm::max(Lighting::Luminance(hdr), 0.0f)); // start at small positive value to avoid inf from log on negative number
 			
-			vec3 c = hdr * exposure * 0.6f;
-			float L = Lighting::Luminance(c);
+			logSum += glm::log(1e-4f + glm::max(Lighting::Luminance(hdr), 0.0f)); // start at small positive value to avoid inf from log on negative number
+			count++;
+			
+			vec3 c = hdr * exposure;
+			// float L = Lighting::Luminance(c);
+			// mapped = c / (c + 1.0f);
 			// mapped = c * ((L / (1.0f + L)) / glm::max(L, 1e-6f)); // map to [0, 1], prevent division by zero on black pixels <- Reinhard approximation
 			mapped = glm::clamp((c * (2.51f * c + 0.03f)) / (c * (2.43f * c + 0.59f) + 0.14f), 0.0f, 1.0f); // Narkowicz approximation of the ACES film curve
 
 			count++;
 		}
+		
 		m_renderTarget->Store(x, HEIGHT - y - 1, vec4(mapped, 1.0f));
 	
 	}
@@ -176,7 +180,6 @@ void Device::Present(Handle _texH)
 		m_adaptedLum += (avgLum - m_adaptedLum) * (1 - exp(-m_pendingPasses[m_activePass].desc.passData.deltaTime)); // TODO use dt
 		m_adaptedLum = glm::clamp(m_adaptedLum, 0.01f, 100.0f); // avoid extreme exposure 
 	}
-
 	m_pendingPasses.clear();
 }
 

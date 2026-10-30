@@ -147,6 +147,7 @@
     <ClCompile Include="Clipping.cpp" />
     <ClCompile Include="Core\Device.cpp" />
     <ClCompile Include="Core\GraphicsContext.cpp" />
+    <ClCompile Include="Cubemap.cpp" />
     <ClCompile Include="Datas\Mesh.cpp" />
     <ClCompile Include="Datas\Object.cpp" />
     <ClCompile Include="Datas\Particle.cpp" />
@@ -163,6 +164,7 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Maths\PerlinNoise.cpp" />
     <ClCompile Include="Octree.cpp" />
+    <ClCompile Include="Scenes\PBR_Scene.cpp" />
     <ClCompile Include="Scenes\Scene.cpp" />
     <ClCompile Include="Scenes\SceneParticlesTest.cpp" />
     <ClCompile Include="Scenes\TexturedBP_Scene.cpp" />
@@ -184,11 +186,13 @@
     <ClInclude Include="Core\Device.h" />
     <ClInclude Include="Core\FrameBuffer.hpp" />
     <ClInclude Include="Core\GraphicsContext.h" />
+    <ClInclude Include="Cubemap.h" />
     <ClInclude Include="Datas\Color.h" />
     <ClInclude Include="Datas\ConstantBuffers.hpp" />
     <ClInclude Include="Datas\DrawCommand.h" />
     <ClInclude Include="Datas\Lights\LightData.hpp" />
     <ClInclude Include="Datas\Lights\LightHelpers.hpp" />
+    <ClInclude Include="Datas\Lights\PBRHelpers.hpp" />
     <ClInclude Include="Datas\Mesh.h" />
     <ClInclude Include="Datas\Morton.hpp" />
     <ClInclude Include="Datas\Object.h" />
@@ -222,6 +226,7 @@
     <ClInclude Include="Maths\Ray.h" />
     <ClInclude Include="Maths\Transform.h" />
     <ClInclude Include="Octree.h" />
+    <ClInclude Include="Scenes\PBR_Scene.h" />
     <ClInclude Include="Scenes\Scene.h" />
     <ClInclude Include="Scenes\SceneParticlesTest.h" />
     <ClInclude Include="Scenes\TexturedBP_Scene.h" />
@@ -229,6 +234,10 @@
     <ClInclude Include="Shaders\ComputeShaders\GammaCorrection_CS.hpp" />
     <ClInclude Include="Shaders\ComputeShaders\ParticleCS.hpp" />
     <ClInclude Include="Shaders\GraphicsShaders\UnlitParticle.hpp" />
+    <ClInclude Include="Shaders\GraphicsShaders\LitC_BP_Cube.hpp" />
+    <ClInclude Include="Shaders\GraphicsShaders\PBR.hpp" />
+    <ClInclude Include="Shaders\GraphicsShaders\LitT_BP_Cube.hpp" />
+    <ClInclude Include="Shaders\GraphicsShaders\UnlitSkybox.hpp" />
     <ClInclude Include="Shaders\ShaderBase\Material.h" />
     <ClInclude Include="Shaders\ShaderBase\Material.inl" />
     <ClInclude Include="Shaders\ShaderBase\ResourceLayout.hpp" />

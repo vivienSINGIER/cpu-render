@@ -33,6 +33,7 @@ public:
     void SetSize(uint32 _width, uint32 _height);
     
     glm::vec4 SampleNP(glm::vec2 uv) const; // nearest point, format aware
+    glm::vec4 SampleNPCube(glm::vec3 _dir) const; 
     
     // vec4 is always (r, g, b, a)
     glm::vec4   Load(uint32 _x, uint32 _y) const;
@@ -45,6 +46,9 @@ public:
     void SetPixelData(uint32 _x, uint32 _y, T _data);
     
     vec4* GetData();
+    
+    static void BakeIrradiance(Texture* _src, Texture* _dst, uint32_t _faceSize);
+    static bool TexelToCubeDir(uint32_t _x, uint32_t _y, uint32_t _faceSize, vec3& _outDir);
     
 private:
     std::vector<vec4> m_data;

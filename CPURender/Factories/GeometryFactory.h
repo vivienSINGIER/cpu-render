@@ -16,6 +16,7 @@ public:
 
 	Mesh BuildPyramid(bool _randomColors = false);
 	Mesh BuildCube(bool _randomColors = false);
+	Mesh BuildSkybox();
 	Mesh BuildTriangle(bool _randomColors = false);
 	Mesh BuildIcosphere(int _subdivisions, bool _randomColors = false);
 	Mesh BuildUVSphere(uint8_t _sliceCount, uint8_t _stackCount, bool _randomColors = false);

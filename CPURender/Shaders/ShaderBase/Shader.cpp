@@ -67,6 +67,17 @@ glm::vec4 Shader::Sample(int _slot, glm::vec2 _uv) const
     return tex->SampleNP(_uv);
 }
 
+glm::vec4 Shader::SampleCube(int _slot, glm::vec3 _dir) const
+{
+    assert(m_r && "shader executed without bound ressources");
+    assert(_slot >= 0 && _slot < MAX_TEX && "Texture slot index out of bounds");
+    assert(m_r->textures[_slot] != nullptr && "Can't access texture data");
+
+    Texture const* tex = m_r->textures[_slot];
+
+    return tex->SampleNPCube(_dir);
+}
+
 glm::vec4 Shader::Load(uint32_t _slot, int _x, int _y) const
 {
     assert(m_r && "shader executed without bound ressources");

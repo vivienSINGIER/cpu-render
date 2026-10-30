@@ -7,6 +7,7 @@
 #include "../Maths/Transform.h"
 #include "../Core/FrameBuffer.hpp"
 #include "../Shaders/ShaderBase/Material.h"
+#include "../Cubemap.h"
 
 class Transparency_Scene : public Scene
 {
@@ -25,6 +26,11 @@ private:
     Material m_glassMat;
     Material m_tintedMat;
     Material m_metalMat;
+
+    Material m_skyboxMat;
+    bool m_toggleSkybox = false;
+    Object* skyboxObject = nullptr;
+    PassDesc m_skyboxPass;
 
     int m_blendIndex = Blending::ALPHA;
     PassDesc m_mainPass;

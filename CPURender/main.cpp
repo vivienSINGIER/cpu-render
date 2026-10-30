@@ -11,6 +11,7 @@
 #include "Scenes/SceneParticlesTest.h"
 
 #include "Core/Device.h"
+#include "Scenes/PBR_Scene.h"
 #include "Scenes/Transparency_Scene.h"
 //Students cannot change anything in this file
 

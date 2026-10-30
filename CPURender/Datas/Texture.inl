@@ -7,7 +7,7 @@
 template <typename T>
 T Texture::GetPixelData(uint32 _x, uint32 _y)
 {
-    static_assert(sizeof(T) == sizeof(glm::vec4), "T must be 32 bit type");
+    static_assert(sizeof(T) == sizeof(glm::vec4), "T must be 128 bit type");
     
     uint32 i = GetIndex(_x, _y);
     return std::bit_cast<T>(m_data.at(i));
@@ -16,7 +16,7 @@ T Texture::GetPixelData(uint32 _x, uint32 _y)
 template <typename T>
 void Texture::SetPixelData(uint32 _x, uint32 _y, T _data)
 {
-    static_assert(sizeof(T) == sizeof(glm::vec4), "T must be 32 bit type");
+    static_assert(sizeof(T) == sizeof(glm::vec4), "T must be 128 bit type");
     uint32 i = GetIndex(_x, _y);
     m_data.at(i) = std::bit_cast<vec4>(_data);
 }
