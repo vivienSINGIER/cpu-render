@@ -167,6 +167,7 @@
     <ClCompile Include="Scenes\Scene.cpp" />
     <ClCompile Include="Scenes\TexturedBP_Scene.cpp" />
     <ClCompile Include="Scenes\Transparency_Scene.cpp" />
+    <ClCompile Include="Shaders\ComputeShaders\TexCopy_CS.cpp" />
     <ClCompile Include="Shaders\ShaderBase\Material.cpp" />
     <ClCompile Include="Shaders\ShaderBase\Shader.cpp" />
     <ClCompile Include="Shaders\ShaderBase\ShaderGroup.cpp" />
@@ -227,7 +228,9 @@
     <ClInclude Include="Scenes\Scene.h" />
     <ClInclude Include="Scenes\TexturedBP_Scene.h" />
     <ClInclude Include="Scenes\Transparency_Scene.h" />
+    <ClInclude Include="Shaders\ComputeShaders\FB_Fusion_CS.hpp" />
     <ClInclude Include="Shaders\ComputeShaders\GammaCorrection_CS.hpp" />
+    <ClInclude Include="Shaders\ComputeShaders\TexCopy_CS.hpp" />
     <ClInclude Include="Shaders\GraphicsShaders\LitC_BP_Cube.hpp" />
     <ClInclude Include="Shaders\GraphicsShaders\LitC_BP_Transparent.hpp" />
     <ClInclude Include="Shaders\GraphicsShaders\PBR.hpp" />

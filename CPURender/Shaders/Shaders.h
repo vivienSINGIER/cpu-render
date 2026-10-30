@@ -14,7 +14,9 @@
 
 #include "GraphicsShaders/PBR.hpp"
 
+#include "ComputeShaders/FB_Fusion_CS.hpp"
 #include "ComputeShaders/GroupDebug_CS.hpp"
 #include "ComputeShaders/GammaCorrection_CS.hpp"
+#include "ComputeShaders/TexCopy_CS.hpp"
 
 #endif

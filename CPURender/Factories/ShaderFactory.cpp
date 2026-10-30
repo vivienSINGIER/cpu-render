@@ -115,6 +115,8 @@ void ShaderFactory::RegisterPrebuilts()
     RegisterGroup<PBR_VS, PBR_PS>("PBR");
     RegisterGroup<LitT_BP_Cube_VS, LitT_BP_Cube_PS>("LitT_BP_Cube");
 
+    RegisterCompute<FB_Fusion_CS>("FBFusion");
     RegisterCompute<GroupDebug_CS>("GroupDebug");
     RegisterCompute<GammaCorr_CS>("GammaCorrect");
+    RegisterCompute<TexCopy_CS>("TexCopy");
 }

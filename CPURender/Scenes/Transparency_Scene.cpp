@@ -25,32 +25,35 @@ void Transparency_Scene::InitLightScene()
 
 void Transparency_Scene::OnInit(Device* _pDevice)
 {
-    m_presentTarget = _pDevice->GetDefaultFrameBuffer().gBuffer[0];
-
     InitLightScene();
 
-    FrameBuffer worldFB = _pDevice->CreateFrameBuffer(WIDTH, HEIGHT, 1, true, glm::vec4(0, 0, 0, 1));
-    //FrameBuffer worldFB = _pDevice->GetDefaultFrameBuffer();
+    FrameBuffer refractedFB = _pDevice->CreateFrameBuffer(WIDTH, HEIGHT, 1, true, glm::vec4(0, 0, 0, 1));
+    //m_presentTarget = refractedFB.depthBuffer;
+    m_presentTarget = _pDevice->GetDefaultFrameBuffer().gBuffer[0];
+    //m_presentTarget = _pDevice->GetDefaultFrameBuffer().depthBuffer;
+    //m_presentTarget = refractedFB.gBuffer[0];
 
-    m_skyboxPass.fb = worldFB;
+    m_skyboxPass.fb = _pDevice->GetDefaultFrameBuffer();
     m_skyboxPass.fb.depthBuffer = _pDevice->GetDefaultFrameBuffer().depthBuffer;
     m_skyboxPass.state.depthTest = false;
     m_skyboxPass.state.depthWrite = false;
     //m_skyboxPass.clearFlags.clearDepth = false;
 
-    m_mainPass.fb = worldFB;
+    m_mainPass.fb = _pDevice->GetDefaultFrameBuffer();
     m_mainPass.fb.depthBuffer = _pDevice->GetDefaultFrameBuffer().depthBuffer;
-    m_mainPass.state.blendMode = (Blending::BlendMode)m_blendIndex;
+    m_mainPass.state.blendMode = Blending::BlendMode::OPAQUE;
     m_mainPass.state.cullMode = CullMode::BACK;
     m_mainPass.clearFlags.clearGBuffer[0] = false;
     m_mainPass.clearFlags.clearDepth = false;
 
-    m_refractionPass.fb = _pDevice->GetDefaultFrameBuffer();
-    worldFB.depthBuffer = m_refractionPass.fb.depthBuffer;
-    m_refractionPass.state.blendMode = (Blending::BlendMode)m_blendIndex;
+    m_refractionPass.fb = refractedFB;
+    m_refractionPass.state.blendMode = Blending::BlendMode::OPAQUE;
     m_refractionPass.state.cullMode = CullMode::BACK;
     //m_refractionPass.clearFlags.clearGBuffer[0] = false;
     m_refractionPass.clearFlags.clearDepth = false;
+
+    m_postProcPass.isCompute = true;
+    m_depthCopyPass.isCompute = true;
 
     _pDevice->SetLightData(m_lightData);
 
@@ -64,8 +67,17 @@ void Transparency_Scene::OnInit(Device* _pDevice)
     LitC_BP_Cube_PS::MaterialCB opaqueCB = { {0.9f, 0.2f, 0.2f, 1.0f}, Lighting::g_fresnelR0Templates[PLASTIC], 0.5f, 0.0f, 0.0f, 1.7f, false };
     LitC_BP_Cube_PS::MaterialCB glassCB = { {0.2f, 0.4f, 0.9f, 1.0f}, Lighting::g_fresnelR0Templates[GLASS],   0.1f, 0.0f, 1.0f, 1.7f, true };
     LitC_BP_Cube_PS::MaterialCB tintedCB = { {1.0f, 1.0f, 1.0f, 1.0f}, Lighting::g_fresnelR0Templates[PLASTIC], 0.4f, 0.0f, 0.95f, 1.7f, true };
-    //LitC_BP_Cube_PS::MaterialCB metalCB = { {0.9f, 0.8f, 0.3f, 1.0f}, Lighting::g_fresnelR0Templates[CRYSTAL], 0.2f, 0.5f, 0.5f, 1.7f, true };
-    LitC_BP_Transparent_PS::MaterialCB transparentCB = { {0.9f, 0.8f, 0.3f, 1.0f}, Lighting::g_fresnelR0Templates[CRYSTAL], 0.2f, 0.5f, 0.5f, 1.0f, true, {WIDTH, HEIGHT} };
+    LitC_BP_Transparent_PS::MaterialCB transparentCB = { {1.0f, 1.0f, 1.0f, 1.0f}, Lighting::g_fresnelR0Templates[CRYSTAL], 0.2f, 0.5f, 0.8f, 1.02f, true, {WIDTH, HEIGHT} };
+
+    m_postProcMat = ShaderFactory::Instance()->CreateComputeMaterial("FBFusion");
+    m_postProcMat->SetRWTexture(FB_Fusion_CS::UAV_SLOT_target1, m_mainPass.fb.gBuffer[0]);
+    m_postProcMat->SetRWTexture(FB_Fusion_CS::UAV_SLOT_target2, m_refractionPass.fb.gBuffer[0]);
+    m_postProcMat->SetRWTexture(FB_Fusion_CS::UAV_SLOT_target1db, m_mainPass.fb.depthBuffer);
+    m_postProcMat->SetRWTexture(FB_Fusion_CS::UAV_SLOT_target2db, m_refractionPass.fb.depthBuffer);
+
+    m_depthCopyMat = ShaderFactory::Instance()->CreateComputeMaterial("TexCopy");
+    m_depthCopyMat->SetRWTexture(TexCopy_CS::UAV_SLOT_source, m_mainPass.fb.depthBuffer);
+    m_depthCopyMat->SetRWTexture(TexCopy_CS::UAV_SLOT_target, m_refractionPass.fb.depthBuffer);
 
     Mesh sphere = GeometryFactory::Instance()->BuildUVSphere(20, 20);
     Mesh cube = GeometryFactory::Instance()->BuildCube();
@@ -94,7 +106,8 @@ void Transparency_Scene::OnInit(Device* _pDevice)
     m_transparentMat = ShaderFactory::Instance()->CreateMaterial("LitC_BP_Transparent");
     m_transparentMat->SetParams<LitC_BP_Transparent_PS::MaterialCB>(LitC_BP_Transparent_PS::CB_SLOT_mat, transparentCB);
     m_transparentMat->SetTexture(LitC_BP_Transparent_PS::TEX_SLOT_cubemap, cubemap.GetTexture());
-    m_transparentMat->SetTexture(LitC_BP_Transparent_PS::TEX_SLOT_framebufferTex, worldFB.gBuffer[0]);
+    m_transparentMat->SetTexture(LitC_BP_Transparent_PS::TEX_SLOT_framebufferTex, m_mainPass.fb.gBuffer[0]);
+    m_transparentMat->SetTexture(LitC_BP_Transparent_PS::TEX_SLOT_framebufferDepth, m_mainPass.fb.depthBuffer);
 
     Object* floor = CreateObject(DYNAMIC);
     floor->mesh = cube;
@@ -104,7 +117,7 @@ void Transparency_Scene::OnInit(Device* _pDevice)
     floor->drawMask = OPAQUE;
 
     Object* back = CreateObject(DYNAMIC);
-    back->mesh = sphere;
+    back->mesh = cube;
     back->mat = m_opaqueMat.get();
     back->transform.SetPosition(glm::vec3(0.0f, 0.0f, 3.0f));
     back->transform.SetScale(glm::vec3(1.5f));
@@ -180,13 +193,17 @@ void Transparency_Scene::OnDraw(Device* _pDevice)
         DrawObjects(_pDevice, m_camera.GetFrustum(), OPAQUE);
     _pDevice->EndPass();
 
+   _pDevice->BeginPass(m_depthCopyPass);
+       _pDevice->Dispatch(m_depthCopyMat.get(), ceil(WIDTH / 32.0f), ceil(HEIGHT / 32.0f), 1);
+   _pDevice->EndPass();
+
     _pDevice->BeginPass(m_refractionPass);
         DrawObjects(_pDevice, m_camera.GetFrustum(), TRANSPARENT);
     _pDevice->EndPass();
 
-    //_pDevice->BeginPass(m_postProcPass);
-    //    _pDevice->Dispatch(m_postProcMat.get(), WIDTH, HEIGHT, 1);
-    //_pDevice->EndPass();
+   _pDevice->BeginPass(m_postProcPass);
+       _pDevice->Dispatch(m_postProcMat.get(), ceil(WIDTH / 32.0f), ceil(HEIGHT / 32.0f), 1);
+   _pDevice->EndPass();
 
 
 }

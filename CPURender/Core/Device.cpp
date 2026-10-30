@@ -466,8 +466,8 @@ void Device::RasterStep(std::vector<Vertex_OUT> const& _vBuffer, ShaderStages _s
 	if (m_boundFB.gBuffer[0].IsValid() == false && m_boundFB.useDepth == false)
 		return;
 	
-//#pragma omp parallel
-//#pragma omp for schedule(dynamic)
+#pragma omp parallel
+#pragma omp for schedule(dynamic)
 	for (int i = 0; i < tiles.Count(); i++)
 	{
 		Binning::Tile const& t = tiles[i];
