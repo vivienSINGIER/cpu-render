@@ -5,7 +5,7 @@
 
 #include "../Heaps/Handle.hpp"
 
-#define MAX_PARTICLES 100'000
+#define MAX_PARTICLES 32'000
 
 struct alignas(128) UavParticle
 {
@@ -24,13 +24,17 @@ struct alignas(128) UavParticle
 	float maxLifeTime = 0.001f;
 	float lifeTime = 0;
 	float size = 0;
+
+	float beginSize = 0;
+	float endSize = 0;
 };
  
 struct alignas(16) ParticleDesc
 {
 	size_t amount = 100;
 	float spawnRadius = 0.f;
-	float particleSize = 0.1f;
+	float particleBeginSize = 0.1f;
+	float particleEndSize = 0.1f;
 
 	glm::vec3 floorDir = { -1, -1, -1 };
 	float minLifeTime = 1.f;

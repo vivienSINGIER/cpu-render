@@ -33,6 +33,9 @@ private:
 
     Mesh mesh_particle;
 
+
+    Object* sphere = nullptr;
+    ParticleEmitter fire;
     ParticleEmitter rain;
 };
 

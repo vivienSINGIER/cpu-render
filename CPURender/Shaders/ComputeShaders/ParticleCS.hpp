@@ -32,7 +32,10 @@ public:
 		p.lifeTime -= dt;
 		p.rotationRad += p.rotSpeed * dt;
 
-		p.color = p.endColor + (p.beginColor - p.endColor) * (p.lifeTime / p.maxLifeTime);
+		float ratio = p.lifeTime / p.maxLifeTime;
+
+		p.size = p.endSize + (p.beginSize - p.endSize) * ratio;
+		p.color = p.endColor + (p.beginColor - p.endColor) * ratio;
 
 		Store_data(_id.x, p);
 	}

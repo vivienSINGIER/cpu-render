@@ -54,7 +54,7 @@ private:
 	float m_camYaw = 0.0f;
 	float m_camPitch = 0.0f;
 
-	bool m_showFps = false; // toggled with F
+	bool m_showFps = true; // toggled with F
 	float m_fpsTimer = 0.0f;
 	uint32_t m_fpsFrames = 0;
 

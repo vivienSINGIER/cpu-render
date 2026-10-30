@@ -52,10 +52,10 @@ void SceneParticlesTest::OnInit(Device* _pDevice)
     m_mat->SetTexture(LitT_BP_PS::TEX_SLOT_displacement, displacement);
     m_mat->SetTexture(LitT_BP_PS::TEX_SLOT_metal, metalness);
 
-    Object* o = CreateObject(DYNAMIC);
-    o->mesh = m;
-    o->mat = m_mat.get();
-    o->transform.SetPosition(glm::vec3(0, 2, 0));
+    sphere = CreateObject(DYNAMIC);
+    sphere->mesh = m;
+    sphere->mat = m_mat.get();
+    sphere->transform.SetPosition(glm::vec3(0, 2, 0));
 
     Object* floor = CreateObject(DYNAMIC);
     floor->mesh = cube;
@@ -78,21 +78,40 @@ void SceneParticlesTest::OnInit(Device* _pDevice)
     BufferFactory::Instance()->Fill(m_uav_buffer, UavParticle());
     ParticleManager::Instance()->m_uavBuffer = m_uav_buffer;
 
-    ParticleDesc desc2;
-    desc2.amount = 1000;
-    desc2.spawnRadius = 8.f;
-    desc2.particleSize = 0.025f;
-    desc2.rotationSpeed = 0.f;
-    desc2.floorDir = glm::vec3(-0.15f, -1, -0.15f);
-    desc2.ceilDir = glm::vec3(0.15f, -0.5f, 0.15f);
-    desc2.minSpeed = 1.f;
-    desc2.maxSpeed = 15.f;
-    desc2.beginColor = glm::vec4(1, 1, 1, 1);
-    desc2.endColor = glm::vec4(0, 0, 0, 1);
-    desc2.minLifeTime = 1.f;
-    desc2.maxLifeTime = 1.f;
+    ParticleDesc fireDesc;
+    fireDesc.amount = 200;
+    fireDesc.spawnRadius = 0.9f;
+    fireDesc.particleBeginSize = 0.15f;
+    fireDesc.particleEndSize = 0.f;
 
-    rain = ParticleManager::Instance()->CreateEmitter({0, 5, 0}, desc2, 0.1f);
+    fireDesc.rotationSpeed = 10.f;
+    fireDesc.floorDir = glm::vec3(-0.25f, 0.5f, -0.25f);
+    fireDesc.ceilDir = glm::vec3(0.25f, 1, 0.25f);
+    fireDesc.minSpeed = 0.33f;
+    fireDesc.maxSpeed = 3.f;
+    fireDesc.beginColor = glm::vec4(1, 0, 0, 1);
+    fireDesc.endColor = glm::vec4(1, 1, 0, 1);
+    fireDesc.minLifeTime = 1.f;
+    fireDesc.maxLifeTime = 3.f;
+
+    fire = ParticleManager::Instance()->CreateEmitter({ 0, 2, 0 }, fireDesc, 0.2f);
+
+    ParticleDesc rainDesc;
+    rainDesc.amount = 750;
+    rainDesc.spawnRadius = 12.5f;
+    rainDesc.particleBeginSize = 0.025f;
+    rainDesc.particleEndSize = 0.025f;
+    rainDesc.rotationSpeed = 0.f;
+    rainDesc.floorDir = glm::vec3(-0.25f, -1, -0.25f);
+    rainDesc.ceilDir = glm::vec3(0.25f, -0.5f, 0.25f);
+    rainDesc.minSpeed = 15.f;
+    rainDesc.maxSpeed = 20.;
+    rainDesc.beginColor = glm::vec4(0, 0, 1, 1);
+    rainDesc.endColor = glm::vec4(0, 0, 1, 1);
+    rainDesc.minLifeTime = 0.5f;
+    rainDesc.maxLifeTime = 1.f;
+
+    rain = ParticleManager::Instance()->CreateEmitter({0, 15.f, 0}, rainDesc, 0.1f);
 
     //TODO CHANGE
     std::vector<Vertex> vertices;
@@ -122,28 +141,14 @@ void SceneParticlesTest::OnInit(Device* _pDevice)
 
 void SceneParticlesTest::OnHandleEvent(const SDL_Event& event)
 {
-    if (event.type == SDL_EVENT_KEY_DOWN && (event.key.key == SDLK_A))
-    {
-        ParticleDesc desc1;
-        desc1.amount = 100;
-        desc1.spawnRadius = 0.f;
-        desc1.particleSize = 0.1f;
-        desc1.rotationSpeed = 100.f;
-        desc1.floorDir = glm::vec3(-1, -1, -1);
-        desc1.ceilDir = glm::vec3(1, 1, 1);
-        desc1.minSpeed = 0.25f;
-        desc1.maxSpeed = 1.f;
-        desc1.beginColor = glm::vec4(1, 0, 0, 1);
-        desc1.endColor = glm::vec4(1, 1, 0, 1);
-        desc1.minLifeTime = 3.f;
-        desc1.maxLifeTime = 5.f;
-
-        ParticleManager::Instance()->Spawn({0, 0, 0}, desc1);
-    }
 }
 
 void SceneParticlesTest::OnUpdate(float dt)
 {
+    sphere->transform.SetPosition(glm::vec3(2.f*cos(m_totalTime*2.f), 2.f, 2.f*sin(m_totalTime*2.f)));
+    fire.center = sphere->transform.GetPosition();
+
+    ParticleManager::Instance()->UpdateEmitter(fire, dt);
     ParticleManager::Instance()->UpdateEmitter(rain, dt);
 }
 
@@ -172,22 +177,5 @@ void SceneParticlesTest::OnDraw(Device* _pDevice)
 
     m_unlitParticle->SetParams<UnlitParticle_PS::ParticleColor>(UnlitParticle_PS::CB_SLOT_pcolor, cb);
     _pDevice->RegisterCommand(mesh_particle, world.GetMatrix(), m_unlitParticle.get());
-  
-    /*  for (int i = 0; i < count; i++)
-    {
-        const UavParticle& p = BufferFactory::Instance()->Read<UavParticle>(m_uav_buffer, i);
-
-        if (p.lifeTime <= 0.f)
-            continue;
-
-        world.SetScale(p.size);
-        world.SetRotationQuaternion(m_camTransform.GetRotation());
-        world.AddYPR(glm::vec3(0, 0, p.rotationRad));
-
-  
-
-      
-    }*/
-
     _pDevice->EndPass();
 }

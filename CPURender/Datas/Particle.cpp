@@ -39,7 +39,9 @@ void ParticleManager::Spawn(glm::vec3 _center, ParticleDesc _desc)
 	{
 		UavParticle p;
 		p.pos = glm::vec3(_center.x +rand_range(-spawnRadius, spawnRadius), _center.y + rand_range(-spawnRadius, spawnRadius), _center.z + rand_range(-spawnRadius, spawnRadius));
-		p.size = _desc.particleSize;
+		p.beginSize = _desc.particleBeginSize;
+		p.endSize = _desc.particleEndSize;
+
 		p.speed = rand_range(_desc.minSpeed, _desc.maxSpeed);
 		p.beginColor = _desc.beginColor;
 		p.endColor = _desc.endColor;
