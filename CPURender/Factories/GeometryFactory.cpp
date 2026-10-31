@@ -814,6 +814,9 @@ std::vector<Vertex> GeometryFactory::CalculateNormalsAndTangents(std::vector<Ver
 	// 2. Premier passage : Accumulation par face
 	for (size_t i = 0; i < _indices.size(); i += 3)
 	{
+		if (_indices[i] >= _vertices.size() || _indices[i + 1] >= _vertices.size() || _indices[i + 2] >= _vertices.size())
+			continue;
+
 		uint32_t i0 = _indices[i], i1 = _indices[i+1], i2 = _indices[i+2];
 		Vertex& v0 = _vertices[i0]; Vertex& v1 = _vertices[i1]; Vertex& v2 = _vertices[i2];
 	
@@ -822,38 +825,64 @@ std::vector<Vertex> GeometryFactory::CalculateNormalsAndTangents(std::vector<Ver
 	
 		// Normale de la face (non normalisée pour pondérer par l'aire de la face)
 		glm::vec3 faceNormal = glm::cross(e1, e2);
-	
+		if (glm::dot(faceNormal, faceNormal) < 1e-8f)
+			continue; // Triangle 3D plat (dégénéré)
+
 		// Tangente
 		float du1 = v1.uv.x - v0.uv.x, dv1 = v1.uv.y - v0.uv.y;
 		float du2 = v2.uv.x - v0.uv.x, dv2 = v2.uv.y - v0.uv.y;
 
 		float det = (du1 * dv2 - du2 * dv1);
 
-		if (det == 0)
-			det = 1e-8f;
+		if (det > 1e-8f)
+		{
+			float f = 1.0f / det;
 
-		float f = 1.0f / det;
-	
-		glm::vec3 faceTangent = f * (dv2 * e1 - dv1 * e2);
-	
+			glm::vec3 faceTangent = f * (dv2 * e1 - dv1 * e2);
+
+			if (std::isfinite(faceTangent.x) && std::isfinite(faceTangent.y) && std::isfinite(faceTangent.z))
+			{
+				for (uint32_t idx : {i0, i1, i2}) {
+					accum[idx].t += faceTangent;
+				}
+			}
+		}
+		
 		for (uint32_t idx : {i0, i1, i2}) {
 			accum[idx].n += faceNormal;
-			accum[idx].t += faceTangent;
 		}
 	}
 	
 	// 3. Second passage : Orthogonalisation et stockage
 	for (size_t i = 0; i < _vertices.size(); i++)
 	{
-		glm::vec3 N = glm::normalize(accum[i].n);
-		glm::vec3 T = accum[i].t;
-	
-		// Gram-Schmidt : T' = Normalize(T - (N.T) * N)
-		T = glm::normalize(T - glm::dot(T, N) * N);
-	
+		glm::vec3 N(0.0f, 0.0f, 1.0f);
+		if (std::isfinite(accum[i].n.x) && std::isfinite(accum[i].n.y) && std::isfinite(accum[i].n.z))
+		{
+			float lenSq = glm::dot(accum[i].n, accum[i].n);
+			if (lenSq > 1e-8f)
+			{
+				N = glm::normalize(accum[i].n);
+			}
+		}
+
+		glm::vec3 T(1.0f, 0.0f, 0.0f); 
+		if (std::isfinite(accum[i].t.x) && std::isfinite(accum[i].t.y) && std::isfinite(accum[i].t.z))
+		{
+			glm::vec3 tanAcc = accum[i].t;
+
+			// Gram-Schmidt : T' = Normalize(T - (N.T) * N)
+			glm::vec3 result = tanAcc - glm::dot(tanAcc, N) * N;
+
+			float resLenSq = glm::dot(result, result);
+			if (resLenSq > 1e-8f && std::isfinite(resLenSq))
+			{
+				T = glm::normalize(result);
+			}
+		}
+
 		_vertices[i].normal = N;
-		// On stocke souvent la tangente en float4 (x, y, z, w) pour la bitangente
-		_vertices[i].tangent = T; 
+		_vertices[i].tangent = T;
 	}
 
 	return _vertices;

@@ -158,6 +158,9 @@ void Device::Present(Handle _texH)
 		{
 			vec3 hdr = vec3(v);
 			
+			if (v.x != v.x)
+				std::cout << "NaN Pixel\n";
+
 			logSum += glm::log(1e-4f + glm::max(Lighting::Luminance(hdr), 0.0f)); // start at small positive value to avoid inf from log on negative number
 			count++;
 			

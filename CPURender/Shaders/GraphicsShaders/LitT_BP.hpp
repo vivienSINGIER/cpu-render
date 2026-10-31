@@ -73,13 +73,26 @@ public:
     
     vec4 Execute(Vertex_OUT const& _in) const override
     {
-        glm::vec3 T = glm::normalize(_in.tangent);
         glm::vec3 N = glm::normalize(_in.normal);
-        T = glm::normalize(T - glm::dot(N, T) * N);
+        glm::vec3 T = _in.tangent;
+
+        //Verification
+        glm::vec3 resultT = T - glm::dot(N, T) * N;
+        if (glm::dot(resultT, resultT) > 1e-8f) {
+            T = glm::normalize(resultT);
+        }
+        else {
+            // Degenerated
+            T = (std::abs(N.z) < 0.999f) ? glm::normalize(glm::cross(N, glm::vec3(0, 0, 1))) : glm::normalize(glm::cross(N, glm::vec3(0, 1, 0)));
+        }
+
         glm::vec3 B = glm::cross(N, T);
         glm::mat3x3 TBN = glm::mat3x3(T, B, N);
-        
-        glm::vec3 toEye = glm::normalize(Pass().eyePos - glm::vec3(_in.posModel));
+   
+        glm::vec3 eyeDir = Pass().eyePos - glm::vec3(_in.posModel);
+        float eyeDistSq = glm::dot(eyeDir, eyeDir);
+        glm::vec3 toEye = (eyeDistSq > 1e-8f) ? glm::normalize(eyeDir) : glm::vec3(0.0f, 0.0f, 1.0f);
+
         glm::vec3 viewT = glm::normalize(glm::transpose(TBN) * toEye);
         viewT.y = -viewT.y;
         

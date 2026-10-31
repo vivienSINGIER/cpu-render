@@ -26,12 +26,12 @@ void SceneParticlesTest::OnInit(Device* _pDevice)
 
     m_camTransform.SetPosition(glm::vec3(0.0f, 0.0f, -10.f));
 
-    Handle diff = TextureFactory::Instance()->CreateTexture("dark_rock_diffuse", "Assets/Textures/DarkRock/diffuse.png");
-    Handle ambient = TextureFactory::Instance()->CreateTexture("dark_rock_ambient", "Assets/Textures/DarkRock/ambient.png");
-    Handle normal = TextureFactory::Instance()->CreateTexture("dark_rock_normal", "Assets/Textures/DarkRock/normal.png");
-    Handle roughness = TextureFactory::Instance()->CreateTexture("dark_rock_roughness", "Assets/Textures/DarkRock/roughness.png");
-    Handle displacement = TextureFactory::Instance()->CreateTexture("dark_rock_displacement", "Assets/Textures/DarkRock/displacement.png");
-    Handle metalness = TextureFactory::Instance()->CreateTexture("dark_rock_metalness", "Assets/Textures/DarkRock/metalness.png");
+    Handle diff = TextureFactory::Instance()->CreateTexture("dark_rock_diffuse", "Assets/Obj/Plane/PaletteBaseColor_6.png");
+    Handle ambient = TextureFactory::Instance()->CreateTexture("dark_rock_ambient", "Assets/Obj/Plane/nimrod_bottom_col_5.png");
+    Handle normal = TextureFactory::Instance()->CreateTexture("dark_rock_normal", "Assets/Obj/Plane/nimrod_bottom_nrm_4.png");
+    Handle roughness = TextureFactory::Instance()->CreateTexture("dark_rock_roughness", "Assets/Obj/Plane/PaletteMetallicRoughness.png");
+   // Handle displacement = TextureFactory::Instance()->CreateTexture("dark_rock_displacement", "Assets/Textures/DarkRock/displacement.png");
+    Handle metalness = TextureFactory::Instance()->CreateTexture("dark_rock_metalness", "Assets/Obj/Plane/PaletteMetallicRoughness2.png");
 
     LitT_BP_PS::MaterialCB cb = {
         {1.0f, 1.0f, 1.0f, 1.0f},
@@ -40,7 +40,7 @@ void SceneParticlesTest::OnInit(Device* _pDevice)
     };
 
     UnlitParticle_PS::ParticleColor color = { glm::vec4(1, 1, 1, 1) };
-    UnlitC_PS::UnlitColor unlit_color = { glm::vec4(1, 0, 0, 1) };
+    UnlitC_PS::UnlitColor unlit_color = { glm::vec4(0, 1, 1, 1) };
 
     m_uav_buffer = BufferFactory::Instance()->CreateUAVBuffer<UavParticle>(MAX_PARTICLES);
     m_CS_handle = ShaderFactory::Instance()->CreateComputeShader<ParticleCS>();
@@ -65,10 +65,10 @@ void SceneParticlesTest::OnInit(Device* _pDevice)
     m_mat->SetTexture(LitT_BP_PS::TEX_SLOT_normal, normal);
 
     m_mat->SetTexture(LitT_BP_PS::TEX_SLOT_roughness, roughness);
-    m_mat->SetTexture(LitT_BP_PS::TEX_SLOT_displacement, displacement);
+    //m_mat->SetTexture(LitT_BP_PS::TEX_SLOT_displacement, displacement);
     m_mat->SetTexture(LitT_BP_PS::TEX_SLOT_metal, metalness);
 
-    Mesh m = GeometryFactory::Instance()->LoadMesh("Assets/Obj/Chair/PlasticSeat.obj");
+    Mesh m = GeometryFactory::Instance()->LoadMesh("Assets/Obj/Plane/plane.obj");
 
     obj = CreateObject(DYNAMIC);
     obj->mesh = m; // GeometryFactory::Instance()->BuildCube();
@@ -79,7 +79,7 @@ void SceneParticlesTest::OnInit(Device* _pDevice)
     Mesh cube = GeometryFactory::Instance()->BuildCube();
     Object* floor = CreateObject(DYNAMIC);
     floor->mesh = cube;
-    floor->mat = m_mat.get();
+    floor->mat = m_unlit.get();
     floor->transform.SetPosition(glm::vec3(0.0f, -2.f, 0.f));
     floor->transform.SetScale(glm::vec3(25.0f, 0.2f, 25.0f));
 
@@ -120,7 +120,6 @@ void SceneParticlesTest::OnInit(Device* _pDevice)
     rainDesc.maxLifeTime = 1.f;
 
     rain = ParticleManager::Instance()->CreateEmitter({0, 15.f, 0}, rainDesc, 0.1f);
-
 
     std::vector<Vertex> vertices;
     std::vector<uint32_t> indices;
