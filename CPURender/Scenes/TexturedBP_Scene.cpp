@@ -57,7 +57,7 @@ void TexturedBP_Scene::OnInit(Device* _pDevice)
     };
 
     //Cubemap cubemap = Cubemap("Skybox", "Assets/Textures/Cubemap/Front.png", "Assets/Textures/Cubemap/Back.png",
-    //    "Assets/Textures/Cubemap/Left.png", "Assets/Textures/Cubemap/Right.png",
+    //    "Assets/Textures/Cubemap/Left.png", "Assets/Textures/Cubemap/Right.png",ddddddds
     //    "Assets/Textures/Cubemap/Up.png", "Assets/Textures/Cubemap/Down.png");
 
     Cubemap cubemap = Cubemap("Skybox", "Assets/Textures/Cubemap/FishPond/posz.jpg", "Assets/Textures/Cubemap/FishPond/negz.jpg",

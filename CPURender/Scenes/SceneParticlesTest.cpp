@@ -13,7 +13,7 @@
 
 void SceneParticlesTest::OnInit(Device* _pDevice)
 {
-    m_lightData.lights[0] = MakeDirectionalLight({ 1.0f, -1.0f, 1.0f }, 0.75f, Color::WHITE);
+    m_lightData.lights[0] = MakeDirectionalLight({ 1.0f, -1.0f, 1.0f }, 20.0f, Color::WHITE);
     m_lightData.ambient = 0.2f;
 
     m_mainPass.fb = _pDevice->GetDefaultFrameBuffer();
@@ -26,12 +26,12 @@ void SceneParticlesTest::OnInit(Device* _pDevice)
 
     m_camTransform.SetPosition(glm::vec3(0.0f, 0.0f, -10.f));
 
-    Handle diff = TextureFactory::Instance()->CreateTexture("dark_rock_diffuse", "Assets/Textures/DarkRock/diffuse.png");
+    Handle diff = TextureFactory::Instance()->CreateTexture("dark_rock_diffuse", "Assets/Textures/DarkRock/diffuse.png", true);
     Handle ambient = TextureFactory::Instance()->CreateTexture("dark_rock_ambient", "Assets/Textures/DarkRock/ambient.png");
     Handle normal = TextureFactory::Instance()->CreateTexture("dark_rock_normal", "Assets/Textures/DarkRock/normal.png");
     Handle roughness = TextureFactory::Instance()->CreateTexture("dark_rock_roughness", "Assets/Textures/DarkRock/roughness.png");
     Handle displacement = TextureFactory::Instance()->CreateTexture("dark_rock_displacement", "Assets/Textures/DarkRock/displacement.png");
-    Handle metalness = TextureFactory::Instance()->CreateTexture("dark_rock_metalness", "Assets/Textures/DarkRock/metalness.png");
+    Handle metalness = TextureFactory::Instance()->CreateTexture("dark_rock_metalness", "Assets/Textures/DarkRock/arm.png");
 
     LitT_BP_PS::MaterialCB cb = {
         {1.0f, 1.0f, 1.0f, 1.0f},
