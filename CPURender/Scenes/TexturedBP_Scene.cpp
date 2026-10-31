@@ -10,9 +10,9 @@
 
 void TexturedBP_Scene::InitLightScene()
 {
-    //m_lightData.lights[0] = MakeDirectionalLight({1.0f, -1.0f, 1.0f}, 10.0f, Color::WHITE);
-    //m_lightData.lights[1] = MakePointLight({5.0f, 0.0f, 5.0f}, 0.5f, { 5.0f, 25.0f }, Color::RED);
-    m_lightData.ambient = 10.0f;
+    m_lightData.lights[0] = MakeDirectionalLight({1.0f, -1.0f, 1.0f}, 1.0f, Color::WHITE);
+    // m_lightData.lights[1] = MakePointLight({5.0f, 0.0f, 5.0f}, 0.5f, { 5.0f, 25.0f }, Color::RED);
+    m_lightData.ambient = 0.5f;
 }
 
 void TexturedBP_Scene::OnInit(Device* _pDevice)
@@ -41,7 +41,7 @@ void TexturedBP_Scene::OnInit(Device* _pDevice)
     Handle normal = TextureFactory::Instance()->CreateTexture("dark_rock_normal", "Assets/Textures/DarkRock/normal.png");
     Handle roughness = TextureFactory::Instance()->CreateTexture("dark_rock_roughness", "Assets/Textures/DarkRock/roughness.png");
     Handle displacement = TextureFactory::Instance()->CreateTexture("dark_rock_displacement", "Assets/Textures/DarkRock/displacement.png");
-    Handle metalness = TextureFactory::Instance()->CreateTexture("dark_rock_metalness", "Assets/Textures/DarkRock/metalness.png");
+    Handle metalness = TextureFactory::Instance()->CreateTexture("dark_rock_metalness", "Assets/Textures/DarkRock/arm.png");
 
     //Handle diff = TextureFactory::Instance()->CreateTexture("dark_rock_diffuse", "Assets/Textures/Gold/diffuse.png", true);
     //Handle ambient = TextureFactory::Instance()->CreateTexture("dark_rock_ambient", "Assets/Textures/Gold/ambient.png");
@@ -53,11 +53,11 @@ void TexturedBP_Scene::OnInit(Device* _pDevice)
     LitT_BP_Cube_PS::MaterialCB cb = {
         {1.0f, 1.0f, 1.0f, 1.0f}, 
             Lighting::g_fresnelR0Templates[PLASTIC], 
-                0.9f, 0.02f, 0.9f
+                0.9f, 0.02f, 0.0f
     };
 
     //Cubemap cubemap = Cubemap("Skybox", "Assets/Textures/Cubemap/Front.png", "Assets/Textures/Cubemap/Back.png",
-    //    "Assets/Textures/Cubemap/Left.png", "Assets/Textures/Cubemap/Right.png",ddddddds
+    //    "Assets/Textures/Cubemap/Left.png", "Assets/Textures/Cubemap/Right.png",
     //    "Assets/Textures/Cubemap/Up.png", "Assets/Textures/Cubemap/Down.png");
 
     Cubemap cubemap = Cubemap("Skybox", "Assets/Textures/Cubemap/FishPond/posz.jpg", "Assets/Textures/Cubemap/FishPond/negz.jpg",
@@ -73,9 +73,9 @@ void TexturedBP_Scene::OnInit(Device* _pDevice)
     m_mat->SetTexture(LitT_BP_Cube_PS::TEX_SLOT_ambient, ambient);
     m_mat->SetTexture(LitT_BP_Cube_PS::TEX_SLOT_normal, normal);
     
-    //m_mat->SetTexture(LitT_BP_Cube_PS::TEX_SLOT_roughness, roughness);
+    m_mat->SetTexture(LitT_BP_Cube_PS::TEX_SLOT_roughness, roughness);
     m_mat->SetTexture(LitT_BP_Cube_PS::TEX_SLOT_displacement, displacement);
-    //m_mat->SetTexture(LitT_BP_Cube_PS::TEX_SLOT_metal, metalness);
+    m_mat->SetTexture(LitT_BP_Cube_PS::TEX_SLOT_metal, metalness);
     m_mat->SetTexture(LitT_BP_Cube_PS::TEX_SLOT_shadow, m_shadowPass.fb.depthBuffer);
     m_mat->SetTexture(LitT_BP_Cube_PS::TEX_SLOT_cubemap, cubemap.GetTexture());
 	

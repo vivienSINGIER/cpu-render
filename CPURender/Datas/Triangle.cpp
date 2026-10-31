@@ -113,6 +113,11 @@ void InterpolateVertex(Vertex_OUT& _vertOut, glm::vec2 _point, const Triangle& _
     _vertOut.tangent = Lerp3(_tri.v1.tangent, _tri.v2.tangent, _tri.v3.tangent, _bary);
 }
 
+glm::vec2 InterpolateUV(const Triangle& _tri, glm::vec3 _bary)
+{
+    return Lerp3(_tri.v1.uv, _tri.v2.uv, _tri.v3.uv, _bary);
+}
+
 glm::vec4 InterpolatePositionH(glm::vec2 _point, const Triangle& _tri, glm::vec3 _bary)
 {
     return { _point, glm::dot(_bary, { _tri.v1.posH.z, _tri.v2.posH.z, _tri.v3.posH.z }), 1 };
