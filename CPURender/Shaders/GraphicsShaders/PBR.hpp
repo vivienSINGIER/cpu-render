@@ -63,24 +63,31 @@ public:
         float roughness = mat().roughness;
         float metalness = mat().metalness;
         
+        float toksvigVariance = 0.0f;
+        
         if (Has_diffuse())
-            albedo = diffuse(_in.uv);
+            albedo = Sample_Grad_diffuse(_in.uv, _in.uvDdx, _in.uvDdy);
         if (Has_normal())
         {
             vec3 T = glm::normalize(_in.tangent);                                                                                                                                                                                         
-            T = glm::normalize(T - glm::dot(N, T) * N);   // Gram-Schmidt re-orthogonalize                                                                                                                                                
+            T = glm::normalize(T - glm::dot(N, T) * N);                                                                                                                                             
             vec3 B = glm::cross(N, T);                                                                                                                                                                                                    
             mat3x3 TBN = mat3x3(T, B, N);                                                                                                                                                                                                 
                                                                                                                                                                                                                                     
-            vec3 sampledN = vec3(normal(_in.uv)) * 2.0f - 1.0f;  // [0,1] -> [-1,1]                                                                                                                                                       
+            vec3 sampledN = vec3(Sample_Grad_normal(_in.uv, _in.uvDdx, _in.uvDdy)) * 2.0f - 1.0f;
+            float len = glm::clamp(glm::length(sampledN), 1e-4f, 1.0f);
+            float variance = (1.0f - len) / len;
+            toksvigVariance = variance;
+            
             normalW = glm::normalize(TBN * sampledN);   
         }
         if (Has_arm())
         {
-            vec3 armS = arm(_in.uv);
+            vec3 armS = Sample_Grad_arm(_in.uv, _in.uvDdx, _in.uvDdy);
             ao = armS.r;
             roughness = armS.g;
-            roughness = glm::clamp(roughness, 0.05f, 1.0f);
+            float a2 = roughness * roughness * roughness * roughness + toksvigVariance;
+            roughness = glm::clamp(sqrt(sqrt(a2)), 0.05f, 1.0f);
             metalness = armS.b;
         }
         

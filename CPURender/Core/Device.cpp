@@ -510,6 +510,12 @@ void Device::RasterStep(std::vector<Vertex_OUT> const& _vBuffer, ShaderStages _s
 					Vertex_OUT px;
 					px.posH = posH;
 					InterpolateVertex(px, glm::vec2({ (float)x + 0.5f, (float)y + 0.5f }), tri, baryP);
+
+					// screen space uv derivatives for mip selection : uv one pixel to the right and one pixel down
+					glm::vec3 baryPX = BarycentricWeightPerspective(tBary + baryOffsetX, wPreDiv[v], wPreDiv[v + 1], wPreDiv[v + 2]);
+					glm::vec3 baryPY = BarycentricWeightPerspective(tBary + baryOffsetY, wPreDiv[v], wPreDiv[v + 1], wPreDiv[v + 2]);
+					px.uvDdx = InterpolateUV(tri, baryPX) - px.uv;
+					px.uvDdy = InterpolateUV(tri, baryPY) - px.uv;
 					
 					if (state.depthWrite && db && px.color.a >= 1.0f || state.blendMode == Blending::OPAQUE)
 						db->Store(x, y, vec4(pixelDepth, 0.0f, 0.0f, 1.0f));
