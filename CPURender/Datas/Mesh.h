@@ -8,6 +8,8 @@
 #include "../Heaps/Handle.hpp"
 #include "../Maths/AABB.h"
 
+#include "../Animation/AnimationData.h"
+
 struct Vertex
 {
 	glm::vec3 position = { 0.0f, 0.0f, 0.0f };
@@ -16,6 +18,9 @@ struct Vertex
 	glm::vec3 tangent = { 1.0f, 0.0f, 0.0f };
 	glm::vec4 color = Color::WHITE;
 	size_t id = 0;
+
+	int bone_ids[MAX_BONE_INFLUENCE] = {};
+	float weights[MAX_BONE_INFLUENCE] = {};
 };
 
 struct Vertex_OUT
