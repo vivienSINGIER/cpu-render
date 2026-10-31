@@ -9,6 +9,9 @@
 #include "../Shaders/ShaderBase/Material.h"
 #include "../Cubemap.h"
 
+#include <string>
+#include <vector>
+
 class PBR_Scene : public Scene
 {
 protected:
@@ -22,10 +25,17 @@ protected:
 private:
     void InitLightScene();
     void UpdateMaterial();
+    void LoadCubemaps();
+    void ApplyCubemap(int _index);
 
     Object* ref = nullptr;
 
-    Material m_mat;
+    std::vector<Material> m_mats;
+    std::vector<Material> m_gridMats;
+    std::vector<Cubemap> m_cubemaps;
+    std::vector<std::string> m_cubemapNames;
+    int m_cubemapIndex = 0;
+
     Material m_skyboxMat;
     float m_metalness = 1.0f;
     float m_roughness = 0.5f;

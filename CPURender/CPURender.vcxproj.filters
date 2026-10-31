@@ -343,5 +343,14 @@
     <ClInclude Include="Shaders\GraphicsShaders\LitC_BP_Cube.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Shaders\GraphicsShaders\LitC_BP_Transparent.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Shaders\ComputeShaders\FB_Fusion_CS.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Shaders\ComputeShaders\TexCopy_CS.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

@@ -1,9 +1,14 @@
 #include "Cubemap.h"
 
+#include <chrono>
+#include <iostream>
+
 Cubemap::Cubemap(const char* _name, const char* _front, const char* _back, const char* _left, const char* _right, const char* _up, const char* _down, bool _isSrgb, uint32_t _irradianceFaceSize)
 {
 	// create new texture with 6 combined
-
+	
+	std::chrono::time_point start = std::chrono::high_resolution_clock::now();
+	
 	// Get 6 textures
 	Texture faceTexs[6];
 
@@ -15,12 +20,14 @@ Cubemap::Cubemap(const char* _name, const char* _front, const char* _back, const
 	faceTexs[5].Load(_down, _isSrgb);
 
 	// Check if textures are square + check if same size
-	int width = faceTexs[0].Width(); int height = faceTexs[0].Height();
+	int width = faceTexs[0].Width(); 
+	int height = faceTexs[0].Height();
 
 	m_texHandle = TextureFactory::Instance()->CreateTexture(_name, width * 3, height * 3);
 
 	Texture* texture = TextureFactory::Instance()->GetTexture(_name);
-
+	
+#pragma omp parallel for collapse(3)
 	for (int i = 0; i < 6; i++)
 	{
 		assert(width == faceTexs[i].Width() && height == faceTexs[i].Height(), "Err: All faces must have the same size");
@@ -28,8 +35,7 @@ Cubemap::Cubemap(const char* _name, const char* _front, const char* _back, const
 
 		int xOffset = (i%2) * width;
 		int yOffset = (i/2) * height;
-
-#pragma omp parallel for
+		
 		for (int j = 0; j < height; j++)
 		{
 			for (int k = 0; k < width; k++)
@@ -39,10 +45,22 @@ Cubemap::Cubemap(const char* _name, const char* _front, const char* _back, const
 		}
 	}
 	
+	texture->GenerateCubeMips();
+	
 	std::string irrName = std::string(_name) + "_irradiance";
 	m_irradianceHandle = TextureFactory::Instance()->CreateTexture(irrName, _irradianceFaceSize * 3, _irradianceFaceSize * 3);
 	Texture* irr = TextureFactory::Instance()->GetTexture(irrName);
+	
 	Texture::BakeIrradiance(texture, irr, _irradianceFaceSize);
+	
+	std::string prefName = std::string(_name) + "_prefilter";
+	m_prefilterHandle = TextureFactory::Instance()->CreateTexture(prefName, width * 3, height * 3);
+	Texture* prefilter = TextureFactory::Instance()->GetTexture(prefName);
+	
+	Texture::BakePrefilter(texture, prefilter);
+	
+	std::chrono::time_point end = std::chrono::high_resolution_clock::now();
+	std::cout << std::chrono::duration<double>(end - start).count() << " s" << std::endl;
 }
 
 Handle Cubemap::GetTexture()
@@ -55,3 +73,7 @@ Handle Cubemap::GetIrradianceTexture()
 	return m_irradianceHandle;
 }
 
+Handle Cubemap::GetPrefilterTexture()
+{
+	return m_prefilterHandle;
+}

@@ -80,7 +80,7 @@ int main(void) {
 
     Engine engine;
     Texture frameBuffer(WIDTH, HEIGHT,  Texture::RGBA32, Texture::LINEAR);
-    engine.Init<SceneParticlesTest>(&frameBuffer);
+    engine.Init<PBR_Scene>(&frameBuffer);
     
     bool isRunning = true;
     uint32_t frame = 1;

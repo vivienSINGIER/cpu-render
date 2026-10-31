@@ -34,10 +34,17 @@ public:
     
     glm::vec4 SampleNP(glm::vec2 uv) const; // nearest point, format aware
     glm::vec4 SampleNPCube(glm::vec3 _dir) const; 
+    glm::vec4 SampleNPCubeLod(glm::vec3 _dir, float _lod) const;
     
     // vec4 is always (r, g, b, a)
+    glm::vec4   Load(uvec2 _c) const;
     glm::vec4   Load(uint32 _x, uint32 _y) const;
+    void        Store(uvec2 _c, glm::vec4 _v);
     void        Store(uint32 _x, uint32 _y, glm::vec4 _v);
+    
+    void StoreCube(uint32 _lod, uint32 _face, uint32 _x, uint32 _y, vec4 _c);
+    void StoreCube(uint32 _lod, uint32 _face, uvec2 _uv, vec4 _c);
+    
     void        Clear(glm::vec4 _color);
     
     template <typename T>
@@ -47,8 +54,14 @@ public:
     
     vec4* GetData();
     
+    void GenerateCubeMips();
+    vec3 CubeFaceUVToDir(uint32 _face, vec2 _uv) const;
+    vec2 GetCubeSampleUV(vec3 _dir, uint32& _faceIndex) const;
+    bool TexelToCubeDir(uint32_t _x, uint32_t _y, vec3& _outDir);
+    
     static void BakeIrradiance(Texture* _src, Texture* _dst, uint32_t _faceSize);
-    static bool TexelToCubeDir(uint32_t _x, uint32_t _y, uint32_t _faceSize, vec3& _outDir);
+    static void BakePrefilter(Texture* _src, Texture* _dst);
+    static void BakeBRDFLookup(Texture* _src, uint32_t _sampleCount = 256);
     
 private:
     std::vector<vec4> m_data;
@@ -59,7 +72,14 @@ private:
     Encoding m_encoding;
     Format m_format;
     
+    int m_mipMapLast = 9;
+    
     uint32 GetIndex(uint32 _x, uint32 _y) const;
+    
+    uint32 CubeFaceSize() const;
+    uint32 LodCount() const;
+    uint32 MaxCubeLod() const;
+    uvec2 CubeTexel(uint32 _lod, uint32 _face, uint32 _x, uint32 _y) const;
 };
 
 #include "Texture.inl"

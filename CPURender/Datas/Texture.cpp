@@ -10,6 +10,8 @@
 #include <glm/ext/scalar_constants.hpp>
 
 #include "../stb_image.h"
+#include "Lights/LightHelpers.hpp"
+#include "Lights/PBRHelpers.hpp"
 
 namespace
 {
@@ -94,57 +96,42 @@ glm::vec4 Texture::SampleNP(glm::vec2 uv) const
 
 glm::vec4 Texture::SampleNPCube(glm::vec3 _dir) const
 {
-    enum Side { FRONT = 0, BACK, LEFT, RIGHT, UP, DOWN };
-    Side cubemapSide;
-    float absX = abs(_dir.x);
-    float absY = abs(_dir.y);
-    float absZ = abs(_dir.z);
+    return SampleNPCubeLod(_dir, 0.0f);
+}
 
-    if (absX >= absY && absX >= absZ) // x major
-    {
-        cubemapSide = _dir.x < 0 ? LEFT : RIGHT;
-    }
-    else if (absY >= absX && absY >= absZ) // y major
-    {
-        cubemapSide = _dir.y < 0 ? DOWN : UP;
-    }
-    else // z major
-    {
-        cubemapSide = _dir.z < 0 ? BACK : FRONT;
-    }
-
-    const float s = 1.0f / 3.0f;
-    int xOffset = (cubemapSide % 2);
-    int yOffset = (cubemapSide / 2);
-    glm::vec2 uvOffset = glm::vec2(xOffset * s, yOffset * s);
-    glm::vec2 uv;
+glm::vec4 Texture::SampleNPCubeLod(glm::vec3 _dir, float _lod) const
+{
+    uint32 face;
+    vec2 uv = GetCubeSampleUV(_dir, face);
+    uint32 F = CubeFaceSize();
     
-    float maxAbs = glm::max(absX, glm::max(absY, absZ));
-    vec3 d = _dir / maxAbs;
-    
-    switch (cubemapSide)
+    auto texelAt = [&](uint32 _l) -> uvec2
     {
-    case FRONT:
-        uv = { (d.x + 1) / 2 , 1 - ((d.y + 1) / 2) };
-        break;
-    case BACK:
-        uv = { (-d.x + 1) / 2 , 1 - ((d.y + 1) / 2) };
-        break;
-    case LEFT:
-        uv = { (d.z + 1) / 2 , 1 - ((d.y + 1) / 2) };
-        break;
-    case RIGHT:
-        uv = { (-d.z + 1) / 2 , 1 - ((d.y + 1) / 2) };
-        break;
-    case UP:
-        uv = { (d.x + 1) / 2 , 1 - ((-d.z + 1) / 2) };
-        break;
-    case DOWN:
-        uv = { (d.x + 1) / 2 , 1 - ((d.z + 1) / 2) };
-        break;
-    }
+        uint32 F_L = F >> _l;
+        uint32 x = clamp((uint32)floor(uv.x * (float)F_L), (uint32)0, F_L - 1);
+        uint32 y = clamp((uint32)floor(uv.y * (float)F_L), (uint32)0, F_L - 1);
+        return CubeTexel(_l, face, x, y);
+    };
 
-    return SampleNP(uv*s + uvOffset);
+    uint32 maxLod = MaxCubeLod();
+    _lod = clamp(_lod, 0.0f, (float)maxLod);
+
+    uint32 l0 = (uint32)floor(_lod);
+    uint32 l1 = min(l0 + 1, maxLod);
+
+    float blend = _lod - (float)l0;
+    
+    vec4 c1 = Load(texelAt(l0));
+    if (blend == 0.0f)
+        return c1;
+    
+    vec4 c2 = Load(texelAt(l1));
+    
+    return glm::mix(c1, c2, blend);
+} 
+glm::vec4 Texture::Load(uvec2 _c) const
+{
+    return Load(_c.x, _c.y);
 }
 
 glm::vec4 Texture::Load(uint32 _x, uint32 _y) const
@@ -164,9 +151,24 @@ glm::vec4 Texture::Load(uint32 _x, uint32 _y) const
     return { 0.0f, 0.0f, 0.0f, 0.0f };
 }
 
+void Texture::Store(uvec2 _c, glm::vec4 _v)
+{
+    Store(_c.x, _c.y, _v);
+}
+
 void Texture::Store(uint32 _x, uint32 _y, glm::vec4 _v)
 {
     m_data[GetIndex(_x, _y)] = EncodeTexel(m_format, _v);;
+}
+
+void Texture::StoreCube(uint32 _lod, uint32 _face, uint32 _x, uint32 _y, vec4 _c)
+{
+    Store(CubeTexel(_lod, _face, _x, _y), _c);
+}
+
+void Texture::StoreCube(uint32 _lod, uint32 _face, uvec2 _uv, vec4 _c)
+{
+    Store(CubeTexel(_lod, _face, _uv.x, _uv.y), _c);
 }
 
 void Texture::Clear(glm::vec4 _color)
@@ -191,13 +193,17 @@ Texture Texture::ToLinear() const
 
 void Texture::BakeIrradiance(Texture* _src, Texture* _dst, uint32_t _faceSize)
 {
+    float faceSize = (float)_src->CubeFaceSize() / (float)64;
+    float lodLvl = floor(log2(faceSize));
+    lodLvl = clamp(lodLvl, 0.0f, (float)_src->MaxCubeLod());
+    
 #pragma omp parallel for
     for (int32_t y = 0; y < _dst->Height(); ++y)
     {
         for (int32_t x = 0; x < _dst->Width(); ++x)
         {
             vec3 N;
-            if (!TexelToCubeDir(x, y, _faceSize, N))
+            if (!_src->TexelToCubeDir(x, y, N))
                 continue;
             
             vec3 up = glm::abs(N.y) < 0.999f ? glm::vec3(0.0f, 1.0f, 0.0f) : glm::vec3(1.0f, 0.0f, 0.0f);
@@ -216,12 +222,158 @@ void Texture::BakeIrradiance(Texture* _src, Texture* _dst, uint32_t _faceSize)
                     vec3 ts = vec3(sin(theta) * cos(phi), sin(theta) * sin(phi), cos(theta));
                     vec3 sampleDir = ts.x * right + ts.y * up + ts.z * N;
                     
-                    irradience += _src->SampleNPCube(sampleDir) * cos(theta) * sin(theta);
+                    irradience += _src->SampleNPCubeLod(sampleDir, lodLvl) * cos(theta) * sin(theta);
                     nrSamples += 1.0f;
                 }
             }
             irradience = pi<float>() * irradience * (1.0f / nrSamples);
             _dst->Store(x, y, vec4(irradience, 1.0f));
+        }
+    }
+}
+
+void Texture::BakePrefilter(Texture* _src, Texture* _dst)
+{
+    int envSize = (int)_src->CubeFaceSize();
+    int outSize = (int)_dst->CubeFaceSize();
+    
+    constexpr int SAMPLE_COUNT = 256;
+    constexpr int MIP_COUNT = 5;
+    
+    uint32 lodLvl = (uint32)floor(log2(float(envSize) / float(outSize)));
+    lodLvl = clamp(lodLvl, (uint32)0, _src->MaxCubeLod());
+
+    struct Sample { vec3 L; float weight; float lod; };
+    
+#pragma omp parallel for collapse(2)
+    for (int i = 0; i < 6; ++i)
+    {
+        for (int x = 0; x < outSize; ++x)
+        {
+            for (int y = 0; y < outSize; ++y)
+            {
+                uvec2 sPos = _src->CubeTexel(lodLvl, i, x, y);
+                uvec2 dPos = _dst->CubeTexel(0, i, x, y);
+                
+                _dst->Store(dPos, _src->Load(sPos));   
+            }
+        }   
+    }
+    
+    for (int m = 1; m < MIP_COUNT; ++m)
+    {
+        std::vector<Sample> samples;
+        float roughness = (float)m / (float)(MIP_COUNT - 1);
+        
+        const vec3 N(0.0f, 0.0f, 1.0f);
+        const float angle = 4.0f * glm::pi<float>() / (6.0f * float(envSize) * float(envSize));
+        
+        float totalWeight = 0.0f;
+        
+        for (int s = 0; s < SAMPLE_COUNT; ++s)
+        {
+            vec2 Xi = Lighting::Hammersley(s, SAMPLE_COUNT);
+            vec3 H = Lighting::ImportanceSampleGGX(Xi, N, roughness);
+            vec3 L  = normalize(vec3(2.0f * dot(N, H)) * H - N);
+
+            float NdotL = L.z;
+            if(NdotL <= 0.0)
+                continue;
+            
+            float pdf               = Lighting::DistributionGGX(N, H, roughness) * 0.25f;
+            float sampleSolidAngle  = 1.0f / (float(SAMPLE_COUNT) * pdf + 1e-6f);
+            float lod               = 0.5f * glm::log2(sampleSolidAngle / angle) + 1.0f; 
+            
+            samples.push_back({ L, NdotL, clamp(lod, 0.0f, (float)_src->MaxCubeLod()) });
+            totalWeight += NdotL;
+        }
+        
+        const float invTotalWeight = 1.0f / totalWeight;
+        
+        uint32 mipSize = outSize >> m;
+#pragma omp parallel for collapse(2)
+        for (int i = 0; i < 6; ++i)
+        {
+            for (int y = 0; y < (int)mipSize; ++y)
+            {
+                for (int x = 0; x < (int)mipSize; ++x)
+                {
+                    uvec2 tx = _dst->CubeTexel(m, i, x, y);
+                    
+                    vec3 Nt;
+                    Nt = _dst->CubeFaceUVToDir(i, vec2(x + 0.5f, y + 0.5f) / (float)mipSize);
+                    Nt = normalize(Nt);
+                    
+                    vec3 up    = glm::abs(Nt.y) < 0.999f ? vec3(0, 1, 0) : vec3(1, 0, 0);
+                    vec3 right = normalize(cross(up, Nt));
+                    up         = cross(Nt, right);
+                    
+                    // float a = 2.0f * pi<float>() * Lighting::HashToFloat(i, m, x, y);
+                    // float c = cos(a);
+                    // float s = sin(a);
+                    
+                    vec3 color(0.0f);
+                    for (auto& smp : samples)
+                    {
+                        // float lx = c * smp.L.x - s * smp.L.y;
+                        // float ly = c * smp.L.z - s * smp.L.x;
+                        
+                        vec3 l = normalize(right * smp.L.x + up * smp.L.y + Nt * smp.L.z);
+                        color += _src->SampleNPCubeLod(l, smp.lod) * smp.weight;
+                    }
+                    color = color * invTotalWeight;
+                    
+                    _dst->Store(tx, vec4(color, 1.0f));
+                }
+            }
+        }
+    }
+}
+
+void Texture::BakeBRDFLookup(Texture* _src, uint32_t _sampleCount)
+{
+    uint32 w = _src->Width();
+    uint32 h = _src->Height();
+    
+#pragma omp parallel for collapse(2)
+    for (int y = 0; y < (int)h; ++y)
+    {
+        for (int x = 0; x < (int)w; ++x)
+        {
+            float NdotV = ((float)x + 0.5f) / (float)w;
+            float roughness = ((float)y + 0.5f) / (float)h;
+            
+            vec3 V = { sqrt(1.0f - NdotV*NdotV), 0.0f, NdotV };
+            float A = 0.0f;
+            float B = 0.0f;
+            
+            vec3 N = vec3(0.0f, 0.0f, 1.0f);
+            
+            for (uint32 i = 0; i < _sampleCount; ++i)
+            {
+                vec2 Xi = Lighting::Hammersley(i, _sampleCount);
+                vec3 H = Lighting::ImportanceSampleGGX(Xi, N, roughness);
+                vec3 L = normalize(2.0f * dot(V, H) * H - V);
+                
+                float NdotL = max(L.z, 0.0f);
+                float NdotH = max(H.z, 0.0f);
+                float VdotH = max(dot(V, H), 0.0f);
+                
+                if (NdotL > 0.0f)
+                {
+                    float G = Lighting::GeometrySmith_IBL(N, V, L, roughness);
+                    float G_vis = (G * VdotH) / (NdotH * NdotV);
+                    float Fc = pow(1.0f - VdotH, 5.0f);
+                    
+                    A += (1.0f - Fc) * G_vis;
+                    B += Fc * G_vis;
+                }
+            }
+            
+            A /= (float)_sampleCount;
+            B /= (float)_sampleCount;
+            
+            _src->Store(x, y, vec4(A, B, 0.0f, 1.0f));
         }
     }
 }
@@ -236,6 +388,7 @@ void Texture::Load(std::string const& _filePath, bool _isSrgb)
     
     SetSize(width, height);
     
+#pragma omp parallel for collapse(2)
     for (int y = 0; y < height; ++y)
     {
         for (int x = 0; x < width; ++x)
@@ -270,18 +423,68 @@ vec4* Texture::GetData()
     return m_data.data();
 }
 
-bool Texture::TexelToCubeDir(uint32_t _x, uint32_t _y, uint32_t _faceSize, vec3& _outDir)
+void Texture::GenerateCubeMips()
 {
-    uint32_t col = _x / _faceSize;
-    uint32_t row = _y / _faceSize;
+    uint32 faceSize = CubeFaceSize();
+    
+    for (int i = 1; i <= (int)MaxCubeLod(); i++)
+    {
+        for (int f = 0; f < 6; f++)
+        {
+            int32 F_L = (int32)faceSize >> i;
+
+#pragma omp parallel for
+            for (int32 x = 0; x < F_L; x++)
+            {
+                for (int32 y = 0; y < F_L; y++)
+                {
+                    vec4 sum = Load(CubeTexel(i - 1, f, 2*x, 2*y));
+                    sum += Load(CubeTexel(i - 1, f, 2*x+1, 2*y));
+                    sum += Load(CubeTexel(i - 1, f, 2*x+1, 2*y+1));
+                    sum += Load(CubeTexel(i - 1, f, 2*x, 2*y+1));
+
+                    sum = sum / vec4(4.0f);
+
+                    Store(CubeTexel(i, f, x, y), sum);
+                }
+            }
+        }
+    }
+}
+
+vec3 Texture::CubeFaceUVToDir(uint32 _face, vec2 _uv) const
+{
+    vec3 dir = vec3(0.0f, 0.0f, 1.0f);
+    vec2 uv = _uv * 2.0f - 1.0f;
+    uv.y = -uv.y;
+    
+    switch (_face)
+    {
+    case 0: dir = { uv.x, uv.y, 1.0f }; break;    // FRONT
+    case 1: dir = { -uv.x, uv.y, -1.0f }; break;  // BACK
+    case 2: dir = { -1.0f, uv.y, uv.x }; break;   // LEFT
+    case 3: dir = { 1.0f, uv.y, -uv.x  }; break;  // RIGHT
+    case 4: dir = { uv.x, 1.0f, -uv.y }; break;   // UP
+    case 5: dir = { uv.x, -1.0f, uv.y }; break;   // DOWN
+    }
+    
+    return dir;
+}
+
+bool Texture::TexelToCubeDir(uint32_t _x, uint32_t _y, vec3& _outDir)
+{
+    uint32 faceSize = CubeFaceSize();
+    
+    uint32_t col = _x / faceSize;
+    uint32_t row = _y / faceSize;
     
     if (col > 1 || row > 2)
         return false;
     
     uint32_t face = col + row * 2;
     
-    float a = ((float)(_x % _faceSize) + 0.5f) / (float)_faceSize;
-    float b = ((float)(_y % _faceSize) + 0.5f) / (float)_faceSize;
+    float a = ((float)(_x % faceSize) + 0.5f) / (float)faceSize;
+    float b = ((float)(_y % faceSize) + 0.5f) / (float)faceSize;
     float u = 2.0f * a - 1.0f;
     float v = 1.0f - b * 2.0f; // inverted uv.y
     
@@ -308,5 +511,89 @@ uint32 Texture::GetIndex(uint32 _x, uint32 _y) const
         return _x + _y * m_width;
     }
     return 0;
+}
+
+uint32 Texture::CubeFaceSize() const
+{
+    return m_width / 3;
+}
+
+uint32 Texture::LodCount() const
+{
+    return (uint32)glm::log2((float)CubeFaceSize()) + 1;
+}
+
+uint32 Texture::MaxCubeLod() const
+{
+    return glm::min((uint32)m_mipMapLast, LodCount() - 1);
+}
+
+uvec2 Texture::CubeTexel(uint32 _lod, uint32 _face, uint32 _x, uint32 _y) const
+{
+    assert(_lod <= MaxCubeLod() && "Texture is too small for this level of detail");
+    assert(_face < 6 && "Invalid cube face");
+
+    uint32 F = CubeFaceSize();
+    uint32 F_L = F >> _lod;
+    assert(_x < F_L && _y < F_L && "Texel out of face bounds");
+    
+    uvec2 origin = { 0, 0 };
+    if (_lod > 0)
+        origin = { 2*F, 3*F - 6*F_L };
+    
+    return origin + uvec2(_face % 2, _face / 2) * uvec2(F_L) + uvec2(_x, _y);
+}
+
+vec2 Texture::GetCubeSampleUV(vec3 _dir, uint32& _faceIndex) const
+{
+    enum Side { FRONT = 0, BACK, LEFT, RIGHT, UP, DOWN };
+    Side cubemapSide;
+    float absX = abs(_dir.x);
+    float absY = abs(_dir.y);
+    float absZ = abs(_dir.z);
+
+    if (absX >= absY && absX >= absZ) // x major
+    {
+        cubemapSide = _dir.x < 0 ? LEFT : RIGHT;
+    }
+    else if (absY >= absX && absY >= absZ) // y major
+    {
+        cubemapSide = _dir.y < 0 ? DOWN : UP;
+    }
+    else // z major
+    {
+        cubemapSide = _dir.z < 0 ? BACK : FRONT;
+    }
+    
+    _faceIndex = (uint32)cubemapSide;
+
+    glm::vec2 uv;
+    
+    float maxAbs = glm::max(absX, glm::max(absY, absZ));
+    vec3 d = _dir / maxAbs;
+    
+    switch (cubemapSide)
+    {
+    case FRONT:
+        uv = { (d.x + 1) / 2 , 1 - ((d.y + 1) / 2) };
+        break;
+    case BACK:
+        uv = { (-d.x + 1) / 2 , 1 - ((d.y + 1) / 2) };
+        break;
+    case LEFT:
+        uv = { (d.z + 1) / 2 , 1 - ((d.y + 1) / 2) };
+        break;
+    case RIGHT:
+        uv = { (-d.z + 1) / 2 , 1 - ((d.y + 1) / 2) };
+        break;
+    case UP:
+        uv = { (d.x + 1) / 2 , 1 - ((-d.z + 1) / 2) };
+        break;
+    case DOWN:
+        uv = { (d.x + 1) / 2 , 1 - ((d.z + 1) / 2) };
+        break;
+    }
+    
+    return uv; // face-local [0,1], face offset is applied in CubeTexel
 }
 

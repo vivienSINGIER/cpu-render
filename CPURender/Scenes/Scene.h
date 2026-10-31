@@ -30,7 +30,7 @@ protected:
 	virtual void OnDraw(Device* _pDevice) = 0;
 
 	// Registers every object inside the frustum to the device, to call between BeginPass / EndPass
-	void DrawObjects(Device* _pDevice, Frustum const& _frustum);
+	void DrawObjects(Device* _pDevice, Frustum const& _frustum, uint8_t _drawMask = 0b11111111);
 
 	Handle m_presentTarget; // texture copied to the screen at the end of the frame, set it in OnInit
 

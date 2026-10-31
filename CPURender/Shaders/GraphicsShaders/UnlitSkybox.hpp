@@ -2,6 +2,7 @@
 #ifndef SHADERS_UNLIT_SKYBOX_HPP_DEFINED
 #define SHADERS_UNLIT_SKYBOX_HPP_DEFINED
 
+#include <algorithm>
 #include <glm/ext/matrix_projection.hpp>
 
 #include "../../Datas/ConstantBuffers.hpp"
@@ -29,11 +30,12 @@ class UnlitSkybox_PS : public PixelShader
 public:
     SHADER_TEX(albedo, 0)
 
-        UnlitSkybox_PS(GraphicsContext* _ctx) : PixelShader(_ctx) {}
+    UnlitSkybox_PS(GraphicsContext* _ctx) : PixelShader(_ctx) {}
 
     vec4 Execute(Vertex_OUT const& _in) const override
     {
-        return albedo(_in.uv);
+        vec3 dir = glm::normalize(glm::vec3(_in.posModel));
+        return Sample_Cube_Lod_albedo(dir, 0.0f);
     }
 };
 

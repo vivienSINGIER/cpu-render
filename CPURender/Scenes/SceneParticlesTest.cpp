@@ -13,7 +13,7 @@
 
 void SceneParticlesTest::OnInit(Device* _pDevice)
 {
-    m_lightData.lights[0] = MakeDirectionalLight({ 1.0f, -1.0f, 1.0f }, 0.75f, Color::WHITE);
+    m_lightData.lights[0] = MakeDirectionalLight({ 1.0f, -1.0f, 1.0f }, 20.0f, Color::WHITE);
     m_lightData.ambient = 0.2f;
 
     m_mainPass.fb = _pDevice->GetDefaultFrameBuffer();

@@ -6,6 +6,7 @@ class Cubemap
 {
 	Handle m_texHandle;
 	Handle m_irradianceHandle;
+	Handle m_prefilterHandle;
 
 public:
 	Cubemap(const char* _name, 
@@ -20,5 +21,6 @@ public:
 
 	Handle GetTexture();
 	Handle GetIrradianceTexture();
+	Handle GetPrefilterTexture();
 };
 

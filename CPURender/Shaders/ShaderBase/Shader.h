@@ -46,6 +46,7 @@ protected:
     bool HasTexture(uint32_t _slot) const;
     glm::vec4 Sample(int _slot, glm::vec2 _uv) const;
     glm::vec4 SampleCube(int _slot, glm::vec3 _dir) const;
+    glm::vec4 SampleCubeLod(int _slot, glm::vec3 _dir, float _lod) const;
     glm::vec4 Load(uint32_t _slot, int _x, int _y) const;
     
     glm::vec4 LoadRW(uint32_t _slot, int _x, int _y) const;
@@ -129,6 +130,8 @@ struct ComputeBindScope
 #define SHADER_TEX(name, slot)                                              \
     private: int m_bind_##name = (AddTexture(slot), slot);                  \
     public: glm::vec4 name(glm::vec2 _uv) const { return Sample(slot, _uv); }   \
+            glm::vec4 Sample_Cube_##name(glm::vec3 _dir) const { return SampleCube(slot, _dir); }   \
+            glm::vec4 Sample_Cube_Lod_##name(glm::vec3 _dir, float _lod) const { return SampleCubeLod(slot, _dir, _lod); }   \
             glm::vec4 name(uint32_t _x, uint32_t _y) const                      \
             { return Load(slot, _x, _y); }                                  \
             static constexpr int TEX_SLOT_##name = slot;
@@ -137,6 +140,7 @@ struct ComputeBindScope
     private: int m_bind_##name = (AddTexture(slot, true), slot);            \
     public: glm::vec4 name(glm::vec2 _uv) const { return Sample(slot, _uv); }   \
             glm::vec4 Sample_Cube_##name(glm::vec3 _dir) const { return SampleCube(slot, _dir); }   \
+            glm::vec4 Sample_Cube_Lod_##name(glm::vec3 _dir, float _lod) const { return SampleCubeLod(slot, _dir, _lod); }   \
             glm::vec4 name(uint32_t _x, uint32_t _y) const                      \
             { return Load(slot, _x, _y); }                                  \
             bool Has_##name() const { return HasTexture(slot); }            \
