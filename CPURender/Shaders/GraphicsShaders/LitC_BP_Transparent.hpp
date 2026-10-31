@@ -62,34 +62,27 @@ public:
         float shininess = 1.0f - mat().roughness;
         glm::vec4 diffuse = mat().diffuseAlbedo * (1.0f - mat().metalness);
         BlinnPhongData d = { diffuse, mat().fresnelR0, shininess };
-        float shadowFactor = 0.0f;
+        const float shadowFactor = 0.0f;
         glm::vec4 directLight = ComputeLighting(Light(), d, _in.posModel, normalW, toEye, shadowFactor);
 
+        glm::vec4 litColor = ambient + directLight;
+
+        const glm::vec3 incidence = -toEye;
+
         glm::vec2 uv = glm::vec2(_in.posH.x, _in.posH.y) / mat().resolution;
-        glm::vec3 dir = glm::refract(-toEye, normalW, 1.0f / mat().refractionFactor);
-        dir = glm::mat3(Pass().view) * (dir + toEye);
+        glm::vec3 dir = glm::refract(incidence, normalW, 1.0f / mat().refractionFactor);
+        dir = glm::mat3(Pass().view) * (dir - incidence);
         glm::vec2 displacedUv = uv + glm::vec2(dir);
 
-        glm::vec4 litColor = ambient + directLight;
-        litColor.a = mat().transparency;
-
-        if (displacedUv.x < 0.0f || displacedUv.x > 1.0f || displacedUv.y < 0.0f || displacedUv.y > 1.0f) // if out of bounds, don't refract
+        if (displacedUv.x < 0.0f || displacedUv.x > 1.0f ||
+            displacedUv.y < 0.0f  || displacedUv.y > 1.0f ||
+            framebufferDepth(displacedUv).x < _in.posH.z) 
         {
-            litColor = glm::mix(litColor, framebufferTex(uv), mat().transparency);
-            //litColor = { 1, 0, 1, 1 };
+            displacedUv = uv; // if out of bounds, don't refract
         }
 
-        else if (framebufferDepth(displacedUv).x < _in.posH.z)
-        {
-            litColor = glm::mix(litColor, framebufferTex(uv), mat().transparency);
-            //litColor = { 1, 0, 1, 1 };
-        }
-
-        else 
-        {
-            litColor = glm::mix(litColor, framebufferTex(displacedUv), mat().transparency);
-            litColor.a = 1;
-        }
+        litColor = glm::mix(litColor, framebufferTex(displacedUv), mat().transparency);
+        litColor.a = 1.0f;
 
         return litColor;
     }
