@@ -108,10 +108,16 @@ void ShaderFactory::RegisterPrebuilts()
     RegisterGroup<LitC_VS, LitC_PS>("LitC");
     RegisterGroup<LitC_BP_VS, LitC_BP_PS>("LitC_BP");
     RegisterGroup<LitT_BP_VS, LitT_BP_PS>("LitT_BP");
+    RegisterGroup<LitC_BP_Cube_VS, LitC_BP_Cube_PS>("LitC_BP_Cube");
+
+    RegisterGroup<LitC_BP_Transparent_VS, LitC_BP_Transparent_PS>("LitC_BP_Transparent");
     
     RegisterGroup<PBR_VS, PBR_PS>("PBR");
     RegisterGroup<LitT_BP_Cube_VS, LitT_BP_Cube_PS>("LitT_BP_Cube");
 
+    RegisterCompute<FB_Fusion_CS>("FBFusion");
     RegisterCompute<GroupDebug_CS>("GroupDebug");
     RegisterCompute<GammaCorr_CS>("GammaCorrect");
+    RegisterCompute<TexCopy_CS>("TexCopy");
+    RegisterCompute<ParticleCS>("Particle");
 }

@@ -23,6 +23,8 @@ struct Mesh;
 class Device
 {
 public:
+	GraphicsContext m_ctx;
+
 	Device();
 	
 	void BeginFrame();
@@ -65,8 +67,6 @@ private:
 	
 	float m_adaptedLum = 0.18f;
 	float m_exposure = 1.0f;
-	
-	GraphicsContext m_ctx;
 	
 	std::vector<float> wPreDiv;
 	void VertexShaderStep(Mesh const& _mesh, ShaderStages _s, std::vector<Vertex_OUT>& _out);

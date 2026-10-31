@@ -33,10 +33,13 @@ Scene::~Scene()
 	{
 		delete o;
 	}
+	m_dynamic_objects.clear();
+	m_static_objects.clear();
 }
 
 void Scene::Init(Device* _pDevice)
 {
+	m_pDevice = _pDevice;
 	m_camera.SetAspectRatio((float)WIDTH / (float)HEIGHT);
 
 	OnInit(_pDevice);
@@ -47,7 +50,7 @@ void Scene::Draw(Device* _pDevice)
 	OnDraw(_pDevice);
 }
 
-void Scene::DrawObjects(Device* _device, Frustum const& _frustum)
+void Scene::DrawObjects(Device* _device, Frustum const& _frustum, uint8_t _drawMask)
 {
 	std::vector<Object*> to_draw = {};
 
@@ -55,7 +58,7 @@ void Scene::DrawObjects(Device* _device, Frustum const& _frustum)
 
 	for (Object* o : to_draw)
 	{
-		_device->RegisterCommand(o->mesh, o->transform.GetMatrix(), o->mat);
+		if(_drawMask & o->drawMask) _device->RegisterCommand(o->mesh, o->transform.GetMatrix(), o->mat);
 	}
 }
 
@@ -79,13 +82,22 @@ void Scene::Update(float dt)
 		m_octTree.UpdateStatic();
 	}
 
+	bool dirty = false;
 	for (Object* o : m_dynamic_objects)
 	{
+		if (o->transform.IsWorldDirty() == false)
+			continue;
+
+		dirty = true;
 		o->transform.UpdateMatrix();
 		o->mesh.world_box = o->mesh.local_box.Transformed(o->transform.GetMatrix());
 	}
 
-	m_octTree.UpdateDynamic();
+	if (dirty)
+	{
+		dirty = false;
+		m_octTree.UpdateDynamic();
+	}
 }
 
 std::vector<Object*>* Scene::GetObjects(ObjectType type)
@@ -141,6 +153,7 @@ void Scene::RemoveObject(Object* o)
 		m_static_objects.pop_back();
 
 		dirty_static = true;
+		obj_id--;
 	}
 	else if (o->type == DYNAMIC)
 	{
@@ -149,6 +162,7 @@ void Scene::RemoveObject(Object* o)
 
 		m_dynamic_objects[o->id] = o2;
 		m_dynamic_objects.pop_back();
+		obj_id--;
 	}
 }
 

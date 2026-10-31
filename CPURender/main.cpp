@@ -8,6 +8,8 @@
 
 #include "engine.hpp"
 #include "Scenes/TexturedBP_Scene.h"
+#include "Scenes/SceneParticlesTest.h"
+
 #include "Core/Device.h"
 #include "Scenes/PBR_Scene.h"
 #include "Scenes/Transparency_Scene.h"
@@ -78,7 +80,8 @@ int main(void) {
 
     Engine engine;
     Texture frameBuffer(WIDTH, HEIGHT,  Texture::RGBA32, Texture::LINEAR);
-    engine.Init<PBR_Scene>(&frameBuffer);
+    engine.Init<SceneParticlesTest>(&frameBuffer);
+    
     bool isRunning = true;
     uint32_t frame = 1;
 

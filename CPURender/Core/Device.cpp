@@ -166,9 +166,12 @@ void Device::Present(Handle _texH)
 			// mapped = c / (c + 1.0f);
 			// mapped = c * ((L / (1.0f + L)) / glm::max(L, 1e-6f)); // map to [0, 1], prevent division by zero on black pixels <- Reinhard approximation
 			mapped = glm::clamp((c * (2.51f * c + 0.03f)) / (c * (2.43f * c + 0.59f) + 0.14f), 0.0f, 1.0f); // Narkowicz approximation of the ACES film curve
+
+			count++;
 		}
 		
 		m_renderTarget->Store(x, HEIGHT - y - 1, vec4(mapped, 1.0f));
+	
 	}
 	
 	if (!isSingleChannel && count > 0)
@@ -177,7 +180,6 @@ void Device::Present(Handle _texH)
 		m_adaptedLum += (avgLum - m_adaptedLum) * (1 - exp(-m_pendingPasses[m_activePass].desc.passData.deltaTime)); // TODO use dt
 		m_adaptedLum = glm::clamp(m_adaptedLum, 0.01f, 100.0f); // avoid extreme exposure 
 	}
-	
 	m_pendingPasses.clear();
 }
 

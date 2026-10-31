@@ -37,7 +37,7 @@ void GraphicsContext::SetHeapsState(HeapState _state)
 
 Texture* GraphicsContext::GetTexture(Handle _h)
 {
-    assert((_h.HeapId() == _h.HeapId() == TEXTURE_HEAP_ID) && "invalid heap id");
+    assert((_h.HeapId() == TEXTURE_HEAP_ID) && "invalid heap id");
     
     return textureHeap.Get(_h);
 }
