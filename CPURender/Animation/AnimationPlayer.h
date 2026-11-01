@@ -16,9 +16,9 @@ struct Node
 struct NodeAnim
 {
 	std::string name = "";
-	std::vector<glm::vec3> positions = {};
-	std::vector<glm::quat> rotations = {};
-	std::vector<glm::vec3> scalings = {};
+	std::vector<KeyPosition> mPositionKeys = {};
+	std::vector<KeyRotation> mRotationKeys = {};
+	std::vector<KeyScale> mScalingKeys = {};
 };
 
 struct Animation
@@ -28,11 +28,11 @@ struct Animation
 
 	std::vector<NodeAnim> channels = {};
 };
-
-struct AnimationPlayer
-{
-	Node* root_node = nullptr;
-	std::vector<AnimMesh> meshes;
-	std::vector<Animation> animations;
-};
+//
+//struct AnimationScene
+//{
+//	Node* root_node = nullptr;
+//	Model mesh;
+//	std::vector<Animation> animations;
+//};
 

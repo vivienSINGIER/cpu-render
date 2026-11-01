@@ -8,7 +8,8 @@
 #include "../Heaps/Handle.hpp"
 #include "../Maths/AABB.h"
 
-#include "../Animation/AnimationData.h"
+#define MAX_BONES 100
+#define MAX_BONE_INFLUENCE 4
 
 struct Vertex
 {
@@ -20,7 +21,7 @@ struct Vertex
 	size_t id = 0;
 
 	int bone_ids[MAX_BONE_INFLUENCE] = {};
-	float weights[MAX_BONE_INFLUENCE] = {};
+	float weights[MAX_BONE_INFLUENCE] = {1.f};
 };
 
 struct Vertex_OUT

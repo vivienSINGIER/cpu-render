@@ -117,5 +117,6 @@
     <ClInclude Include="stb_image.h" />
     <ClInclude Include="Animation\AnimationPlayer.h" />
     <ClInclude Include="Animation\AnimationData.h" />
+    <ClInclude Include="Animation\AssimpGLMHelpers.h" />
   </ItemGroup>
 </Project>

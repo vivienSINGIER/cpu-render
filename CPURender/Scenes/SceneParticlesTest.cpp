@@ -11,8 +11,11 @@
 #include "../Shaders/ComputeShaders/ParticleCS.hpp"
 #include "../Factories/BufferFactory.h"
 
+#include "../Animation/AnimationData.h"
+
 void SceneParticlesTest::OnInit(Device* _pDevice)
 {
+#pragma region PARTICLE_INIT
     m_lightData.lights[0] = MakeDirectionalLight({ 1.0f, -1.0f, 1.0f }, 20.0f, Color::WHITE);
     m_lightData.ambient = 0.2f;
 
@@ -26,12 +29,11 @@ void SceneParticlesTest::OnInit(Device* _pDevice)
 
     m_camTransform.SetPosition(glm::vec3(0.0f, 0.0f, -10.f));
 
-    Handle diff = TextureFactory::Instance()->CreateTexture("dark_rock_diffuse", "Assets/Obj/Plane/PaletteBaseColor_6.png");
-    Handle ambient = TextureFactory::Instance()->CreateTexture("dark_rock_ambient", "Assets/Obj/Plane/nimrod_bottom_col_5.png");
-    Handle normal = TextureFactory::Instance()->CreateTexture("dark_rock_normal", "Assets/Obj/Plane/nimrod_bottom_nrm_4.png");
-    Handle roughness = TextureFactory::Instance()->CreateTexture("dark_rock_roughness", "Assets/Obj/Plane/PaletteMetallicRoughness.png");
-   // Handle displacement = TextureFactory::Instance()->CreateTexture("dark_rock_displacement", "Assets/Textures/DarkRock/displacement.png");
-    Handle metalness = TextureFactory::Instance()->CreateTexture("dark_rock_metalness", "Assets/Obj/Plane/PaletteMetallicRoughness2.png");
+    Handle diff = TextureFactory::Instance()->CreateTexture("dark_rock_diffuse", "Assets/Textures/DarkRock/diffuse.png", true);
+    Handle ambient = TextureFactory::Instance()->CreateTexture("dark_rock_ambient", "Assets/Textures/DarkRock/ambient.png");
+    Handle normal = TextureFactory::Instance()->CreateTexture("dark_rock_normal", "Assets/Textures/DarkRock/normal.png");
+    Handle roughness = TextureFactory::Instance()->CreateTexture("dark_rock_roughness", "Assets/Textures/DarkRock/roughness.png");
+    Handle displacement = TextureFactory::Instance()->CreateTexture("dark_rock_displacement", "Assets/Textures/DarkRock/displacement.png");
 
     LitT_BP_PS::MaterialCB cb = {
         {1.0f, 1.0f, 1.0f, 1.0f},
@@ -40,7 +42,7 @@ void SceneParticlesTest::OnInit(Device* _pDevice)
     };
 
     UnlitParticle_PS::ParticleColor color = { glm::vec4(1, 1, 1, 1) };
-    UnlitC_PS::UnlitColor unlit_color = { glm::vec4(0, 1, 1, 1) };
+    UnlitC_PS::UnlitColor unlit_color = { glm::vec4(1, 0.25f, 0, 1) };
 
     m_uav_buffer = BufferFactory::Instance()->CreateUAVBuffer<UavParticle>(MAX_PARTICLES);
     m_CS_handle = ShaderFactory::Instance()->CreateComputeShader<ParticleCS>();
@@ -65,21 +67,20 @@ void SceneParticlesTest::OnInit(Device* _pDevice)
     m_mat->SetTexture(LitT_BP_PS::TEX_SLOT_normal, normal);
 
     m_mat->SetTexture(LitT_BP_PS::TEX_SLOT_roughness, roughness);
-    //m_mat->SetTexture(LitT_BP_PS::TEX_SLOT_displacement, displacement);
-    m_mat->SetTexture(LitT_BP_PS::TEX_SLOT_metal, metalness);
+    m_mat->SetTexture(LitT_BP_PS::TEX_SLOT_displacement, displacement);
 
     Mesh m = GeometryFactory::Instance()->LoadMesh("Assets/Obj/Plane/plane.obj");
 
     obj = CreateObject(DYNAMIC);
-    obj->mesh = m; // GeometryFactory::Instance()->BuildCube();
-    obj->mat = m_mat.get();
+    obj->mesh = GeometryFactory::Instance()->BuildUVSphere(15, 15, true);
+    obj->mat = m_unlit.get();
     obj->transform.SetPosition(glm::vec3(-1.5f, 1.5f, -1.5f));
-    obj->transform.SetScale(0.1f);
+    obj->transform.SetScale(1.f);
 
     Mesh cube = GeometryFactory::Instance()->BuildCube();
     Object* floor = CreateObject(DYNAMIC);
     floor->mesh = cube;
-    floor->mat = m_unlit.get();
+    floor->mat = m_mat.get();
     floor->transform.SetPosition(glm::vec3(0.0f, -2.f, 0.f));
     floor->transform.SetScale(glm::vec3(25.0f, 0.2f, 25.0f));
 
@@ -144,6 +145,16 @@ void SceneParticlesTest::OnInit(Device* _pDevice)
     }
 
     mesh_particle = GeometryFactory::Instance()->CreateMesh(vertices, indices);
+#pragma endregion PARTICLE_INIT
+
+    Model test("Assets/Dae/exportRootNodeMeshTest_out.dae");
+    std::cout << "Bones = " << test.GetBoneCount() << std::endl;
+
+    Object* model_test = CreateObject(DYNAMIC);
+    model_test->mesh = test.meshes[0];
+    model_test->transform.SetIdentity();
+    model_test->transform.SetScale(0.01f);
+    model_test->mat = m_unlit.get();
 }
 
 void SceneParticlesTest::OnHandleEvent(const SDL_Event& event)
