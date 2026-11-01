@@ -526,8 +526,8 @@ void Texture::GenerateMips()
     
     for (uint32 l = 1; l < m_mipCount; l++)
     {
-        uvec2 src = MipDims(l - 1);
         uvec2 dst = MipDims(l);
+        uvec2 src = MipDims(l - 1);
         
         int32 dstX = (int32)dst.x;
         int32 dstY = (int32)dst.y;
@@ -537,10 +537,15 @@ void Texture::GenerateMips()
         {
             for (int32 x = 0; x < dstX; ++x)
             {
-                vec4 sum =  Load(2*x, 2*y, l - 1);
-                sum +=      Load(2*x+1, 2*y, l - 1);
-                sum +=      Load(2*x, 2*y+1, l - 1);
-                sum +=      Load(2*x+1, 2*y+1, l - 1);
+                uint32 x0 = 2 * (uint32)x;
+                uint32 y0 = 2 * (uint32)y;
+                uint32 x1 = glm::min(x0 + 1, src.x - 1);
+                uint32 y1 = glm::min(y0 + 1, src.y - 1);
+
+                vec4 sum =  Load(x0, y0, l - 1);
+                sum +=      Load(x1, y0, l - 1);
+                sum +=      Load(x0, y1, l - 1);
+                sum +=      Load(x1, y1, l - 1);
                 
                 Store(x, y, l, sum / 4.0f);
             }
