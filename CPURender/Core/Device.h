@@ -68,13 +68,15 @@ private:
 	float m_adaptedLum = 0.18f;
 	float m_exposure = 1.0f;
 	
+	std::vector<Vertex_OUT> m_transformed;
+	std::vector<uint8> m_visible;
+	std::vector<Vertex_OUT> m_clipped;
 	std::vector<float> wPreDiv;
-	void VertexShaderStep(Mesh const& _mesh, ShaderStages _s, std::vector<Vertex_OUT>& _out);
 	
-	void ClippingStep(std::vector<Vertex_OUT>& _inOut);
-	void ClipToScreen(std::vector<Vertex_OUT>& _inOut);
-	
-	void RasterStep(std::vector<Vertex_OUT> const& _vBuffer, ShaderStages _s);
+	void VertexShaderStep(Mesh const& _mesh, ShaderStages _s);
+	void ClippingStep(Mesh const& _mesh);
+	void ClipToScreen();
+	void RasterStep(ShaderStages _s);
 };
 
 #endif

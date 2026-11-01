@@ -1,12 +1,9 @@
 #include "Cubemap.h"
-
 #include <chrono>
 #include <iostream>
 
-Cubemap::Cubemap(const char* _name, const char* _front, const char* _back, const char* _left, const char* _right, const char* _up, const char* _down, bool _isSrgb, uint32_t _irradianceFaceSize)
+Handle Cubemap::SetTexture(const char* _name, const char* _front, const char* _back, const char* _left, const char* _right, const char* _up, const char* _down, bool _isSrgb, uint32_t _irradianceFaceSize)
 {
-	// create new texture with 6 combined
-	
 	std::chrono::time_point start = std::chrono::high_resolution_clock::now();
 	
 	// Get 6 textures
@@ -33,9 +30,9 @@ Cubemap::Cubemap(const char* _name, const char* _front, const char* _back, const
 		assert(width == faceTexs[i].Width() && height == faceTexs[i].Height(), "Err: All faces must have the same size");
 		assert(faceTexs[i].Width() == faceTexs[i].Height(), "Err: All faces must be square");
 
-		int xOffset = (i%2) * width;
-		int yOffset = (i/2) * height;
-		
+		int xOffset = (i % 2) * width;
+		int yOffset = (i / 2) * height;
+
 		for (int j = 0; j < height; j++)
 		{
 			for (int k = 0; k < width; k++)

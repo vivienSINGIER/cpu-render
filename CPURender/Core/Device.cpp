@@ -200,15 +200,12 @@ void Device::ExecCommand(DrawCommand const& _cmd)
 	
 	ShaderStages stages = m_ctx.shaderGroupHeap.Get(_cmd.material->PipelineHandle())->Resolve();
 	
-	std::vector<Vertex_OUT> vBuffer;
-	std::vector<size_t> iBuffer;
-	
 	wPreDiv.clear();
 	ShaderBindScope bind(stages, res);
-	VertexShaderStep(_cmd.mesh, stages, vBuffer);
-	ClippingStep(vBuffer);
-	ClipToScreen(vBuffer);
-	RasterStep(vBuffer, stages);
+	VertexShaderStep(_cmd.mesh, stages);
+	ClippingStep(_cmd.mesh);
+	ClipToScreen();
+	RasterStep(stages);
 }
 
 void Device::ExecCommand(DispatchCommand const& _cmd)
@@ -276,33 +273,32 @@ FrameBuffer const& Device::GetDefaultFrameBuffer()
 	return m_defaultFB;
 }
 
-void Device::VertexShaderStep(Mesh const& _mesh, ShaderStages _s, std::vector<Vertex_OUT>& _out)
+void Device::VertexShaderStep(Mesh const& _mesh, ShaderStages _s)
 {
 	uint32_t vertexCount = _mesh.vertexCount;
 	uint32_t indexCount = _mesh.indexCount;
 	
 	assert(indexCount % 3 == 0 && "Index count must be divisible by 3 : incomplete triangle");
 	
-	PerPassCB pCB = m_ctx.constantBufferHeap.Read<PerPassCB>(m_perPassCB);
-	PerObjectCB oCB = m_ctx.constantBufferHeap.Read<PerObjectCB>(m_perObjectCB);
-	
 	Vertex const* vBuffer = m_ctx.vertexBufferHeap.GetData(_mesh.vertexBuffer);
 	Index const* iBuffer = m_ctx.indexBufferHeap.GetData(_mesh.indexBuffer);
 
-	std::vector<Vertex_OUT> transformed(vertexCount);
+	if (m_transformed.size() < vertexCount)
+		m_transformed.resize(vertexCount);
 
 	PipelineState state = m_pendingPasses[m_activePass].desc.state;
 	
 	// Per vertex stage
 #pragma omp parallel
-#pragma omp for
+#pragma omp for schedule(dynamic, 1024)
 	for (uint32_t v = 0; v < vertexCount; v++)
 	{
-		transformed[v] = _s.vs->Execute(vBuffer[v]);
+		m_transformed[v] = _s.vs->Execute(vBuffer[v]);
 	}
 
 	size_t triCount = indexCount / 3;
-	std::vector<uint8_t> visible(triCount);
+	if (m_visible.size() < triCount)
+		m_visible.resize(triCount);
 
 	// Per triangle stage - backface culling
 #pragma omp parallel
@@ -317,146 +313,107 @@ void Device::VertexShaderStep(Mesh const& _mesh, ShaderStages _s, std::vector<Ve
 		assert(i1 < vertexCount && "index out of bounds");
 		assert(i2 < vertexCount && "index out of bounds");
 		
-		Triangle currentTriangle = { transformed[i0], transformed[i1], transformed[i2] };
+		Triangle currentTriangle = { m_transformed[i0], m_transformed[i1], m_transformed[i2] };
 		
 		if (state.cullMode == CullMode::NONE)
-			visible[t] = true;
+			m_visible[t] = true;
 		else if (state.cullMode == CullMode::BACK)
-			visible[t] = IsFront(currentTriangle);
+			m_visible[t] = IsFront(currentTriangle);
 		else
-			visible[t] = !IsFront(currentTriangle);
-	}
-
-	// Compaction stage
-	_out.clear();
-	_out.reserve(indexCount);
-
-	for (size_t t = 0; t < triCount; t++)
-	{
-		if (visible[t] == false)
-			continue;
-
-		Index i0 = iBuffer[3 * t];
-		Index i1 = iBuffer[3 * t + 1];
-		Index i2 = iBuffer[3 * t + 2];
-
-		_out.push_back(transformed[i0]);
-		_out.push_back(transformed[i1]);
-		_out.push_back(transformed[i2]);
+			m_visible[t] = !IsFront(currentTriangle);
 	}
 }
 
-void Device::ClippingStep(std::vector<Vertex_OUT>& _inOut)
+// TODO parallelize
+
+void Device::ClippingStep(Mesh const& _mesh)
 {
-	std::vector<Vertex_OUT> clippedVertexBuffer;
+	Index const* iBuffer = m_ctx.indexBufferHeap.GetData(_mesh.indexBuffer);
+	size_t triCount = _mesh.indexCount / 3;
 
-	for (uint32_t v = 0; v < _inOut.size(); v += 3)
+	m_clipped.clear();
+	m_clipped.reserve(_mesh.indexCount);
+
+	Vertex_OUT polyA[9];
+	Vertex_OUT polyB[9];
+	
+	for (uint32_t t = 0; t < triCount; t++)
 	{
-		std::vector<Vertex_OUT> subVBuffer;
-
-		subVBuffer.push_back(_inOut[v]);
-		subVBuffer.push_back(_inOut[v + 1]);
-		subVBuffer.push_back(_inOut[v + 2]);
-		Triangle currentTriangle = { subVBuffer[0], subVBuffer[1], subVBuffer[2] };
-
-		std::vector<uint8_t> frustumBitmasks = Clipping::GetBufferFrustumBitmask(subVBuffer);
-
-		// Edge cases
-		uint8_t frustumBitmasksOr = Clipping::GetBufferFrustumBitmaskOr(frustumBitmasks);
-		if (frustumBitmasksOr == 0)
-		{
-			clippedVertexBuffer.insert(clippedVertexBuffer.end(), _inOut.begin() + v, _inOut.begin() + v + 3);
+		if (m_visible[t] == false)
 			continue;
-		}
-		if ((frustumBitmasks[0] & frustumBitmasks[1] & frustumBitmasks[2]) != 0)
-			continue;
-
 		
-		for (int i = 0; i < 6; i++)
+		Vertex_OUT const& v0 = m_transformed[iBuffer[3 * t]];
+		Vertex_OUT const& v1 = m_transformed[iBuffer[3 * t + 1]];
+		Vertex_OUT const& v2 = m_transformed[iBuffer[3 * t + 2]];
+		
+		uint8 m0 = Clipping::GetFrustumBitmask(v0);
+		uint8 m1 = Clipping::GetFrustumBitmask(v1);
+		uint8 m2 = Clipping::GetFrustumBitmask(v2);
+		
+		uint8 planesToClip = m0 | m1 | m2;
+		if (planesToClip == 0)
 		{
-			std::vector<Vertex_OUT> planeSubVB;
-			frustumBitmasks = Clipping::GetBufferFrustumBitmask(subVBuffer);
-			frustumBitmasksOr = Clipping::GetBufferFrustumBitmaskOr(frustumBitmasks);
-			if (((frustumBitmasksOr >> i) & 1) == 0) continue;
-
-			size_t vertexCount = subVBuffer.size();
-			for (int j = 0; j < vertexCount; j++)
-			{
-
-				bool v1InFrustum = ((frustumBitmasks[j] >> Clipping::FrustumPlane(i)) & 1) == 0;
-				bool v2InFrustum = ((frustumBitmasks[(j + 1) % vertexCount] >> Clipping::FrustumPlane(i)) & 1) == 0;
-
-				if (v1InFrustum == false)
-				{
-					if (v2InFrustum == true)
-					{
-						float t = Clipping::GetPlaneIntersection(subVBuffer[j], subVBuffer[(j + 1) % vertexCount], Clipping::FrustumPlane(i));
-						planeSubVB.push_back(InterpolateVertex(subVBuffer[j], subVBuffer[(j + 1) % vertexCount], t));
-					}
-				}
-
-				else
-				{
-					planeSubVB.push_back(subVBuffer[j]);
-
-					if (v2InFrustum == false)
-					{
-						float t = Clipping::GetPlaneIntersection(subVBuffer[j], subVBuffer[(j + 1) % vertexCount], Clipping::FrustumPlane(i));
-						planeSubVB.push_back(InterpolateVertex(subVBuffer[j], subVBuffer[(j + 1) % vertexCount], t));
-					}
-				}
-
-			}
-
-			subVBuffer = planeSubVB;
+			m_clipped.push_back(v0);
+			m_clipped.push_back(v1);
+			m_clipped.push_back(v2);
+			continue;
 		}
+		if ((m0 & m1 & m2) != 0)
+			continue;
 
-		// trianguler
-		std::vector<Vertex_OUT> triangulatedSubVBuffer;
-
-		size_t vCount = subVBuffer.size();
-		if (vCount < 3) continue;
-		for (int i = 0; i < vCount - 2; i++)
+		polyA[0] = v0;
+		polyA[1] = v1;
+		polyA[2] = v2;
+		Vertex_OUT* src = polyA;
+		Vertex_OUT* dst = polyB;
+		int count = 3;
+		
+		for (int p = 0; p < 6; p++)
 		{
-			triangulatedSubVBuffer.push_back(subVBuffer[0]);
-			triangulatedSubVBuffer.push_back(subVBuffer[i + 1]);
-			triangulatedSubVBuffer.push_back(subVBuffer[i + 2]);
+			if ( ((planesToClip >> p) & 1) == 0)
+				continue;
+			
+			count = Clipping::ClipPolygonAgainstPlane(src, count, dst, (Clipping::FrustumPlane)p);
+			std::swap(src, dst);
 		}
-
-		clippedVertexBuffer.insert(clippedVertexBuffer.end(), triangulatedSubVBuffer.begin(), triangulatedSubVBuffer.end());
+		
+		for (int i = 1; i + 1 < count; i++)
+		{
+			m_clipped.push_back(src[0]);
+			m_clipped.push_back(src[i]);
+			m_clipped.push_back(src[i + 1]);
+		}
 	}
-
-	_inOut = clippedVertexBuffer;
 }
 
-void Device::ClipToScreen(std::vector<Vertex_OUT>& _inOut)
+void Device::ClipToScreen()
 {
-	wPreDiv.resize(_inOut.size());
+	wPreDiv.resize(m_clipped.size());
 	
 #pragma omp parallel for
-	for (uint32_t v = 0; v < _inOut.size(); v++)
+	for (uint32_t v = 0; v < m_clipped.size(); v++)
 	{
-		wPreDiv[v] = _inOut[v].posH.w;
+		wPreDiv[v] = m_clipped[v].posH.w;
 
 		// Perspective Divide
-		_inOut[v].posH /= _inOut[v].posH.w;
+		m_clipped[v].posH /= m_clipped[v].posH.w;
 
 		// Ndc
-		_inOut[v].posH = _inOut[v].posH * 0.5f + 0.5f; 
+		m_clipped[v].posH = m_clipped[v].posH * 0.5f + 0.5f; 
 
 		// To Screen
-		_inOut[v].posH[0] = _inOut[v].posH[0] * m_viewport[2] + m_viewport[0];
-		_inOut[v].posH[1] = _inOut[v].posH[1] * m_viewport[3] + m_viewport[1];
+		m_clipped[v].posH[0] = m_clipped[v].posH[0] * m_viewport[2] + m_viewport[0];
+		m_clipped[v].posH[1] = m_clipped[v].posH[1] * m_viewport[3] + m_viewport[1];
 	}
 }
 
 // TODO Add multiple PS output - Output / gBuffer member -> check match
 
-void Device::RasterStep(std::vector<Vertex_OUT> const& _vBuffer, ShaderStages _s)
+void Device::RasterStep(ShaderStages _s)
 {
 	Binning::Tiles& tiles = m_tiles;
 	Binning::ClearTiles(tiles);
-	Binning::BlinningStep(_vBuffer, tiles);
+	Binning::BlinningStep(m_clipped, tiles);
 	
 	PipelineState state = m_pendingPasses[m_activePass].desc.state;
 	
@@ -481,7 +438,7 @@ void Device::RasterStep(std::vector<Vertex_OUT> const& _vBuffer, ShaderStages _s
 			glm::vec3 baryOffsetY = entry.barOffsetY;
 			Index v = entry.index;
 			
-			Triangle tri = Triangle{ _vBuffer[entry.index], _vBuffer[entry.index + 1], _vBuffer[entry.index + 2] };
+			Triangle tri = Triangle{ m_clipped[entry.index], m_clipped[entry.index + 1], m_clipped[entry.index + 2] };
 			glm::vec3 bary = BarycentricWeight({ (float)t.x + 0.5f, (float)t.y + 0.5f}, tri);
 			
 			for (int x = box.minX; x < box.maxX; x++)

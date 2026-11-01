@@ -27,11 +27,11 @@ void SceneParticlesTest::OnInit(Device* _pDevice)
     m_camTransform.SetPosition(glm::vec3(0.0f, 0.0f, -10.f));
 
     Handle diff = TextureFactory::Instance()->CreateTexture("dark_rock_diffuse", "Assets/Obj/Plane/PaletteBaseColor_6.png");
-    Handle ambient = TextureFactory::Instance()->CreateTexture("dark_rock_ambient", "Assets/Obj/Plane/nimrod_bottom_col_5.png");
-    Handle normal = TextureFactory::Instance()->CreateTexture("dark_rock_normal", "Assets/Obj/Plane/nimrod_bottom_nrm_4.png");
-    Handle roughness = TextureFactory::Instance()->CreateTexture("dark_rock_roughness", "Assets/Obj/Plane/PaletteMetallicRoughness.png");
+    // Handle ambient = TextureFactory::Instance()->CreateTexture("dark_rock_ambient", "Assets/Obj/Plane/nimrod_bottom_col_5.png");
+    // Handle normal = TextureFactory::Instance()->CreateTexture("dark_rock_normal", "Assets/Obj/Plane/nimrod_bottom_nrm_4.png");
+    // Handle roughness = TextureFactory::Instance()->CreateTexture("dark_rock_roughness", "Assets/Obj/Plane/PaletteMetallicRoughness.png");
    // Handle displacement = TextureFactory::Instance()->CreateTexture("dark_rock_displacement", "Assets/Textures/DarkRock/displacement.png");
-    Handle metalness = TextureFactory::Instance()->CreateTexture("dark_rock_metalness", "Assets/Obj/Plane/PaletteMetallicRoughness2.png");
+    // Handle metalness = TextureFactory::Instance()->CreateTexture("dark_rock_metalness", "Assets/Obj/Plane/PaletteMetallicRoughness2.png");
 
     LitT_BP_PS::MaterialCB cb = {
         {1.0f, 1.0f, 1.0f, 1.0f},
@@ -61,12 +61,12 @@ void SceneParticlesTest::OnInit(Device* _pDevice)
     m_mat = ShaderFactory::Instance()->CreateMaterial("LitT_BP");
     m_mat->SetParams<LitT_BP_PS::MaterialCB>(LitT_BP_PS::CB_SLOT_mat, cb);
     m_mat->SetTexture(LitT_BP_PS::TEX_SLOT_diffuse, diff);
-    m_mat->SetTexture(LitT_BP_PS::TEX_SLOT_ambient, ambient);
-    m_mat->SetTexture(LitT_BP_PS::TEX_SLOT_normal, normal);
+    // m_mat->SetTexture(LitT_BP_PS::TEX_SLOT_ambient, ambient);
+    // m_mat->SetTexture(LitT_BP_PS::TEX_SLOT_normal, normal);
 
-    m_mat->SetTexture(LitT_BP_PS::TEX_SLOT_roughness, roughness);
+    // m_mat->SetTexture(LitT_BP_PS::TEX_SLOT_roughness, roughness);
     //m_mat->SetTexture(LitT_BP_PS::TEX_SLOT_displacement, displacement);
-    m_mat->SetTexture(LitT_BP_PS::TEX_SLOT_metal, metalness);
+    // m_mat->SetTexture(LitT_BP_PS::TEX_SLOT_metal, metalness);
 
     Mesh m = GeometryFactory::Instance()->LoadMesh("Assets/Obj/Plane/plane.obj");
 
@@ -105,7 +105,7 @@ void SceneParticlesTest::OnInit(Device* _pDevice)
     fire = ParticleManager::Instance()->CreateEmitter({ 0, 2, 0 }, fireDesc, 0.2f);
 
     ParticleDesc rainDesc;
-    rainDesc.amount = 0;
+    rainDesc.amount = 200;
     rainDesc.spawnRadius = 12.5f;
     rainDesc.particleBeginSize = 0.025f;
     rainDesc.particleEndSize = 0.025f;
