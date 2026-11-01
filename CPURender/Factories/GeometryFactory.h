@@ -16,6 +16,7 @@ public:
 
 	Mesh BuildPyramid(bool _randomColors = false);
 	Mesh BuildCube(bool _randomColors = false);
+	Mesh BuildSkybox();
 	Mesh BuildTriangle(bool _randomColors = false);
 	Mesh BuildIcosphere(int _subdivisions, bool _randomColors = false);
 	Mesh BuildUVSphere(uint8_t _sliceCount, uint8_t _stackCount, bool _randomColors = false);
@@ -25,6 +26,7 @@ public:
 	Mesh LoadMesh(std::string const& _path);
 	Mesh CreateMesh(std::vector<Vertex>& _vertices, std::vector<Index>& _indices);
 
+	Mesh CreateMesh(std::vector<Vertex>& _vertices, std::vector<Index>& _indices);
 private:
 	static inline GeometryFactory* g_instance = nullptr;
 	GraphicsContext* m_ctx = nullptr;

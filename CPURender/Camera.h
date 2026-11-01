@@ -16,6 +16,7 @@ public:
     void SetWorld(glm::mat4x4 const& _world);
     void SetFov(float _fov);
     void SetNearDistance(float _nearPlane);
+    void SetShadowDistance(float _shadowDistance);
     void SetFarDistance(float _farPlane);
     void SetAspectRatio(float _aspectRatio);
 
@@ -23,14 +24,19 @@ public:
     float GetNearDistance() const;
     float GetFarDistance() const;
     float GetAspectRatio() const;
+    
+    glm::mat4x4 const& GetShadowProj() const;
+    glm::mat4x4 const& GetView() const;
 
     void UpdateMatrices();
     Frustum const& GetFrustum();
+    void FillData(PerPassCB* _passData);
 
 private:
     glm::mat4x4 m_world;
     glm::mat4x4 m_view;
     glm::mat4x4 m_proj;
+    glm::mat4x4 m_shadowProj;
     glm::mat4x4 m_viewProj;
 
     glm::vec3 m_pos = { 0.0f, 0.0f, 0.0f };
@@ -39,10 +45,10 @@ private:
     float m_nearPlane = 1.0f;
     float m_farPlane = 1000.0f;
     float m_aspectRatio = 0.0f;
+    float m_shadowDistance = 25.0f;
 
     Frustum m_frustum;
 
-    void FillData(PerPassCB* _passData);
 
     friend class Device;
 };

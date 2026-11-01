@@ -1,11 +1,14 @@
 #pragma once
 #include <stdint.h>
 #include <stddef.h>
+#include <glm/glm.hpp>
 
 //Students cannot change anything in this file
 
-#define WIDTH 1280
-#define HEIGHT 920
+using namespace glm;
 
-#define SCREEN_WIDTH 2560
-#define SCREEN_HEIGHT 1600
+#define WIDTH 640
+#define HEIGHT 460
+
+#define SCREEN_WIDTH 1280
+#define SCREEN_HEIGHT 920

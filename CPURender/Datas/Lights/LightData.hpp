@@ -77,7 +77,7 @@ inline void FillLightPassCB(LightData _data, LightPassCB& _out)
     _out.ambientLight = _data.ambient;
 }
 
-inline LightDesc MakeDirectionalLight(glm::vec3 direction, float _intensity, Color _color = Color::WHITE)
+inline LightDesc MakeDirectionalLight(glm::vec3 direction, float _intensity, glm::vec4 _color = Color::WHITE)
 {
     LightDesc d;
     d.type = LightType::Directional;
@@ -87,12 +87,12 @@ inline LightDesc MakeDirectionalLight(glm::vec3 direction, float _intensity, Col
     
     d.light.falloffStart = 0.0f;
     d.light.falloffEnd = 1.0f;
-    d.light.color = Color::ToVec4(_color);
+    d.light.color = _color;
     d.light.position = glm::vec3(0.0f);
     return d;
 }
 
-inline LightDesc MakePointLight(glm::vec3 _pos, float _intensity, glm::vec2 _fallOff, Color _color = Color::WHITE)
+inline LightDesc MakePointLight(glm::vec3 _pos, float _intensity, glm::vec2 _fallOff, glm::vec4 _color = Color::WHITE)
 {
     LightDesc d;
     d.type = LightType::Point;
@@ -102,12 +102,12 @@ inline LightDesc MakePointLight(glm::vec3 _pos, float _intensity, glm::vec2 _fal
     
     d.light.falloffStart = _fallOff.x;
     d.light.falloffEnd = _fallOff.y;
-    d.light.color = Color::ToVec4(_color);
+    d.light.color = _color;
     d.light.position = _pos;
     return d;
 }
 
-inline LightDesc MakeSpotLight(glm::vec3 _pos, glm::vec3 _dir, float _intensity, glm::vec2 _fallOff, Color _color = Color::WHITE)
+inline LightDesc MakeSpotLight(glm::vec3 _pos, glm::vec3 _dir, float _intensity, glm::vec2 _fallOff, glm::vec4 _color = Color::WHITE)
 {
     LightDesc d;
     d.type = LightType::Spot;
@@ -117,7 +117,7 @@ inline LightDesc MakeSpotLight(glm::vec3 _pos, glm::vec3 _dir, float _intensity,
     
     d.light.falloffStart = _fallOff.x;
     d.light.falloffEnd = _fallOff.y;
-    d.light.color = Color::ToVec4(_color);
+    d.light.color = _color;
     d.light.position = _pos;
     return d;
 }

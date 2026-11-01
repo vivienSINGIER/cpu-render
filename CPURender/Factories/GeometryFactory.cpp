@@ -1,5 +1,5 @@
 ﻿#include "GeometryFactory.h"
-
+#include <iostream>
 #include <algorithm>
 #include <cassert>
 #include <cmath>
@@ -12,7 +12,7 @@
 #include <glm/gtc/constants.hpp>
 
 #include "../Core/GraphicsContext.h"
-
+ 
 void GeometryFactory::Init(GraphicsContext* _pContext)
 {
 	assert(g_instance == nullptr && "GeometryFactory already initialized");
@@ -34,8 +34,20 @@ Mesh GeometryFactory::CreateMesh(std::vector<Vertex>& _vertices, std::vector<Ind
 	Mesh m;
 	m.vertexCount = (uint32_t)_vertices.size();
 	m.indexCount = (uint32_t)_indices.size();
-	m.vertexBuffer = m_ctx->vertexBufferHeap.Create(_vertices.data(), (uint16_t)m.vertexCount);
-	m.indexBuffer = m_ctx->indexBufferHeap.Create(_indices.data(), (uint16_t)m.indexCount);
+	m.vertexBuffer = m_ctx->vertexBufferHeap.Create(_vertices.data(), (uint32_t)m.vertexCount);
+	m.indexBuffer = m_ctx->indexBufferHeap.Create(_indices.data(), (uint32_t)m.indexCount);
+
+	glm::vec3& box_min = m.local_box.min;
+	glm::vec3& box_max = m.local_box.max;
+	box_min = _vertices[0].position;
+	box_max = _vertices[0].position;
+
+	for (int i = 1; i < _vertices.size(); ++i)
+	{
+		box_min = glm::min(box_min, _vertices[i].position);
+		box_max = glm::max(box_max, _vertices[i].position);
+	}
+
 	return m;
 }
 
@@ -154,6 +166,71 @@ Mesh GeometryFactory::BuildCube(bool _randomColors)
 	if (_randomColors)
 		ApplyPaletteColors(vertices);
 
+	return CreateMesh(vertices, indices);
+}
+
+Mesh GeometryFactory::BuildSkybox()
+{
+	std::vector<Vertex> vertices;
+	std::vector<uint32_t> indices;
+
+	const float s = 1.0f/3.0f;
+	const glm::vec2 dFactor = glm::vec2(1*s, 2*s);
+	const glm::vec2 uFactor = glm::vec2(0*s, 2*s);
+	const glm::vec2 lFactor = glm::vec2(0*s, 1*s);
+	const glm::vec2 rFactor = glm::vec2(1*s, 1*s);
+	const glm::vec2 fFactor = glm::vec2(0*s, 0*s);
+	const glm::vec2 bFactor = glm::vec2(1*s, 0*s);
+
+	vertices = {
+		// DOWN  (y = -0.5)
+		Vertex{glm::vec3(-0.5f, -0.5f, -0.5f), glm::vec2(0.0f, 1.0f) * s + dFactor},
+		Vertex{glm::vec3(-0.5f, -0.5f,  0.5f), glm::vec2(0.0f, 0.0f) * s + dFactor},
+		Vertex{glm::vec3(0.5f, -0.5f, -0.5f), glm::vec2(1.0f, 1.0f) * s + dFactor},
+		Vertex{glm::vec3(0.5f, -0.5f,  0.5f), glm::vec2(1.0f, 0.0f) * s + dFactor},
+		// UP    (y = +0.5)
+		Vertex{glm::vec3(-0.5f,  0.5f, -0.5f), glm::vec2(0.0f, 0.0f) * s + uFactor},
+		Vertex{glm::vec3(-0.5f,  0.5f,  0.5f), glm::vec2(0.0f, 1.0f) * s + uFactor},
+		Vertex{glm::vec3(0.5f,  0.5f, -0.5f), glm::vec2(1.0f, 0.0f) * s + uFactor},
+		Vertex{glm::vec3(0.5f,  0.5f,  0.5f), glm::vec2(1.0f, 1.0f) * s + uFactor},
+		// LEFT  (x = -0.5)
+		Vertex{glm::vec3(-0.5f, -0.5f, -0.5f), glm::vec2(0.0f, 1.0f)*s + lFactor},
+		Vertex{glm::vec3(-0.5f, -0.5f,  0.5f), glm::vec2(1.0f, 1.0f)*s + lFactor},
+		Vertex{glm::vec3(-0.5f,  0.5f, -0.5f), glm::vec2(0.0f, 0.0f)*s + lFactor},
+		Vertex{glm::vec3(-0.5f,  0.5f,  0.5f), glm::vec2(1.0f, 0.0f)*s + lFactor},
+		// RIGHT (x = +0.5)
+		Vertex{glm::vec3(0.5f, -0.5f, -0.5f), glm::vec2(1.0f, 1.0f)*s + rFactor},
+		Vertex{glm::vec3(0.5f, -0.5f,  0.5f), glm::vec2(0.0f, 1.0f)*s + rFactor},
+		Vertex{glm::vec3(0.5f,  0.5f, -0.5f), glm::vec2(1.0f, 0.0f)*s + rFactor},
+		Vertex{glm::vec3(0.5f,  0.5f,  0.5f), glm::vec2(0.0f, 0.0f)*s + rFactor},
+		// FRONT (z = -0.5)
+		Vertex{glm::vec3(-0.5f, -0.5f, -0.5f), glm::vec2(1.0f, 1.0f) * s + bFactor},
+		Vertex{glm::vec3(0.5f, -0.5f, -0.5f), glm::vec2(0.0f, 1.0f) * s + bFactor},
+		Vertex{glm::vec3(-0.5f,  0.5f, -0.5f), glm::vec2(1.0f, 0.0f) * s + bFactor},
+		Vertex{glm::vec3(0.5f,  0.5f, -0.5f), glm::vec2(0.0f, 0.0f) * s + bFactor},
+		// BACK  (z = +0.5)
+		Vertex{glm::vec3(-0.5f, -0.5f,  0.5f), glm::vec2(0.0f, 1.0f) * s + fFactor},
+		Vertex{glm::vec3(0.5f, -0.5f,  0.5f), glm::vec2(1.0f, 1.0f) * s + fFactor},
+		Vertex{glm::vec3(-0.5f,  0.5f,  0.5f), glm::vec2(0.0f, 0.0f) * s + fFactor},
+		Vertex{glm::vec3(0.5f,  0.5f,  0.5f), glm::vec2(1.0f, 0.0f) * s + fFactor},
+	};
+
+	indices = {
+		// DOWN
+		0, 1, 2,   3,  2,  1,
+		// UP
+		4,  6,  5,  7,  5,  6,
+		// LEFT
+		8,  10, 9,  9, 10, 11,
+		// RIGHT
+		12, 13, 14,  13, 15, 14,
+		// FRONT
+		16, 17, 18,  17, 19, 18,
+		// BACK
+		20, 22, 21,  21, 22, 23,
+	};
+
+	vertices = CalculateNormalsAndTangents(vertices, indices);
 	return CreateMesh(vertices, indices);
 }
 
@@ -567,6 +644,30 @@ Mesh GeometryFactory::LoadMesh(std::string const& _path)
 
 	vertices = CalculateNormalsAndTangents(vertices, indices);
 
+	for (Vertex& v : vertices)
+	{
+		const auto& p = v.position;
+		const auto& uv = v.uv;
+		const auto& c = v.color;
+		const auto& n = v.normal;
+		const auto& t = v.tangent;
+
+		if (p.x != p.x || p.y != p.y || p.z != p.z)
+			std::cout << "NaN Position !!!\n";
+
+		if (uv.x != uv.x || uv.y != uv.y)
+			std::cout << "NaN UV !!!\n";
+
+		if (c.x != c.x || c.y != c.y || c.z != c.z)
+			std::cout << "NaN Color !!!\n";
+
+		if (t.x != t.x || t.y != t.y || t.z != t.z)
+			std::cout << "NaN Tangente !!!\n";
+
+		if (n.x != n.x || n.y != n.y || n.z != n.z)
+			std::cout << "NaN Normal !!!\n";
+	}
+
 	return CreateMesh(vertices, indices);
 }
 
@@ -576,7 +677,7 @@ Mesh GeometryFactory::LoadMesh(std::string const& _path)
 
 void GeometryFactory::ApplyPaletteColors(std::vector<Vertex>& _vertices)
 {
-	Color const palette[] = {
+	glm::vec4 const palette[] = {
 		Color::RED, Color::GREEN, Color::BLUE, Color::YELLOW,
 		Color::CYAN, Color::MAGENTA, Color::ORANGE, Color::PURPLE,
 		Color::LIME, Color::PINK, Color::TEAL, Color::BROWN,
@@ -607,10 +708,10 @@ void GeometryFactory::ApplyGradientColors(std::vector<Vertex>& _vertices)
 		for (int k = 0; k < 3; k++)
 			t[k] = extent[k] > 1e-6f ? (v.position[k] - min[k]) / extent[k] : 0.5f;
 		
-		v.color = Color(255,
-			static_cast<glm::uint8>(55.0f + t.x * 200.0f),
-			static_cast<glm::uint8>(55.0f + t.y * 200.0f),
-			static_cast<glm::uint8>(55.0f + t.z * 200.0f));
+		v.color = glm::vec4(0.216f + t.x * 0.784f,
+					0.216f + t.y * 0.784f,
+					0.216f + t.z * 0.784f,
+					1.0f);
 	}
 }
 
@@ -713,6 +814,9 @@ std::vector<Vertex> GeometryFactory::CalculateNormalsAndTangents(std::vector<Ver
 	// 2. Premier passage : Accumulation par face
 	for (size_t i = 0; i < _indices.size(); i += 3)
 	{
+		if (_indices[i] >= _vertices.size() || _indices[i + 1] >= _vertices.size() || _indices[i + 2] >= _vertices.size())
+			continue;
+
 		uint32_t i0 = _indices[i], i1 = _indices[i+1], i2 = _indices[i+2];
 		Vertex& v0 = _vertices[i0]; Vertex& v1 = _vertices[i1]; Vertex& v2 = _vertices[i2];
 	
@@ -721,34 +825,66 @@ std::vector<Vertex> GeometryFactory::CalculateNormalsAndTangents(std::vector<Ver
 	
 		// Normale de la face (non normalisée pour pondérer par l'aire de la face)
 		glm::vec3 faceNormal = glm::cross(e1, e2);
-	
+		if (glm::dot(faceNormal, faceNormal) < 1e-8f)
+			continue; // Triangle 3D plat (dégénéré)
+
 		// Tangente
 		float du1 = v1.uv.x - v0.uv.x, dv1 = v1.uv.y - v0.uv.y;
 		float du2 = v2.uv.x - v0.uv.x, dv2 = v2.uv.y - v0.uv.y;
-		float f = 1.0f / (du1 * dv2 - du2 * dv1);
-	
-		glm::vec3 faceTangent = f * (dv2 * e1 - dv1 * e2);
-	
+
+		float det = (du1 * dv2 - du2 * dv1);
+
+		if (det > 1e-8f)
+		{
+			float f = 1.0f / det;
+
+			glm::vec3 faceTangent = f * (dv2 * e1 - dv1 * e2);
+
+			if (std::isfinite(faceTangent.x) && std::isfinite(faceTangent.y) && std::isfinite(faceTangent.z))
+			{
+				for (uint32_t idx : {i0, i1, i2}) {
+					accum[idx].t += faceTangent;
+				}
+			}
+		}
+		
 		for (uint32_t idx : {i0, i1, i2}) {
 			accum[idx].n += faceNormal;
-			accum[idx].t += faceTangent;
 		}
 	}
 	
 	// 3. Second passage : Orthogonalisation et stockage
 	for (size_t i = 0; i < _vertices.size(); i++)
 	{
-		glm::vec3 N = glm::normalize(accum[i].n);
-		glm::vec3 T = accum[i].t;
-	
-		// Gram-Schmidt : T' = Normalize(T - (N.T) * N)
-		T = glm::normalize(T - glm::dot(T, N) * N);
-	
+		glm::vec3 N(0.0f, 0.0f, 1.0f);
+		if (std::isfinite(accum[i].n.x) && std::isfinite(accum[i].n.y) && std::isfinite(accum[i].n.z))
+		{
+			float lenSq = glm::dot(accum[i].n, accum[i].n);
+			if (lenSq > 1e-8f)
+			{
+				N = glm::normalize(accum[i].n);
+			}
+		}
+
+		glm::vec3 T(1.0f, 0.0f, 0.0f); 
+		if (std::isfinite(accum[i].t.x) && std::isfinite(accum[i].t.y) && std::isfinite(accum[i].t.z))
+		{
+			glm::vec3 tanAcc = accum[i].t;
+
+			// Gram-Schmidt : T' = Normalize(T - (N.T) * N)
+			glm::vec3 result = tanAcc - glm::dot(tanAcc, N) * N;
+
+			float resLenSq = glm::dot(result, result);
+			if (resLenSq > 1e-8f && std::isfinite(resLenSq))
+			{
+				T = glm::normalize(result);
+			}
+		}
+
 		_vertices[i].normal = N;
-		// On stocke souvent la tangente en float4 (x, y, z, w) pour la bitangente
-		_vertices[i].tangent = T; 
+		_vertices[i].tangent = T;
 	}
-	
+
 	return _vertices;
 }
 

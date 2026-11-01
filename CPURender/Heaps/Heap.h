@@ -5,6 +5,7 @@
 #include <vector>
 
 #include "Handle.hpp"
+#include "HeapUtils.hpp"
 
 class GraphicsContext;
 
@@ -15,21 +16,24 @@ public:
     template <typename Derived, typename... Args>
     Handle Create(Args&&... args);
 
-    // takes ownership of an already built item, for types whose constructor isn't public
     template <typename Derived>
     Handle Insert(std::unique_ptr<Derived> _item);
 
     Base* Get(Handle _h);
     
     void Delete(Handle _h);
-    
+
+    HeapState State() const { return m_state; }
+
 private:
     std::vector<std::unique_ptr<Base>> m_items;
     std::vector<size_t> m_free;
     uint16_t m_heapId;
     GraphicsContext* m_ctx;
-    
+    HeapState m_state = HeapState::FREE;
+
     Heap(uint16_t _heapId, GraphicsContext* _ctx);
+    void SetState(HeapState _state) { m_state = _state; }
     
     friend class GraphicsContext;
 };

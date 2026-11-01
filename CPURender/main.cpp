@@ -6,8 +6,13 @@
 #include <iostream>
 #include <ostream>
 
-#include "engine.h"
+#include "engine.hpp"
+#include "Scenes/TexturedBP_Scene.h"
+#include "Scenes/SceneParticlesTest.h"
+
 #include "Core/Device.h"
+#include "Scenes/PBR_Scene.h"
+#include "Scenes/Transparency_Scene.h"
 //Students cannot change anything in this file
 
 
@@ -55,7 +60,7 @@ int main(void) {
 
     texture = SDL_CreateTexture(
         renderer,
-        SDL_PIXELFORMAT_ARGB32,
+        SDL_PIXELFORMAT_RGBA128_FLOAT,
         SDL_TEXTUREACCESS_STREAMING,
         WIDTH,
         HEIGHT
@@ -74,8 +79,9 @@ int main(void) {
     }
 
     Engine engine;
-    Texture frameBuffer(WIDTH, HEIGHT, Texture::LINEAR);
-    engine.init(&frameBuffer);
+    Texture frameBuffer(WIDTH, HEIGHT,  Texture::RGBA32, Texture::LINEAR);
+    engine.Init<SceneParticlesTest>(&frameBuffer);
+    
     bool isRunning = true;
     uint32_t frame = 1;
 
@@ -91,14 +97,14 @@ int main(void) {
             engine.handleEvent(event);
         }
 
-        engine.renderFrame();
+        engine.mainLoop();
 
         /* Copy contents of the framebuffer to our SDL texture */
         SDL_UpdateTexture(
             texture,
             NULL,
             frameBuffer.GetData(),
-            (int)(frameBuffer.Width() * sizeof(Color))
+            (int)(frameBuffer.Width() * sizeof(vec4))
         );
 
         /* Render texture and display the renderer */

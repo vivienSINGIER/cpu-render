@@ -1,5 +1,8 @@
 #include "Device.h"
 
+#include <iostream>
+#include <ostream>
+
 #include "Binning.hpp"
 #include "../Camera.h"
 #include "../main.h"
@@ -8,77 +11,177 @@
 #include "../Datas/Triangle.h"
 #include "../Clipping.h"
 #include "../Datas/Lights/LightData.hpp"
+#include "../Datas/Lights/LightHelpers.hpp"
 #include "../Shaders/ShaderBase/Material.h"
 
 Device::Device() : m_ctx()
 {
-	m_viewport = { 0.0f, 0.0f, WIDTH, HEIGHT };
-	m_clearColor = Color(255, 20, 20, 20);
-	
-	m_mainCam = nullptr;
 	m_renderTarget = nullptr;
 	
-	m_frameBuffer = m_ctx.frameBufferHeap.Create<Texture>(WIDTH, HEIGHT, Texture::Encoding::MORTON, Color::WHITE);
-	m_depthBuffer = m_ctx.frameBufferHeap.Create<Texture>(WIDTH, HEIGHT, Texture::Encoding::MORTON, Color::BLACK);
+	m_defaultFB.width = WIDTH;
+	m_defaultFB.height = HEIGHT;
+	m_defaultFB.gBuffer[0] = m_ctx.textureHeap.Create<Texture>(WIDTH, HEIGHT, Texture::RGBA32, Texture::MORTON, Color::WHITE);
+	m_defaultFB.depthBuffer = m_ctx.textureHeap.Create<Texture>(WIDTH, HEIGHT, Texture::R32F, Texture::MORTON, Color::BLACK);
+	m_defaultFB.clearColor = vec4(0.0f, 0.0f, 0.0f, 1.0f);
 	
 	m_perPassCB = m_ctx.constantBufferHeap.Create(sizeof(PerPassCB));
 	m_lightCB = m_ctx.constantBufferHeap.Create(sizeof(LightPassCB));
 	m_perObjectCB = m_ctx.constantBufferHeap.Create(sizeof(PerObjectCB));
+	m_dispatchCB = m_ctx.constantBufferHeap.Create(sizeof(DispatchCB));
 }
 
-void Device::Clear()
+void Device::BeginFrame()
 {
-	Texture* rt = m_ctx.frameBufferHeap.Get(m_frameBuffer);
-	Texture* depth = m_ctx.frameBufferHeap.Get(m_depthBuffer);
+	assert(m_renderTarget != nullptr && "Can't draw on uninitialized render target");
 	
-	rt->Clear(m_clearColor);
-	depth->Clear(std::bit_cast<Color>(1.0f));
+	m_pendingPasses.clear();
+	
+	m_ctx.SetHeapsState(HeapState::BLOCKED);
 }
 
-void Device::BeginDraw()
+void Device::BeginPass(PassDesc const& _pass)
 {
-	Clear();
+	assert(m_hasOpenPass == false && "Can't open multiple render passes at once");
+	m_hasOpenPass = true;
 	
-	assert(m_mainCam != nullptr && "Can't draw on uninitialized main camera");
-	PerPassCB perPassCB;
-	perPassCB.deltaTime = 0.066f;
-	perPassCB.lightIntensity = 0.8f;
-	perPassCB.lightDirection = { 1, 1, 1 };
-	perPassCB.lightDirection = glm::normalize(perPassCB.lightDirection);
-	m_mainCam->FillData(&perPassCB);
+	m_pendingPasses.push_back({_pass, {}});
+}
+
+void Device::Clear(FrameBuffer _fb, ClearFlags _flags)
+{
+	for (int i = 0; i < MAX_RT; i++)
+	{
+		if (_fb.gBuffer[i].IsValid() == false)
+			continue;
+		if (_flags.clearGBuffer[i] == false)
+			continue;
+		
+		Texture* rt = m_ctx.textureHeap.Get(_fb.gBuffer[i]);
+		rt->Clear(_fb.clearColor);
+	}
 	
-	m_ctx.constantBufferHeap.Write<PerPassCB>(m_perPassCB, perPassCB);
+	if (_fb.useDepth == false)
+		return;
+	if (_flags.clearDepth == false)
+		return;
+	
+	Texture* depth = m_ctx.textureHeap.Get(_fb.depthBuffer);
+	depth->Clear(glm::vec4(1.0f));
 }
 
 void Device::RegisterCommand(Mesh const& _m, glm::mat4x4 _world, MaterialData const* _mat)
 {
-	DrawCommand d = { _m, _world, _mat };
-	m_pendingDraws.push_back(d);
-}
-
-void Device::Draw()
-{
-	for (DrawCommand& d : m_pendingDraws)
-	{
-		ExecCommand(d);
-	}
-	m_pendingDraws.clear();
-}
-
-void Device::EndDraw()
-{
-	assert(m_renderTarget != nullptr && "Can't draw on uninitialized render target");
+	assert(m_hasOpenPass == true && "Can't push command into close pass queue");
 	
-	Texture* fb = m_ctx.frameBufferHeap.Get(m_frameBuffer);
+	DrawCommand d = { _m, _world, _mat };
+	m_pendingPasses.back().cmds.push_back(d);
+}
+
+void Device::Dispatch(MaterialData const* _mat, uint32_t _groupsX, uint32_t _groupsY, uint32_t _groupsZ)
+{
+	assert(m_hasOpenPass == true && "Can't push command into close pass queue");
+	
+	DispatchCommand d = { _mat, {_groupsX, _groupsY, _groupsZ} };
+	m_pendingPasses.back().cmds.push_back(d);
+}
+
+void Device::EndPass()
+{
+	assert(m_hasOpenPass == true && "Can't close already closed pass");
+	assert(m_pendingPasses.size() > 0 && "Can't close absent pass");
+	
+	m_hasOpenPass = false;
+}
+
+void Device::EndFrame()
+{
+	for (uint32_t i = 0; i < m_pendingPasses.size(); i++)
+	{
+		RenderPass& pass = m_pendingPasses[i];
+		m_activePass = i;
+		
+		if (pass.desc.isCompute == false)
+		{
+			m_boundFB = pass.desc.fb;
+			m_viewport = { 0.0f, 0.0f, m_boundFB.width, m_boundFB.height };
+			Binning::InitTiles(m_tiles, m_boundFB.width, m_boundFB.height);
+			pass.desc.passData.renderTargetSize = { m_boundFB.width, m_boundFB.height };
+		
+			m_ctx.constantBufferHeap.Write<PerPassCB>(m_perPassCB, pass.desc.passData);
+			
+			Clear(m_boundFB, pass.desc.clearFlags);
+		}
+		
+		for (Command const& d : pass.cmds)
+			std::visit([this](auto const& _cmd) { ExecCommand(_cmd); }, d);	
+	}
+	
+	m_ctx.SetHeapsState(HeapState::FREE);
+}
+
+void Device::Present(Handle _texH)
+{
+	Texture* fb = m_ctx.textureHeap.Get(_texH);
+	Texture* depth = m_boundFB.useDepth ? m_ctx.textureHeap.Get(m_boundFB.depthBuffer) : nullptr;
+	
+	uint32_t width = fb->Width();
+	uint32_t height = fb->Height();
+	
+	bool match = width == WIDTH && height == HEIGHT;
+	// assert(width == WIDTH && height == HEIGHT && "Can't present texture not matching final render target format");
+	bool isSingleChannel = fb->GetFormat() == Texture::R32F;
+	
+	double logSum = 0.0;
+	int32_t count = 0;
+	float exposure = m_exposure * 0.18f / m_adaptedLum;
 	
 #pragma omp parallel
-#pragma omp for
-	for (uint32_t i = 0; i < HEIGHT * WIDTH; i++)
+#pragma omp for reduction(+:logSum, count)
+	for (int32_t i = 0; i < HEIGHT * WIDTH; i++)
 	{
 		uint32_t y = i / WIDTH;
 		uint32_t x = i % WIDTH;
-		m_renderTarget->SetPixelColor(x, HEIGHT - y - 1, fb->GetPixelColor(x, y));
+		
+		glm::vec4 v;
+
+		if (match)
+			v = fb->Load(x, y);
+		else
+			v = fb->SampleNP({ ((float)x + 0.5f) / (float)WIDTH, ((float)y + 0.5f) / (float)HEIGHT });
+
+		bool isClear = v == m_boundFB.clearColor; 
+			
+		vec3 mapped = vec3(v);
+		if (isSingleChannel)
+			mapped = { v.r, v.r, v.r };
+		else if (isClear == false)
+		{
+			vec3 hdr = vec3(v);
+			
+			if (v.x != v.x)
+				std::cout << "NaN Pixel\n";
+
+			logSum += glm::log(1e-4f + glm::max(Lighting::Luminance(hdr), 0.0f)); // start at small positive value to avoid inf from log on negative number
+			count++;
+			
+			vec3 c = hdr * exposure;
+			// float L = Lighting::Luminance(c);
+			// mapped = c / (c + 1.0f);
+			// mapped = c * ((L / (1.0f + L)) / glm::max(L, 1e-6f)); // map to [0, 1], prevent division by zero on black pixels <- Reinhard approximation
+			mapped = glm::clamp((c * (2.51f * c + 0.03f)) / (c * (2.43f * c + 0.59f) + 0.14f), 0.0f, 1.0f); // Narkowicz approximation of the ACES film curve
+		}
+		
+		m_renderTarget->Store(x, HEIGHT - y - 1, vec4(mapped, 1.0f));
+	
 	}
+	
+	if (!isSingleChannel && count > 0)
+	{
+		float avgLum = glm::exp((float)(logSum / count));
+		m_adaptedLum += (avgLum - m_adaptedLum) * (1 - exp(-m_pendingPasses[m_activePass].desc.passData.deltaTime)); // TODO use dt
+		m_adaptedLum = glm::clamp(m_adaptedLum, 0.01f, 100.0f); // avoid extreme exposure 
+	}
+	m_pendingPasses.clear();
 }
 
 void Device::ExecCommand(DrawCommand const& _cmd)
@@ -95,7 +198,7 @@ void Device::ExecCommand(DrawCommand const& _cmd)
 	res.cbs[CB_LIGHT_PASS] = m_ctx.constantBufferHeap.GetRaw(m_lightCB);
 	res.cbs[CB_PER_OBJECT] = m_ctx.constantBufferHeap.GetRaw(m_perObjectCB);
 	
-	ShaderStages stages = m_ctx.shaderGroupHeap.Get(_cmd.material->ShaderGroupHandle())->Resolve();
+	ShaderStages stages = m_ctx.shaderGroupHeap.Get(_cmd.material->PipelineHandle())->Resolve();
 	
 	std::vector<Vertex_OUT> vBuffer;
 	std::vector<size_t> iBuffer;
@@ -108,9 +211,33 @@ void Device::ExecCommand(DrawCommand const& _cmd)
 	RasterStep(vBuffer, stages);
 }
 
-void Device::SetMainCamera(Camera* _c)
+void Device::ExecCommand(DispatchCommand const& _cmd)
 {
-	m_mainCam = _c;
+	ComputeShader* cs = m_ctx.computeShaderHeap.Get(_cmd.material->PipelineHandle());
+	glm::uvec3 gs = cs->GroupSize();
+	glm::uvec3 g = _cmd.groups;
+	
+	DispatchCB cb = { g, 0, g * gs, 0 };
+	m_ctx.constantBufferHeap.Write<DispatchCB>(m_dispatchCB, cb);
+	
+	ShaderResources res;
+	_cmd.material->Resolve(res);
+	res.cbs[CB_PER_PASS] = m_ctx.constantBufferHeap.GetRaw(m_perPassCB);
+	res.cbs[CB_LIGHT_PASS] = m_ctx.constantBufferHeap.GetRaw(m_lightCB);
+	res.cbs[CB_PER_OBJECT] = m_ctx.constantBufferHeap.GetRaw(m_dispatchCB);
+	
+	ComputeBindScope bind(cs, res);
+	
+	int groupCount = (int)(g.x * g.y * g.z);
+#pragma omp parallel for schedule(dynamic)
+	for (int i = 0; i < groupCount; i++)
+	{
+		glm::uvec3 gId = { i % g.x, (i / g.x) % g.y, i / (g.x * g.y) };
+		for (uint32_t z = 0; z < gs.z; z++)
+			for (uint32_t y = 0; y < gs.y; y++)
+				for (uint32_t x = 0; x < gs.x; x++)
+					cs->Execute(gId * gs + glm::uvec3{x, y, z});
+	}
 }
 
 void Device::SetRenderTarget(Texture* _tex)
@@ -123,6 +250,30 @@ void Device::SetLightData(LightData const& _ld)
 	LightPassCB l;
 	FillLightPassCB(_ld, l);
 	m_ctx.constantBufferHeap.Write<LightPassCB>(m_lightCB, l);
+}
+
+FrameBuffer Device::CreateFrameBuffer(uint32_t _w, uint32_t _h, uint32_t _colorBuffCount, bool _useDepth, vec4 _clearColor)
+{
+	assert(_colorBuffCount <= MAX_RT && "out of bounds color buffer count");
+	
+	FrameBuffer out;
+	out.useDepth = _useDepth;
+	out.width = _w;
+	out.height = _h;
+	out.clearColor = _clearColor;
+	
+	for (uint32_t i = 0; i < _colorBuffCount; i++)
+		out.gBuffer[i] = m_ctx.textureHeap.Create<Texture>(_w, _h, Texture::RGBA32, Texture::MORTON, Color::WHITE);
+
+	if (_useDepth)
+		out.depthBuffer = m_ctx.textureHeap.Create<Texture>(_w, _h, Texture::R32F, Texture::MORTON, Color::BLACK);
+	
+	return out;
+}
+
+FrameBuffer const& Device::GetDefaultFrameBuffer()
+{
+	return m_defaultFB;
 }
 
 void Device::VertexShaderStep(Mesh const& _mesh, ShaderStages _s, std::vector<Vertex_OUT>& _out)
@@ -140,6 +291,8 @@ void Device::VertexShaderStep(Mesh const& _mesh, ShaderStages _s, std::vector<Ve
 
 	std::vector<Vertex_OUT> transformed(vertexCount);
 
+	PipelineState state = m_pendingPasses[m_activePass].desc.state;
+	
 	// Per vertex stage
 #pragma omp parallel
 #pragma omp for
@@ -163,10 +316,15 @@ void Device::VertexShaderStep(Mesh const& _mesh, ShaderStages _s, std::vector<Ve
 		assert(i0 < vertexCount && "index out of bounds");
 		assert(i1 < vertexCount && "index out of bounds");
 		assert(i2 < vertexCount && "index out of bounds");
-
+		
 		Triangle currentTriangle = { transformed[i0], transformed[i1], transformed[i2] };
-
-		visible[t] = IsFront(currentTriangle);
+		
+		if (state.cullMode == CullMode::NONE)
+			visible[t] = true;
+		else if (state.cullMode == CullMode::BACK)
+			visible[t] = IsFront(currentTriangle);
+		else
+			visible[t] = !IsFront(currentTriangle);
 	}
 
 	// Compaction stage
@@ -224,8 +382,9 @@ void Device::ClippingStep(std::vector<Vertex_OUT>& _inOut)
 			size_t vertexCount = subVBuffer.size();
 			for (int j = 0; j < vertexCount; j++)
 			{
-				bool v1InFrustum = ((frustumBitmasks[j] << Clipping::FrustumPlane(i)) & 1) == 0;
-				bool v2InFrustum = ((frustumBitmasks[(j + 1) % vertexCount] << Clipping::FrustumPlane(i)) & 1) == 0;
+
+				bool v1InFrustum = ((frustumBitmasks[j] >> Clipping::FrustumPlane(i)) & 1) == 0;
+				bool v2InFrustum = ((frustumBitmasks[(j + 1) % vertexCount] >> Clipping::FrustumPlane(i)) & 1) == 0;
 
 				if (v1InFrustum == false)
 				{
@@ -277,32 +436,41 @@ void Device::ClipToScreen(std::vector<Vertex_OUT>& _inOut)
 #pragma omp parallel for
 	for (uint32_t v = 0; v < _inOut.size(); v++)
 	{
-		wPreDiv[v] = _inOut[v].positionH.w;
+		wPreDiv[v] = _inOut[v].posH.w;
 
 		// Perspective Divide
-		_inOut[v].positionH /= _inOut[v].positionH.w;
+		_inOut[v].posH /= _inOut[v].posH.w;
 
 		// Ndc
-		_inOut[v].positionH = _inOut[v].positionH * 0.5f + 0.5f; 
+		_inOut[v].posH = _inOut[v].posH * 0.5f + 0.5f; 
 
 		// To Screen
-		_inOut[v].positionH[0] = _inOut[v].positionH[0] * m_viewport[2] + m_viewport[0];
-		_inOut[v].positionH[1] = _inOut[v].positionH[1] * m_viewport[3] + m_viewport[1];
+		_inOut[v].posH[0] = _inOut[v].posH[0] * m_viewport[2] + m_viewport[0];
+		_inOut[v].posH[1] = _inOut[v].posH[1] * m_viewport[3] + m_viewport[1];
 	}
 }
 
+// TODO Add multiple PS output - Output / gBuffer member -> check match
+
 void Device::RasterStep(std::vector<Vertex_OUT> const& _vBuffer, ShaderStages _s)
 {
-	Binning::Tiles tiles;
-	Binning::InitTiles(tiles);
+	Binning::Tiles& tiles = m_tiles;
+	Binning::ClearTiles(tiles);
 	Binning::BlinningStep(_vBuffer, tiles);
 	
-	Texture* fb = m_ctx.frameBufferHeap.Get(m_frameBuffer);
-	Texture* db = m_ctx.frameBufferHeap.Get(m_depthBuffer);
+	PipelineState state = m_pendingPasses[m_activePass].desc.state;
+	
+	bool writeColor = m_boundFB.gBuffer[0].IsValid();
+	
+	Texture* fb = writeColor ? m_ctx.textureHeap.Get(m_boundFB.gBuffer[0]) : nullptr;
+	Texture* db = m_boundFB.useDepth ? m_ctx.textureHeap.Get(m_boundFB.depthBuffer) : nullptr;
+	
+	if (m_boundFB.gBuffer[0].IsValid() == false && m_boundFB.useDepth == false)
+		return;
 	
 #pragma omp parallel
 #pragma omp for schedule(dynamic)
-	for (int i = 0; i < TILE_COUNT; i++)
+	for (int i = 0; i < tiles.Count(); i++)
 	{
 		Binning::Tile const& t = tiles[i];
 		
@@ -328,21 +496,40 @@ void Device::RasterStep(std::vector<Vertex_OUT> const& _vBuffer, ShaderStages _s
 					
 					glm::vec3 baryP = BarycentricWeightPerspective(tBary, wPreDiv[v], wPreDiv[v + 1], wPreDiv[v + 2]);
 					
-					glm::vec4 posH = InterpolatePositionH(glm::vec2({ (float)x + 0.5f, (float)y + 0.5f }), tri, baryP);
+					glm::vec4 posH = InterpolatePositionH(glm::vec2({ (float)x + 0.5f, (float)y + 0.5f }), tri, tBary);
 					float pixelDepth = posH.z;
 					
-					if (pixelDepth > 1.0f || pixelDepth < 0.0f)
-						continue;
-					if (pixelDepth > db->GetPixelData<float>(x, y))
-						continue;
-	
+					if (state.depthTest && db)
+					{
+						if (pixelDepth > 1.0f || pixelDepth < 0.0f)
+							continue;
+						if (pixelDepth > db->Load(x, y).r)
+							continue;	
+					}
+					
 					Vertex_OUT px;
-					px.positionH = posH;
+					px.posH = posH;
 					InterpolateVertex(px, glm::vec2({ (float)x + 0.5f, (float)y + 0.5f }), tri, baryP);
-	
-					db->SetPixelData<float>(x, y, pixelDepth);
-	
-					fb->SetPixelColor(x, y, _s.ps->Execute(px)); 
+
+					// screen space uv derivatives for mip selection : uv one pixel to the right and one pixel down
+					glm::vec3 baryPX = BarycentricWeightPerspective(tBary + baryOffsetX, wPreDiv[v], wPreDiv[v + 1], wPreDiv[v + 2]);
+					glm::vec3 baryPY = BarycentricWeightPerspective(tBary + baryOffsetY, wPreDiv[v], wPreDiv[v + 1], wPreDiv[v + 2]);
+					px.uvDdx = InterpolateUV(tri, baryPX) - px.uv;
+					px.uvDdy = InterpolateUV(tri, baryPY) - px.uv;
+					
+					if (state.depthWrite && db && px.color.a >= 1.0f || state.blendMode == Blending::OPAQUE)
+						db->Store(x, y, vec4(pixelDepth, 0.0f, 0.0f, 1.0f));
+					
+					if (writeColor == false)
+						continue;
+					
+					glm::vec4 src = _s.ps->Execute(px);
+					if (src.a <= 0.1f)
+						continue;
+					
+					glm::vec4 dest = fb->Load(x, y);
+					
+					fb->Store(x, y, Blending::Blend(src, dest, state.blendMode)); 
 				}
 			}
 		}

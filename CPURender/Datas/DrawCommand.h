@@ -1,6 +1,7 @@
 #ifndef DRAW_COMMAND_H_DEFINED
 #define DRAW_COMMAND_H_DEFINED
 
+#include <variant>
 #include <glm/mat4x4.hpp>
 #include "Mesh.h"
 
@@ -14,6 +15,14 @@ struct DrawCommand
 	glm::mat4x4 world;
 	MaterialData const* material;
 };
+
+struct DispatchCommand
+{
+	MaterialData const* material;
+	glm::uvec3 groups;
+};
+
+using Command = std::variant<DrawCommand, DispatchCommand>;
 
 #endif
 
