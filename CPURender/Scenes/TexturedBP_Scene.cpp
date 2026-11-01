@@ -60,7 +60,8 @@ void TexturedBP_Scene::OnInit(Device* _pDevice)
     //    "Assets/Textures/Cubemap/Left.png", "Assets/Textures/Cubemap/Right.png",
     //    "Assets/Textures/Cubemap/Up.png", "Assets/Textures/Cubemap/Down.png");
 
-    Cubemap cubemap = Cubemap("Skybox", "Assets/Textures/Cubemap/FishPond/posz.jpg", "Assets/Textures/Cubemap/FishPond/negz.jpg",
+    Cubemap cubemap;
+    cubemap.SetTexture("Skybox", "Assets/Textures/Cubemap/FishPond/posz.jpg", "Assets/Textures/Cubemap/FishPond/negz.jpg",
         "Assets/Textures/Cubemap/FishPond/negx.jpg", "Assets/Textures/Cubemap/FishPond/posx.jpg",
         "Assets/Textures/Cubemap/FishPond/posy.jpg", "Assets/Textures/Cubemap/FishPond/negy.jpg", true);
 

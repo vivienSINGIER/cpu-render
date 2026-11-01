@@ -23,46 +23,32 @@ void Transparency_Scene::InitLightScene()
     m_lightData.ambient = 0.0f;
 }
 
-void Transparency_Scene::OnInit(Device* _pDevice)
+void Transparency_Scene::InitPassDesc(Device* _pDevice)
 {
-    InitLightScene();
-
     FrameBuffer refractedFB = _pDevice->CreateFrameBuffer(WIDTH, HEIGHT, 1, true, glm::vec4(0, 0, 0, 1));
-    //m_presentTarget = refractedFB.depthBuffer;
-    m_presentTarget = _pDevice->GetDefaultFrameBuffer().gBuffer[0];
-    //m_presentTarget = _pDevice->GetDefaultFrameBuffer().depthBuffer;
-    //m_presentTarget = refractedFB.gBuffer[0];
-
     m_skyboxPass.fb = _pDevice->GetDefaultFrameBuffer();
     m_skyboxPass.fb.depthBuffer = _pDevice->GetDefaultFrameBuffer().depthBuffer;
-    m_skyboxPass.state.depthTest = false;
+    m_skyboxPass.state.depthTest = true;
     m_skyboxPass.state.depthWrite = false;
-    //m_skyboxPass.clearFlags.clearDepth = false;
+    m_skyboxPass.clearFlags.clearGBuffer[0] = false;
+    m_skyboxPass.clearFlags.clearDepth = false;
 
     m_mainPass.fb = _pDevice->GetDefaultFrameBuffer();
     m_mainPass.fb.depthBuffer = _pDevice->GetDefaultFrameBuffer().depthBuffer;
     m_mainPass.state.blendMode = Blending::BlendMode::OPAQUE;
     m_mainPass.state.cullMode = CullMode::BACK;
-    m_mainPass.clearFlags.clearGBuffer[0] = false;
-    m_mainPass.clearFlags.clearDepth = false;
 
     m_refractionPass.fb = refractedFB;
     m_refractionPass.state.blendMode = Blending::BlendMode::OPAQUE;
     m_refractionPass.state.cullMode = CullMode::BACK;
-    //m_refractionPass.clearFlags.clearGBuffer[0] = false;
     m_refractionPass.clearFlags.clearDepth = false;
 
     m_postProcPass.isCompute = true;
     m_depthCopyPass.isCompute = true;
+}
 
-    _pDevice->SetLightData(m_lightData);
-
-    Cubemap cubemap = Cubemap("Skybox", "Assets/Textures/Cubemap/FishPond/posz.jpg", "Assets/Textures/Cubemap/FishPond/negz.jpg",
-        "Assets/Textures/Cubemap/FishPond/negx.jpg", "Assets/Textures/Cubemap/FishPond/posx.jpg",
-        "Assets/Textures/Cubemap/FishPond/posy.jpg", "Assets/Textures/Cubemap/FishPond/negy.jpg");
-
-    m_camTransform.SetPosition(glm::vec3(0.0f, 0.0f, -10.f));
-
+void Transparency_Scene::InitMaterials()
+{
     LitC_BP_Cube_PS::MaterialCB floorCB = { {0.6f, 0.6f, 0.6f, 1.0f}, Lighting::g_fresnelR0Templates[PLASTIC], 0.8f, 0.0f, 0.0f, 1.7f, false };
     LitC_BP_Cube_PS::MaterialCB opaqueCB = { {0.9f, 0.2f, 0.2f, 1.0f}, Lighting::g_fresnelR0Templates[PLASTIC], 0.5f, 0.0f, 0.0f, 1.7f, false };
     LitC_BP_Transparent_PS::MaterialCB transparentCB = { {1.0f, 1.0f, 1.0f, 1.0f}, Lighting::g_fresnelR0Templates[CRYSTAL], 0.2f, 0.5f, 0.8f, 1.02f, true, {WIDTH, HEIGHT} };
@@ -77,23 +63,26 @@ void Transparency_Scene::OnInit(Device* _pDevice)
     m_depthCopyMat->SetRWTexture(TexCopy_CS::UAV_SLOT_source, m_mainPass.fb.depthBuffer);
     m_depthCopyMat->SetRWTexture(TexCopy_CS::UAV_SLOT_target, m_refractionPass.fb.depthBuffer);
 
-    Mesh sphere = GeometryFactory::Instance()->BuildUVSphere(20, 20);
-    Mesh cube = GeometryFactory::Instance()->BuildCube();
-    Mesh donut = GeometryFactory::Instance()->BuildDonut(1.0f, 0.35f, 24, 12);
-
     m_floorMat = ShaderFactory::Instance()->CreateMaterial("LitC_BP_Cube");
     m_floorMat->SetParams<LitC_BP_Cube_PS::MaterialCB>(LitC_BP_Cube_PS::CB_SLOT_mat, floorCB);
-    m_floorMat->SetTexture(LitC_BP_Cube_PS::TEX_SLOT_cubemap, cubemap.GetTexture());
+    m_floorMat->SetTexture(LitC_BP_Cube_PS::TEX_SLOT_cubemap, m_cubemap.GetTexture());
 
     m_opaqueMat = ShaderFactory::Instance()->CreateMaterial("LitC_BP_Cube");
     m_opaqueMat->SetParams<LitC_BP_Cube_PS::MaterialCB>(LitC_BP_Cube_PS::CB_SLOT_mat, opaqueCB);
-    m_opaqueMat->SetTexture(LitC_BP_Cube_PS::TEX_SLOT_cubemap, cubemap.GetTexture());
+    m_opaqueMat->SetTexture(LitC_BP_Cube_PS::TEX_SLOT_cubemap, m_cubemap.GetTexture());
 
     m_transparentMat = ShaderFactory::Instance()->CreateMaterial("LitC_BP_Transparent");
     m_transparentMat->SetParams<LitC_BP_Transparent_PS::MaterialCB>(LitC_BP_Transparent_PS::CB_SLOT_mat, transparentCB);
-    m_transparentMat->SetTexture(LitC_BP_Transparent_PS::TEX_SLOT_cubemap, cubemap.GetTexture());
+    m_transparentMat->SetTexture(LitC_BP_Transparent_PS::TEX_SLOT_cubemap, m_cubemap.GetTexture());
     m_transparentMat->SetTexture(LitC_BP_Transparent_PS::TEX_SLOT_framebufferTex, m_mainPass.fb.gBuffer[0]);
     m_transparentMat->SetTexture(LitC_BP_Transparent_PS::TEX_SLOT_framebufferDepth, m_mainPass.fb.depthBuffer);
+}
+
+void Transparency_Scene::InitObjects()
+{
+    Mesh sphere = GeometryFactory::Instance()->BuildUVSphere(20, 20);
+    Mesh cube = GeometryFactory::Instance()->BuildCube();
+    Mesh donut = GeometryFactory::Instance()->BuildDonut(1.0f, 0.35f, 24, 12);
 
     Object* floor = CreateObject(DYNAMIC);
     floor->mesh = cube;
@@ -129,11 +118,33 @@ void Transparency_Scene::OnInit(Device* _pDevice)
 
     skyboxObject = new Object();
     m_skyboxMat = ShaderFactory::Instance()->CreateMaterial("UnlitSkybox");
-    m_skyboxMat->SetTexture(UnlitSkybox_PS::TEX_SLOT_albedo, cubemap.GetTexture());
+    m_skyboxMat->SetTexture(UnlitSkybox_PS::TEX_SLOT_albedo, m_cubemap.GetTexture());
 
     skyboxObject->mat = m_skyboxMat.get();
     skyboxObject->mesh = GeometryFactory::Instance()->BuildSkybox();
     skyboxObject->transform.SetScale(50.0f);
+}
+
+void Transparency_Scene::OnInit(Device* _pDevice)
+{
+    m_presentTarget = _pDevice->GetDefaultFrameBuffer().gBuffer[0];
+    
+    InitLightScene();
+
+    m_cubemap.SetTexture("Skybox", "Assets/Textures/Cubemap/FishPond/posz.jpg", "Assets/Textures/Cubemap/FishPond/negz.jpg",
+        "Assets/Textures/Cubemap/FishPond/negx.jpg", "Assets/Textures/Cubemap/FishPond/posx.jpg",
+        "Assets/Textures/Cubemap/FishPond/posy.jpg", "Assets/Textures/Cubemap/FishPond/negy.jpg");
+
+    InitPassDesc(_pDevice);
+    InitMaterials();
+    InitObjects();
+
+    _pDevice->SetLightData(m_lightData);
+
+
+
+    m_camTransform.SetPosition(glm::vec3(0.0f, 0.0f, -10.f));
+
     m_toggleSkybox = true;
 }
 
@@ -163,9 +174,12 @@ void Transparency_Scene::OnDraw(Device* _pDevice)
     m_camera.FillData(&m_mainPass.passData);
     m_mainPass.passData.deltaTime = m_deltaTime;
     m_mainPass.passData.totalTime = m_totalTime;
+
     m_camera.FillData(&m_refractionPass.passData);
-    m_refractionPass.passData.deltaTime = m_deltaTime;
-    m_refractionPass.passData.totalTime = m_totalTime;
+
+    _pDevice->BeginPass(m_mainPass);
+        DrawObjects(_pDevice, m_camera.GetFrustum(), OPAQUE);
+    _pDevice->EndPass();
 
     if (m_toggleSkybox)
     {
@@ -174,10 +188,6 @@ void Transparency_Scene::OnDraw(Device* _pDevice)
         _pDevice->RegisterCommand(skyboxObject->mesh, skyboxObject->transform.GetMatrix(), skyboxObject->mat);
         _pDevice->EndPass();
     }
-
-    _pDevice->BeginPass(m_mainPass);
-        DrawObjects(_pDevice, m_camera.GetFrustum(), OPAQUE);
-    _pDevice->EndPass();
 
    _pDevice->BeginPass(m_depthCopyPass);
        _pDevice->Dispatch(m_depthCopyMat.get(), ceil(WIDTH / 32.0f), ceil(HEIGHT / 32.0f), 1);

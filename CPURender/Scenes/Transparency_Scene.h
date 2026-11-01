@@ -19,7 +19,12 @@ protected:
 
 private:
     void InitLightScene();
+    void InitPassDesc(Device* _pDevice);
+    void InitMaterials();
+    void InitObjects();
     void CycleBlendMode(int _step);
+
+    Cubemap m_cubemap;
 
     Material m_floorMat;
     Material m_opaqueMat;
