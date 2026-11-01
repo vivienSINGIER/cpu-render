@@ -6,7 +6,7 @@
 #include "../../Heaps/HeapUtils.hpp"
 
 #define MAX_CB 8
-#define MAX_TEX 8
+#define MAX_TEX 16
 #define MAX_UAV 8
 
 // registers declared by every shader

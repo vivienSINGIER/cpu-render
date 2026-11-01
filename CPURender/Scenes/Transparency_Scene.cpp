@@ -20,7 +20,7 @@ static const char* g_blendModeNames[Blending::COUNT] = {
 void Transparency_Scene::InitLightScene()
 {
     m_lightData.lights[0] = MakeDirectionalLight({1.0f, -1.0f, 1.0f}, 2.0f, Color::WHITE);
-    m_lightData.ambient = 0.0f;
+    m_lightData.ambient = 0.03f;
 }
 
 void Transparency_Scene::InitPassDesc(Device* _pDevice)
@@ -50,7 +50,7 @@ void Transparency_Scene::InitPassDesc(Device* _pDevice)
 void Transparency_Scene::InitMaterials()
 {
     LitC_BP_Cube_PS::MaterialCB floorCB = { {0.6f, 0.6f, 0.6f, 1.0f}, Lighting::g_fresnelR0Templates[PLASTIC], 0.8f, 0.0f, 0.0f, 1.7f, false };
-    LitC_BP_Cube_PS::MaterialCB opaqueCB = { {0.9f, 0.2f, 0.2f, 1.0f}, Lighting::g_fresnelR0Templates[PLASTIC], 0.5f, 0.0f, 0.0f, 1.7f, false };
+    LitC_BP_Cube_PS::MaterialCB opaqueCB = { {1.0f, 0.2f, 0.2f, 1.0f}, Lighting::g_fresnelR0Templates[PLASTIC], 0.5f, 0.0f, 0.0f, 1.7f, false };
     LitC_BP_Transparent_PS::MaterialCB transparentCB = { {1.0f, 1.0f, 1.0f, 1.0f}, Lighting::g_fresnelR0Templates[CRYSTAL], 0.2f, 0.5f, 0.8f, 1.02f, true, {WIDTH, HEIGHT} };
 
     m_postProcMat = ShaderFactory::Instance()->CreateComputeMaterial("FBFusion");
@@ -175,7 +175,11 @@ void Transparency_Scene::OnDraw(Device* _pDevice)
     m_mainPass.passData.deltaTime = m_deltaTime;
     m_mainPass.passData.totalTime = m_totalTime;
 
-    m_camera.FillData(&m_refractionPass.passData);
+    m_camera.FillData(&m_refractionPass.passData);    
+    m_postProcPass.passData.deltaTime = m_deltaTime;
+    m_postProcPass.passData.totalTime = m_totalTime;
+    m_refractionPass.passData.deltaTime = m_deltaTime;
+    m_refractionPass.passData.totalTime = m_totalTime;
 
     _pDevice->BeginPass(m_mainPass);
         DrawObjects(_pDevice, m_camera.GetFrustum(), OPAQUE);

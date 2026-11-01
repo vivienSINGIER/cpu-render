@@ -54,7 +54,7 @@ public:
 
     LitT_BP_PS(GraphicsContext* _ctx) : PixelShader(_ctx) {}
 
-    float Depth(glm::vec2 _uv) const { return 1.0f - displacement(_uv).x; }
+    float Depth(glm::vec2 _uv, glm::vec2 _ddx, glm::vec2 _ddy) const { return 1.0f - Sample_Grad_displacement(_uv, _ddx, _ddy).x; }
     
     float ShadowCalc(glm::vec4 posLightSpace) const
     {
@@ -73,30 +73,43 @@ public:
     
     vec4 Execute(Vertex_OUT const& _in) const override
     {
-        glm::vec3 T = glm::normalize(_in.tangent);
         glm::vec3 N = glm::normalize(_in.normal);
-        T = glm::normalize(T - glm::dot(N, T) * N);
+        glm::vec3 T = _in.tangent;
+
+        //Verification
+        glm::vec3 resultT = T - glm::dot(N, T) * N;
+        if (glm::dot(resultT, resultT) > 1e-8f) {
+            T = glm::normalize(resultT);
+        }
+        else {
+            // Degenerated
+            T = (std::abs(N.z) < 0.999f) ? glm::normalize(glm::cross(N, glm::vec3(0, 0, 1))) : glm::normalize(glm::cross(N, glm::vec3(0, 1, 0)));
+        }
+
         glm::vec3 B = glm::cross(N, T);
         glm::mat3x3 TBN = glm::mat3x3(T, B, N);
-        
-        glm::vec3 toEye = glm::normalize(Pass().eyePos - glm::vec3(_in.posModel));
+   
+        glm::vec3 eyeDir = Pass().eyePos - glm::vec3(_in.posModel);
+        float eyeDistSq = glm::dot(eyeDir, eyeDir);
+        glm::vec3 toEye = (eyeDistSq > 1e-8f) ? glm::normalize(eyeDir) : glm::vec3(0.0f, 0.0f, 1.0f);
+
         glm::vec3 viewT = glm::normalize(glm::transpose(TBN) * toEye);
         viewT.y = -viewT.y;
         
         glm::vec2 uv = _in.uv;
         if (Has_displacement())
-            uv = _in.uv - glm::vec2(viewT) / glm::max(viewT.z, 0.3f) * (Depth(_in.uv) * mat().heightScale);
+            uv = _in.uv - glm::vec2(viewT) / glm::max(viewT.z, 0.3f) * (Depth(_in.uv, _in.uvDdx, _in.uvDdy) * mat().heightScale);
         
         glm::vec4 albedo;
         if (Has_diffuse())
-            albedo = diffuse(uv) * mat().diffuseAlbedo;
+            albedo = Sample_Grad_diffuse(uv, _in.uvDdx, _in.uvDdy) * mat().diffuseAlbedo;
         else
             albedo = _in.color * mat().diffuseAlbedo;
         
         glm::vec3 normalW;
         if (Has_normal())
         {
-            glm::vec3 sampledN = glm::vec3(normal(uv));
+            glm::vec3 sampledN = glm::vec3(Sample_Grad_normal(uv, _in.uvDdx, _in.uvDdy));
             sampledN = sampledN * 2.0f - 1.0f;
             normalW = glm::normalize(TBN * sampledN);
         }
@@ -105,13 +118,13 @@ public:
 
         float roughnessFactor;
         if  (Has_roughness())
-            roughnessFactor = roughness(uv).x;
+            roughnessFactor = Sample_Grad_roughness(uv, _in.uvDdx, _in.uvDdy).x;
         else
             roughnessFactor = mat().roughness;
         
         float metalnessFactor;
         if  (Has_metal())
-            metalnessFactor = metal(uv).b;
+            metalnessFactor = Sample_Grad_metal(uv, _in.uvDdx, _in.uvDdy).b;
         else
             metalnessFactor = mat().metalness;
 
@@ -121,7 +134,7 @@ public:
         
         glm::vec3 ambientFactor = Light().ambientLight * (glm::vec3(diffuse) + F0);
         if (Has_ambient())
-            ambientFactor *= glm::vec3(ambient(uv));
+            ambientFactor *= glm::vec3(Sample_Grad_ambient(uv, _in.uvDdx, _in.uvDdy));
         
         BlinnPhongData d = { diffuse, F0, shininess};
         float shadowFactor = 0.0f;

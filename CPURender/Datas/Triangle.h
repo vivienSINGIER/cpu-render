@@ -19,5 +19,6 @@ glm::vec3 BarycentricWeight(const glm::vec2& _point, const Triangle& _tri);
 void BarycentricOffsets(const Triangle& _tri, glm::vec3& _offsetX, glm::vec3& _offsetY);
 Vertex_OUT InterpolateVertex(const Vertex_OUT& _v1, const Vertex_OUT& _v2, float _t);
 void InterpolateVertex(Vertex_OUT& _vertOut, glm::vec2 _point, const Triangle& _tri, glm::vec3 _bary);
+glm::vec2 InterpolateUV(const Triangle& _tri, glm::vec3 _bary);
 glm::vec4 InterpolatePositionH(glm::vec2 _point, const Triangle& _tri, glm::vec3 _bary);
 glm::vec4 GetBoundingBox(const Triangle& _tri);

@@ -143,12 +143,12 @@ void Device::Present(Handle _texH)
 		uint32_t x = i % WIDTH;
 		
 		glm::vec4 v;
-		
+
 		if (match)
 			v = fb->Load(x, y);
 		else
 			v = fb->SampleNP({ ((float)x + 0.5f) / (float)WIDTH, ((float)y + 0.5f) / (float)HEIGHT });
-		
+
 		bool isClear = v == m_boundFB.clearColor; 
 			
 		vec3 mapped = vec3(v);
@@ -158,6 +158,9 @@ void Device::Present(Handle _texH)
 		{
 			vec3 hdr = vec3(v);
 			
+			if (v.x != v.x)
+				std::cout << "NaN Pixel\n";
+
 			logSum += glm::log(1e-4f + glm::max(Lighting::Luminance(hdr), 0.0f)); // start at small positive value to avoid inf from log on negative number
 			count++;
 			
@@ -166,8 +169,6 @@ void Device::Present(Handle _texH)
 			// mapped = c / (c + 1.0f);
 			// mapped = c * ((L / (1.0f + L)) / glm::max(L, 1e-6f)); // map to [0, 1], prevent division by zero on black pixels <- Reinhard approximation
 			mapped = glm::clamp((c * (2.51f * c + 0.03f)) / (c * (2.43f * c + 0.59f) + 0.14f), 0.0f, 1.0f); // Narkowicz approximation of the ACES film curve
-
-			count++;
 		}
 		
 		m_renderTarget->Store(x, HEIGHT - y - 1, vec4(mapped, 1.0f));
@@ -509,6 +510,12 @@ void Device::RasterStep(std::vector<Vertex_OUT> const& _vBuffer, ShaderStages _s
 					Vertex_OUT px;
 					px.posH = posH;
 					InterpolateVertex(px, glm::vec2({ (float)x + 0.5f, (float)y + 0.5f }), tri, baryP);
+
+					// screen space uv derivatives for mip selection : uv one pixel to the right and one pixel down
+					glm::vec3 baryPX = BarycentricWeightPerspective(tBary + baryOffsetX, wPreDiv[v], wPreDiv[v + 1], wPreDiv[v + 2]);
+					glm::vec3 baryPY = BarycentricWeightPerspective(tBary + baryOffsetY, wPreDiv[v], wPreDiv[v + 1], wPreDiv[v + 2]);
+					px.uvDdx = InterpolateUV(tri, baryPX) - px.uv;
+					px.uvDdy = InterpolateUV(tri, baryPY) - px.uv;
 					
 					if (state.depthWrite && db && px.color.a >= 1.0f || state.blendMode == Blending::OPAQUE)
 						db->Store(x, y, vec4(pixelDepth, 0.0f, 0.0f, 1.0f));

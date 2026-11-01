@@ -32,7 +32,7 @@ public:
 
     vec4 Execute(Vertex_OUT const& _in) const override
     {
-        return albedo(_in.uv);
+        return Sample_Grad_albedo(_in.uv, _in.uvDdx, _in.uvDdy);
     }
 };
 

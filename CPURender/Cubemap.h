@@ -6,6 +6,7 @@ class Cubemap
 {
 	Handle m_texHandle;
 	Handle m_irradianceHandle;
+	Handle m_prefilterHandle;
 
 public:
 	Cubemap() {};
@@ -21,5 +22,6 @@ public:
 		uint32_t _irradianceFaceSize = 32);
 	Handle GetTexture();
 	Handle GetIrradianceTexture();
+	Handle GetPrefilterTexture();
 };
 
