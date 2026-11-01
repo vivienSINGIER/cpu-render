@@ -3,19 +3,55 @@
 #include "Factories/GeometryFactory.h"
 #include "Datas/Texture.h"
 
+float TerrainGenerator::SampleHeight(TerrainDesc const& _d, float _x, float _y, glm::vec2 _uv)
+{
+	glm::vec2 pos = glm::vec2(_x, _y) + _d.noiseOffset;
+	
+	if (_d.domainWarpStrength > 0.0f)
+	{
+		glm::vec2 w = {
+			PerlinNoise::FractalBrownianMotion(pos.x + 37.1f, pos.y + 11.3f, _d.frequency, 2),
+			PerlinNoise::FractalBrownianMotion(pos.x -19.7f, pos.y + 53.9f, _d.frequency, 2), };
+		pos += w * _d.domainWarpStrength / _d.frequency;
+	}
+	
+	float n = PerlinNoise::FractalBrownianMotion(pos.x, pos.y, _d.frequency, _d.octaveCount);
+	if (_d.ridged)
+		n = 1.0f - 2.0f * glm::abs(n);
+	
+	float h01 = glm::pow(glm::clamp(n * 0.5f + 0.5f, 0.0f, 1.0f), _d.heightRedistribution);
+	float h = _d.baseHeight + _d.heightScale * (h01 * 2.0f - 1.0f);
+	
+	if (_d.useCenterMountain)
+	{
+		float dst = glm::length(_uv - _d.mountainCenter) / _d.mountainRadius;
+		dst += _d.edgeWarp * PerlinNoise::Perlin(pos.x, pos.y, _d.frequency * 0.5f);
+		float mask = 1.0f - glm::smoothstep(0.0f, 1.0f, dst);
+		h += _d.mountainHeight * mask * (1.0f + _d.mountainNoiseScale * n);
+	}
+	
+	if (_d.terraceSteps > 0)
+	{
+		float step = (_d.maxHeight - _d.minHeight) / (float)_d.terraceSteps;
+		h = glm::round(h / step) * step;
+	}
+	
+	return glm::clamp(h, _d.minHeight, _d.maxHeight);
+}
+
 Mesh TerrainGenerator::GetTerrainMesh()
 {
 	return m_terrain;
 }
 
-Vertex MakeVertex(int _x, int _y, Texture _heightmap, float _cellSize, uint32_t _sideCellCount)
+Vertex MakeVertex(int _x, int _y, Texture const& _heightmap, float _cellSize, uint32_t _sideCellCount)
 {
 	Vertex v;
 	v.position = { (_x - (int)(_sideCellCount / 2)) * _cellSize, _heightmap.Load(_x, _y).r, (_y - (int)(_sideCellCount / 2)) * _cellSize };
 	return v;
 }
 
-std::vector<Vertex> MakeCell(size_t _index, Texture _heightmap, std::vector<glm::vec3> _normalmap, float _cellSize, uint32_t _sideCellCount)
+std::vector<Vertex> MakeCell(size_t _index, Texture const& _heightmap, std::vector<glm::vec3> const& _normalmap, float _cellSize, uint32_t _sideCellCount)
 {
 	std::vector<Vertex> vBuffer;
 
@@ -30,29 +66,25 @@ std::vector<Vertex> MakeCell(size_t _index, Texture _heightmap, std::vector<glm:
 	vBuffer.push_back(MakeVertex(x + 1, y + 1, _heightmap, _cellSize, _sideCellCount)); // bottom right
 	vBuffer.push_back(MakeVertex(x + 1, y, _heightmap, _cellSize, _sideCellCount)); // top right
 
-	vBuffer[0].normal = _normalmap[_index];
-	vBuffer[1].normal = _normalmap[_index + _sideCellCount];
-	vBuffer[2].normal = _normalmap[_index + 1];
+	uint32_t s = _sideCellCount + 1; // vertices per row
+	size_t tl = y * s + x;             // top left
+	size_t tr = y * s + (x + 1);       // top right
+	size_t bl = (y + 1) * s + x;       // bottom left
+	size_t br = (y + 1) * s + (x + 1); // bottom right
 
-	vBuffer[3].normal = _normalmap[_index + _sideCellCount];
-	vBuffer[4].normal = _normalmap[_index + _sideCellCount + 1];
-	vBuffer[5].normal = _normalmap[_index + 1];
+	vBuffer[0].normal = _normalmap[tl];
+	vBuffer[1].normal = _normalmap[bl];
+	vBuffer[2].normal = _normalmap[tr];
 
-	/*vBuffer[0].normal = _normalmap[_index];
-	vBuffer[1].normal = _normalmap[_index];
-	vBuffer[2].normal = _normalmap[_index];
-
-	vBuffer[3].normal = _normalmap[_index];
-	vBuffer[4].normal = _normalmap[_index];
-	vBuffer[5].normal = _normalmap[_index];*/
+	vBuffer[3].normal = _normalmap[bl];
+	vBuffer[4].normal = _normalmap[br];
+	vBuffer[5].normal = _normalmap[tr];
 
 	return vBuffer;
 }
 
-void TerrainGenerator::GenerateMesh()
+void TerrainGenerator::GenerateMesh(TerrainDesc const& _desc)
 {
-	PerlinNoise::InitTable();
-	
 	uint32_t sideVertexCount = m_grid_size + 1; 
 
 	std::vector<Vertex> gridV;
@@ -69,17 +101,18 @@ void TerrainGenerator::GenerateMesh()
 		int x = i % sideVertexCount;
 		int y = i / sideVertexCount;
 
-		float value = 1.f*PerlinNoise::FractalBrownianMotion(x, y, 0.01f, 8);
+		glm::vec2 uv = glm::vec2(x, y) / (float)(sideVertexCount - 1);
+		float value = SampleHeight(_desc, (float)x, (float)y, uv);
 		
 		heightmap.Store(x, y, vec4(value, value, value, 1.0f));// +2.0f * PerlinNoise::FractalBrownianMotion(x / 4, y / 4, 0.05f, 5));
 	}
 
 	// Compute cell normals
 	std::vector<glm::vec3> cellNormalMap(m_grid_size * m_grid_size);
-	for (size_t i = 0; i < m_grid_size * m_grid_size; i++)
+	for (size_t i = 0; i < sideVertexCount * sideVertexCount; i++)
 	{
-		int x = i % m_grid_size;
-		int y = i / m_grid_size;
+		int x = i % sideVertexCount;
+		int y = i / sideVertexCount;
 		glm::vec3 pos = { x * m_cellSize, heightmap.Load(x, y).r, y * m_cellSize };
 
 		glm::vec3 normal = glm::vec3(0, 1, 0);
@@ -128,38 +161,38 @@ void TerrainGenerator::GenerateMesh()
 		}
 	
 		normal = glm::cross(tu, tv);
-		cellNormalMap[i] = glm::normalize(normal);
+		normalmap[i] = glm::normalize(normal);
 	}
 	// Vertice normals
 	size_t cellCount = m_grid_size * m_grid_size;
-	for (size_t i = 0; i < cellCount; i++)
-	{
-		int x = i % m_grid_size;
-		int y = i / m_grid_size;
-		glm::vec3 normal = glm::vec3(0, 0, 0);
-
-		if (x > 0 && y > 0) // Get top left
-		{
-			normal += cellNormalMap[i - 1 - m_grid_size];
-		}; 
-
-		if (x < m_grid_size - 1 && y > 0) // Get top right
-		{
-			normal += cellNormalMap[i + 1 - m_grid_size];
-		};
-
-		if (x > 0 && y < m_grid_size - 1) // Get bottom left
-		{
-			normal += cellNormalMap[i - 1 + m_grid_size];
-		}
-
-		if (x < m_grid_size - 1 && y < m_grid_size - 1) // Get bottom right
-		{
-			normal += cellNormalMap[i + 1 + m_grid_size];
-		}
-
-		normalmap[i] = glm::normalize(normal);
-	}
+	// for (size_t i = 0; i < cellCount; i++)
+	// {
+	// 	int x = i % m_grid_size;
+	// 	int y = i / m_grid_size;
+	// 	glm::vec3 normal = glm::vec3(0, 0, 0);
+	//
+	// 	if (x > 0 && y > 0) // Get top left
+	// 	{
+	// 		normal += cellNormalMap[i - 1 - m_grid_size];
+	// 	}; 
+	//
+	// 	if (x < m_grid_size - 1 && y > 0) // Get top right
+	// 	{
+	// 		normal += cellNormalMap[i + 1 - m_grid_size];
+	// 	};
+	//
+	// 	if (x > 0 && y < m_grid_size - 1) // Get bottom left
+	// 	{
+	// 		normal += cellNormalMap[i - 1 + m_grid_size];
+	// 	}
+	//
+	// 	if (x < m_grid_size - 1 && y < m_grid_size - 1) // Get bottom right
+	// 	{
+	// 		normal += cellNormalMap[i + 1 + m_grid_size];
+	// 	}
+	//
+	// 	normalmap[i] = glm::normalize(normal);
+	// }
 
 	// Fill Vertex and Index buffer
 	for (size_t i = 0; i < cellCount; i++)

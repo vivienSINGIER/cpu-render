@@ -120,6 +120,9 @@
     <ClCompile Include="Scenes\Transparency_Scene.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Scenes\Terrain_Scene.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="main.h">
@@ -337,6 +340,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Scenes\Transparency_Scene.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Scenes\Terrain_Scene.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Shaders\GraphicsShaders\PBR.hpp">

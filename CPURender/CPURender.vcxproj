@@ -169,6 +169,7 @@
     <ClCompile Include="Scenes\SceneParticlesTest.cpp" />
     <ClCompile Include="Scenes\TexturedBP_Scene.cpp" />
     <ClCompile Include="Scenes\Transparency_Scene.cpp" />
+    <ClCompile Include="Scenes\Terrain_Scene.cpp" />
     <ClCompile Include="Shaders\ShaderBase\Material.cpp" />
     <ClCompile Include="Shaders\ShaderBase\Shader.cpp" />
     <ClCompile Include="Shaders\ShaderBase\ShaderGroup.cpp" />
@@ -232,6 +233,7 @@
     <ClInclude Include="Scenes\SceneParticlesTest.h" />
     <ClInclude Include="Scenes\TexturedBP_Scene.h" />
     <ClInclude Include="Scenes\Transparency_Scene.h" />
+    <ClInclude Include="Scenes\Terrain_Scene.h" />
     <ClInclude Include="Shaders\ComputeShaders\FB_Fusion_CS.hpp" />
     <ClInclude Include="Shaders\ComputeShaders\GammaCorrection_CS.hpp" />
     <ClInclude Include="Shaders\ComputeShaders\TexCopy_CS.hpp" />

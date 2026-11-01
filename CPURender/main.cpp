@@ -13,6 +13,7 @@
 #include "Core/Device.h"
 #include "Scenes/PBR_Scene.h"
 #include "Scenes/Transparency_Scene.h"
+#include "Scenes/Terrain_Scene.h"
 //Students cannot change anything in this file
 
 
@@ -80,7 +81,7 @@ int main(void) {
 
     Engine engine;
     Texture frameBuffer(WIDTH, HEIGHT,  Texture::RGBA32, Texture::LINEAR);
-    engine.Init<Transparency_Scene>(&frameBuffer);
+    engine.Init<Terrain_Scene>(&frameBuffer);
     
     bool isRunning = true;
     uint32_t frame = 1;
