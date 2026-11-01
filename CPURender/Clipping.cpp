@@ -1,4 +1,7 @@
 #include "Clipping.h"
+
+#include "Datas/Triangle.h"
+
 namespace Clipping
 {
 
@@ -71,4 +74,24 @@ namespace Clipping
         return dist1 / (dist1 + dist2);
     }
 
+    int ClipPolygonAgainstPlane(Vertex_OUT const* _in, int _inCount, Vertex_OUT* _out, Clipping::FrustumPlane _plane)
+    {
+        int outCount = 0;
+        for (int i = 0; i < _inCount; i++)
+        {
+            Vertex_OUT const& a = _in[i];
+            Vertex_OUT const& b = _in[(i + 1) % _inCount];
+            
+            float da = Clipping::SignedDistanceToPlane(a, _plane);
+            float db = Clipping::SignedDistanceToPlane(b, _plane);
+            bool aIn = da > 0.0f;
+            bool bIn = db > 0.0f;
+            
+            if (aIn)
+                _out[outCount++] = a;
+            if (aIn != bIn)
+                _out[outCount++] = InterpolateVertex(a, b, da / (da - db));
+        }
+        return outCount;
+    }
 }
