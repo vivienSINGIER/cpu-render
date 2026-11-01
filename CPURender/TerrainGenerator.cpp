@@ -11,7 +11,7 @@ Mesh TerrainGenerator::GetTerrainMesh()
 Vertex MakeVertex(int _x, int _y, Texture _heightmap, float _cellSize, uint32_t _sideCellCount)
 {
 	Vertex v;
-	v.position = { (_x - (int)(_sideCellCount / 2)) * _cellSize, _heightmap.GetPixelData<float>(_x, _y), (_y - (int)(_sideCellCount / 2)) * _cellSize };
+	v.position = { (_x - (int)(_sideCellCount / 2)) * _cellSize, _heightmap.Load(_x, _y).r, (_y - (int)(_sideCellCount / 2)) * _cellSize };
 	return v;
 }
 
@@ -59,18 +59,19 @@ void TerrainGenerator::GenerateMesh()
 	std::vector<Index> gridI;
 
 	std::vector<glm::vec3> normalmap(sideVertexCount * sideVertexCount);
-	Texture texMap = Texture(sideVertexCount, sideVertexCount, Texture::MORTON);
+	Texture texMap = Texture(sideVertexCount, sideVertexCount,  Texture::R32F, Texture::MORTON);
 
 	// Fill Heightmap
 	size_t pointCount = sideVertexCount * sideVertexCount;
-	Texture heightmap = Texture(sideVertexCount, sideVertexCount, Texture::MORTON);
+	Texture heightmap = Texture(sideVertexCount, sideVertexCount, Texture::R32F, Texture::MORTON);
 	for (size_t i = 0; i < pointCount; i++)
 	{
 		int x = i % sideVertexCount;
 		int y = i / sideVertexCount;
 
-		heightmap.SetPixelData<float>(x, y, 1.f*PerlinNoise::FractalBrownianMotion(x, y, 0.01f, 8));// +2.0f * PerlinNoise::FractalBrownianMotion(x / 4, y / 4, 0.05f, 5));
-		//heightmap.SetPixelData<float>(x, y,  2*cos(x * 0.2f) + 2*cos(y * 0.2f));// +2.0f * PerlinNoise::FractalBrownianMotion(x / 4, y / 4, 0.05f, 5));
+		float value = 1.f*PerlinNoise::FractalBrownianMotion(x, y, 0.01f, 8);
+		
+		heightmap.Store(x, y, vec4(value, value, value, 1.0f));// +2.0f * PerlinNoise::FractalBrownianMotion(x / 4, y / 4, 0.05f, 5));
 	}
 
 	// Compute cell normals
@@ -79,7 +80,7 @@ void TerrainGenerator::GenerateMesh()
 	{
 		int x = i % m_grid_size;
 		int y = i / m_grid_size;
-		glm::vec3 pos = { x * m_cellSize, heightmap.GetPixelData<float>(x, y), y * m_cellSize };
+		glm::vec3 pos = { x * m_cellSize, heightmap.Load(x, y).r, y * m_cellSize };
 
 		glm::vec3 normal = glm::vec3(0, 1, 0);
 
@@ -94,35 +95,35 @@ void TerrainGenerator::GenerateMesh()
 
 		if (x > 0 && x < sideVertexCount - 1)
 		{
-			glm::vec3 left = { (x - 1) * m_cellSize, heightmap.GetPixelData<float>(x - 1, y), y * m_cellSize };
-			glm::vec3 right = { (x + 1) * m_cellSize, heightmap.GetPixelData<float>(x + 1, y), y * m_cellSize };
+			glm::vec3 left = { (x - 1) * m_cellSize, heightmap.Load(x - 1, y).r, y * m_cellSize };
+			glm::vec3 right = { (x + 1) * m_cellSize, heightmap.Load(x + 1, y).r, y * m_cellSize };
 			tu = right - left;
 		}
 		else if (x == 0)
 		{
-			glm::vec3 right = { (x + 1) * m_cellSize, heightmap.GetPixelData<float>(x + 1, y), y * m_cellSize };
+			glm::vec3 right = { (x + 1) * m_cellSize, heightmap.Load(x + 1, y).r, y * m_cellSize };
 			tu = right - pos;
 		}
 		else
 		{
-			glm::vec3 left = { (x - 1) * m_cellSize, heightmap.GetPixelData<float>(x - 1, y), y * m_cellSize };
+			glm::vec3 left = { (x - 1) * m_cellSize, heightmap.Load(x - 1, y).r, y * m_cellSize };
 			tu = pos - left;
 		}
 	
 		if (y > 0 && y < sideVertexCount - 1)
 		{
-			glm::vec3 top = { x * m_cellSize, heightmap.GetPixelData<float>(x, y - 1), (y - 1) * m_cellSize };
-			glm::vec3 bottom = { x * m_cellSize, heightmap.GetPixelData<float>(x, y + 1), (y + 1) * m_cellSize };
+			glm::vec3 top = { x * m_cellSize, heightmap.Load(x, y - 1).r, (y - 1) * m_cellSize };
+			glm::vec3 bottom = { x * m_cellSize, heightmap.Load(x, y + 1).r, (y + 1) * m_cellSize };
 			tv = top - bottom;
 		}
 		else if (y == 0)
 		{
-			glm::vec3 bottom = { x * m_cellSize, heightmap.GetPixelData<float>(x, y + 1), (y + 1) * m_cellSize };
+			glm::vec3 bottom = { x * m_cellSize, heightmap.Load(x, y + 1).r, (y + 1) * m_cellSize };
 			tv = pos - bottom;
 		}
 		else
 		{
-			glm::vec3 top = { x * m_cellSize, heightmap.GetPixelData<float>(x, y - 1), (y - 1) * m_cellSize };
+			glm::vec3 top = { x * m_cellSize, heightmap.Load(x, y - 1).r, (y - 1) * m_cellSize };
 			tv = top - pos;
 		}
 	
