@@ -61,6 +61,7 @@ void Model::SetVertexBoneDataToDefault(Vertex& vertex)
 // loads a model with supported ASSIMP extensions from file and stores the resulting meshes in the meshes vector.
 void Model::loadModel(std::string const& path)
 {
+    current_mesh_id = 0;
     // read file via ASSIMP
     Assimp::Importer importer;
     const aiScene* scene = importer.ReadFile(path, aiProcess_Triangulate | aiProcess_GenSmoothNormals | aiProcess_CalcTangentSpace);
@@ -115,7 +116,7 @@ Mesh Model::processMesh(aiMesh* mesh, const aiScene* scene)
         {
             glm::vec2 vec;
             vec.x = mesh->mTextureCoords[0][i].x;
-            vec.y = mesh->mTextureCoords[0][i].y;
+            vec.y = 1.f - mesh->mTextureCoords[0][i].y;
             vertex.uv = vec;
         }
         else
@@ -145,6 +146,7 @@ Mesh Model::processMesh(aiMesh* mesh, const aiScene* scene)
 
     ExtractBoneWeightForVertices(vertices, mesh, scene);
 
+    current_mesh_id++;
     return m;
 }
 
@@ -212,9 +214,16 @@ std::vector<Handle> Model::loadMaterialTextures(aiMaterial* mat, aiTextureType t
         unsigned char* data = stbi_load(str.C_Str(), &width, &height, &nrComponents, 0);
         if (data)
         {
-            Handle result = TextureFactory::Instance()->CreateTexture(typeName, str.C_Str());
+            std::cout << str.C_Str() << " for mesh : " << current_mesh_id << std::endl;
+            Handle result;
+
+            if(TextureFactory::Instance()->HasTexture(str.C_Str()))
+              result = TextureFactory::Instance()->GetTextureHandle(str.C_Str());
+            else
+              result = TextureFactory::Instance()->CreateTexture(str.C_Str(), str.C_Str());
+
             textures.push_back(result);
-            textures_loaded.push_back(result);  // store it as texture loaded for entire model, to ensure we won't unnecessary load duplicate textures.
+            textures_loaded[current_mesh_id] = (result);  // store it as texture loaded for entire model, to ensure we won't unnecessary load duplicate textures.
 
             stbi_image_free(data);
         }

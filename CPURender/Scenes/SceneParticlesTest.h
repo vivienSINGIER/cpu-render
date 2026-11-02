@@ -30,11 +30,12 @@ private:
 
     Material m_unlit;
 
+    Material model_mat;
+
     Handle m_uav_buffer;
     UAVView m_uav_view;
 
     Mesh mesh_particle;
-
 
     Object* obj = nullptr;
     ParticleEmitter fire;

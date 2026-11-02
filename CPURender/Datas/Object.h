@@ -20,6 +20,7 @@ struct Object
 	ObjectType type;
 
 	Mesh mesh;
+
 	Transform transform;
 	MaterialData const* mat;
 	uint8_t drawMask = 0b1111'1111;

@@ -16,7 +16,7 @@
 void SceneParticlesTest::OnInit(Device* _pDevice)
 {
 #pragma region PARTICLE_INIT
-    m_lightData.lights[0] = MakeDirectionalLight({ 1.0f, -1.0f, 1.0f }, 20.0f, Color::WHITE);
+    m_lightData.lights[0] = MakeDirectionalLight({ 1.0f, -1.0f, 1.0f }, 1.f, Color::WHITE);
     m_lightData.ambient = 0.2f;
 
     m_mainPass.fb = _pDevice->GetDefaultFrameBuffer();
@@ -69,14 +69,6 @@ void SceneParticlesTest::OnInit(Device* _pDevice)
     m_mat->SetTexture(LitT_BP_PS::TEX_SLOT_roughness, roughness);
     m_mat->SetTexture(LitT_BP_PS::TEX_SLOT_displacement, displacement);
 
-    Mesh m = GeometryFactory::Instance()->LoadMesh("Assets/Obj/Plane/plane.obj");
-
-    obj = CreateObject(DYNAMIC);
-    obj->mesh = GeometryFactory::Instance()->BuildUVSphere(15, 15, true);
-    obj->mat = m_unlit.get();
-    obj->transform.SetPosition(glm::vec3(-1.5f, 1.5f, -1.5f));
-    obj->transform.SetScale(1.f);
-
     Mesh cube = GeometryFactory::Instance()->BuildCube();
     Object* floor = CreateObject(DYNAMIC);
     floor->mesh = cube;
@@ -88,7 +80,7 @@ void SceneParticlesTest::OnInit(Device* _pDevice)
     ParticleManager::Instance()->m_uavBuffer = m_uav_buffer;
 
     ParticleDesc fireDesc;
-    fireDesc.amount = 100;
+    fireDesc.amount = 3;
     fireDesc.spawnRadius = 0.9f;
     fireDesc.particleBeginSize = 0.15f;
     fireDesc.particleEndSize = 0.f;
@@ -103,7 +95,7 @@ void SceneParticlesTest::OnInit(Device* _pDevice)
     fireDesc.minLifeTime = 1.f;
     fireDesc.maxLifeTime = 3.f;
 
-    fire = ParticleManager::Instance()->CreateEmitter({ 0, 2, 0 }, fireDesc, 0.2f);
+    fire = ParticleManager::Instance()->CreateEmitter({ 0, 2, 0 }, fireDesc, 0.0f);
 
     ParticleDesc rainDesc;
     rainDesc.amount = 0;
@@ -147,14 +139,25 @@ void SceneParticlesTest::OnInit(Device* _pDevice)
     mesh_particle = GeometryFactory::Instance()->CreateMesh(vertices, indices);
 #pragma endregion PARTICLE_INIT
 
-    Model test("Assets/Dae/exportRootNodeMeshTest_out.dae");
+    Model test("Assets/Fbx/dance.fbx");
     std::cout << "Bones = " << test.GetBoneCount() << std::endl;
 
-    Object* model_test = CreateObject(DYNAMIC);
-    model_test->mesh = test.meshes[0];
-    model_test->transform.SetIdentity();
-    model_test->transform.SetScale(0.01f);
-    model_test->mat = m_unlit.get();
+    ShaderFactory::Instance()->RegisterGroup<LitT_BP_VS, LitT_BP_PS>("TestMaterial");
+
+    model_mat = ShaderFactory::Instance()->CreateMaterial(std::string("TestMaterial"));
+    model_mat->SetParams<LitT_BP_PS::MaterialCB>(LitT_BP_PS::CB_SLOT_mat, cb);
+
+    Handle tex = TextureFactory::Instance()->CreateTexture("fbx_tex", "Assets/Fbx/Character_Male_34.png");
+    model_mat->SetTexture(LitT_BP_PS::TEX_SLOT_diffuse, tex);
+
+    obj = CreateObject(DYNAMIC);
+    obj->mesh = test.meshes[0];
+    obj->mat = model_mat.get();
+
+    obj->transform.SetIdentity();
+    obj->transform.SetScale(2.f);
+  //  obj->transform.SetScale(0.025f);
+    obj->transform.SetYPR(glm::vec3(-pi<float>()*0.5f, pi<float>(), 0));
 }
 
 void SceneParticlesTest::OnHandleEvent(const SDL_Event& event)
@@ -183,8 +186,8 @@ void SceneParticlesTest::OnHandleEvent(const SDL_Event& event)
 
 void SceneParticlesTest::OnUpdate(float dt)
 {
-    obj->transform.AddYPR(glm::vec3(0, 0.5f*dt, 0));
-    obj->transform.Move(obj->transform.GetForward() * 1.5f * dt);
+    obj->transform.AddYPR(glm::vec3(0, 0, 1.f*dt));
+    //obj->transform.Move(obj->transform.GetForward() * 1.5f * dt);
     fire.center = obj->transform.GetPosition();
 
     ParticleManager::Instance()->UpdateEmitter(fire, dt);

@@ -182,7 +182,7 @@ class Model
 {
 public:
     // model data 
-    std::vector<Handle> textures_loaded;
+    std::unordered_map<size_t, Handle> textures_loaded;
     std::vector<Mesh> meshes;
     std::string directory = "";
     bool gammaCorrection = false;
@@ -197,6 +197,7 @@ public:
     int& GetBoneCount() { return m_BoneCounter; }
 
 private:
+    size_t current_mesh_id = 0;
     std::map<std::string, BoneInfo> m_BoneInfoMap; //
     int m_BoneCounter = 0;
 
