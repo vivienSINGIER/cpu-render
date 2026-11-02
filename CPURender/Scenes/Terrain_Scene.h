@@ -6,7 +6,8 @@
 #include "../Datas/Lights/LightData.hpp"
 #include "../Core/FrameBuffer.hpp"
 #include "../Shaders/ShaderBase/Material.h"
-#include "../TerrainGenerator.h"
+#include "../Terrain/TerrainGenerator.h"
+#include "../Terrain/Erosion.h"
 
 class Terrain_Scene : public Scene
 {
@@ -25,6 +26,7 @@ private:
     static constexpr uint32_t TERRAIN_GRID_SIZE = 99;
     static constexpr float TERRAIN_CELL_SIZE = 0.25f;
 
+    Erosion m_eroder; 
     TerrainGenerator m_terrainGenerator;
     TerrainDesc m_terrainDesc;
     TerrainDesc m_defaultTerrainDesc; // restored with numpad 5

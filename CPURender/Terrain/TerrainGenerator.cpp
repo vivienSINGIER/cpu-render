@@ -1,7 +1,7 @@
 #include "TerrainGenerator.h"
 #include <vector>
-#include "Factories/GeometryFactory.h"
-#include "Datas/Texture.h"
+#include "../Factories/GeometryFactory.h"
+#include "../Datas/Texture.h"
 
 float TerrainGenerator::SampleHeight(TerrainDesc const& _d, float _x, float _y, glm::vec2 _uv)
 {
@@ -44,59 +44,20 @@ Mesh TerrainGenerator::GetTerrainMesh()
 	return m_terrain;
 }
 
-Vertex MakeVertex(int _x, int _y, Texture const& _heightmap, float _cellSize, uint32_t _sideCellCount)
-{
-	Vertex v;
-	v.position = { (_x - (int)(_sideCellCount / 2)) * _cellSize, _heightmap.Load(_x, _y).r, (_y - (int)(_sideCellCount / 2)) * _cellSize };
-	return v;
-}
-
-std::vector<Vertex> MakeCell(size_t _index, Texture const& _heightmap, std::vector<glm::vec3> const& _normalmap, float _cellSize, uint32_t _sideCellCount)
-{
-	std::vector<Vertex> vBuffer;
-
-	int x = _index % _sideCellCount;
-	int y = _index / _sideCellCount;
-
-	vBuffer.push_back(MakeVertex(x, y, _heightmap, _cellSize, _sideCellCount)); // top left
-	vBuffer.push_back(MakeVertex(x, y+1, _heightmap, _cellSize, _sideCellCount)); // bottom left
-	vBuffer.push_back(MakeVertex(x+1, y, _heightmap, _cellSize, _sideCellCount)); // top right
-
-	vBuffer.push_back(MakeVertex(x, y + 1, _heightmap, _cellSize, _sideCellCount)); // bottom left
-	vBuffer.push_back(MakeVertex(x + 1, y + 1, _heightmap, _cellSize, _sideCellCount)); // bottom right
-	vBuffer.push_back(MakeVertex(x + 1, y, _heightmap, _cellSize, _sideCellCount)); // top right
-
-	uint32_t s = _sideCellCount + 1; // vertices per row
-	size_t tl = y * s + x;             // top left
-	size_t tr = y * s + (x + 1);       // top right
-	size_t bl = (y + 1) * s + x;       // bottom left
-	size_t br = (y + 1) * s + (x + 1); // bottom right
-
-	vBuffer[0].normal = _normalmap[tl];
-	vBuffer[1].normal = _normalmap[bl];
-	vBuffer[2].normal = _normalmap[tr];
-
-	vBuffer[3].normal = _normalmap[bl];
-	vBuffer[4].normal = _normalmap[br];
-	vBuffer[5].normal = _normalmap[tr];
-
-	return vBuffer;
-}
-
 void TerrainGenerator::GenerateMesh(TerrainDesc const& _desc)
 {
 	uint32_t sideVertexCount = m_grid_size + 1; 
 
 	std::vector<Vertex> gridV;
 	std::vector<Index> gridI;
-
-	std::vector<glm::vec3> normalmap(sideVertexCount * sideVertexCount);
+	
 	Texture texMap = Texture(sideVertexCount, sideVertexCount,  Texture::R32F, Texture::MORTON);
 
 	// Fill Heightmap
-	size_t pointCount = sideVertexCount * sideVertexCount;
+	size_t vertexCount = sideVertexCount * sideVertexCount;
+	gridV.resize(vertexCount);
 	Texture heightmap = Texture(sideVertexCount, sideVertexCount, Texture::R32F, Texture::MORTON);
-	for (size_t i = 0; i < pointCount; i++)
+	for (size_t i = 0; i < vertexCount; i++)
 	{
 		int x = i % sideVertexCount;
 		int y = i / sideVertexCount;
@@ -105,11 +66,14 @@ void TerrainGenerator::GenerateMesh(TerrainDesc const& _desc)
 		float value = SampleHeight(_desc, (float)x, (float)y, uv);
 		
 		heightmap.Store(x, y, vec4(value, value, value, 1.0f));// +2.0f * PerlinNoise::FractalBrownianMotion(x / 4, y / 4, 0.05f, 5));
+		
+		vec3 pos = { ((float)x - (float)((int32)m_grid_size / 2)) * m_cellSize, value, ((float)y - (float)((int32)m_grid_size / 2)) * m_cellSize };
+		
+		gridV[i] = { pos, uv };
 	}
 
 	// Compute cell normals
-	std::vector<glm::vec3> cellNormalMap(m_grid_size * m_grid_size);
-	for (size_t i = 0; i < sideVertexCount * sideVertexCount; i++)
+	for (size_t i = 0; i < vertexCount; i++)
 	{
 		int x = i % sideVertexCount;
 		int y = i / sideVertexCount;
@@ -161,19 +125,28 @@ void TerrainGenerator::GenerateMesh(TerrainDesc const& _desc)
 		}
 	
 		normal = glm::cross(tu, tv);
-		normalmap[i] = glm::normalize(normal);
+		gridV[i].normal = normal;
 	}
-	// Vertice normals
+	
 	size_t cellCount = m_grid_size * m_grid_size;
-
-	// Fill Vertex and Index buffer
+	// Fill Index buffer
 	for (size_t i = 0; i < cellCount; i++)
 	{
-		std::vector<Vertex> subVBuff = MakeCell(i, heightmap, normalmap, m_cellSize, m_grid_size);
-		gridV.insert(gridV.end(), subVBuff.begin(), subVBuff.end());
-
-		gridI.push_back(i * 6); gridI.push_back(i * 6 + 1); gridI.push_back(i * 6 + 2);
-		gridI.push_back(i * 6 + 3); gridI.push_back(i * 6 + 4); gridI.push_back(i * 6 + 5);
+		int x = (int32)i % (int32)m_grid_size;
+		int y = (int32)i / (int32)m_grid_size;
+		
+		uint32_t s = sideVertexCount; // vertices per row
+		Index tl = y * s + x;             // top left
+		Index tr = y * s + (x + 1);       // top right
+		Index bl = (y + 1) * s + x;       // bottom left
+		Index br = (y + 1) * s + (x + 1); // bottom right
+		
+		gridI.push_back(tl); 
+		gridI.push_back(bl); 
+		gridI.push_back(tr);
+		gridI.push_back(bl); 
+		gridI.push_back(br); 
+		gridI.push_back(tr);
 	}
 
 	m_terrain = GeometryFactory::Instance()->CreateMesh(gridV, gridI);

@@ -1,6 +1,6 @@
 #pragma once
-#include "Datas/Mesh.h"
-#include "Maths/PerlinNoise.h"
+#include "../Datas/Mesh.h"
+#include "PerlinNoise.h"
 
 enum TerrainType
 {
@@ -43,7 +43,7 @@ struct TerrainDesc
 
 class TerrainGenerator
 {
-	// Align 3 noises: 
+	// Align 3 noises:   
 	// 1 for Water/ground height
 	// 1 for "biomes" / texture type
 	// 1 for small scale heightmap
