@@ -11,7 +11,6 @@
 #include "../Shaders/ComputeShaders/ParticleCS.hpp"
 #include "../Factories/BufferFactory.h"
 
-#include "../Animation/AnimationData.h"
 
 void SceneParticlesTest::OnInit(Device* _pDevice)
 {
@@ -147,14 +146,14 @@ void SceneParticlesTest::OnInit(Device* _pDevice)
     mesh_particle = GeometryFactory::Instance()->CreateMesh(vertices, indices);
 #pragma endregion PARTICLE_INIT
 
-    Model test("Assets/Dae/exportRootNodeMeshTest_out.dae");
-    std::cout << "Bones = " << test.GetBoneCount() << std::endl;
+    m_test.loadModel("Assets/Dae/exportMeshIdTest_empty_out.dae");
+    std::cout << "Bones = " << m_test.GetBoneCount() << std::endl;
 
     Object* model_test = CreateObject(DYNAMIC);
-    model_test->mesh = test.meshes[0];
+    model_test->mesh = m_test.meshes[0];
     model_test->transform.SetIdentity();
     model_test->transform.SetScale(0.01f);
-    model_test->mat = m_unlit.get();
+    model_test->mat = m_test.m_materials[m_test.m_materialKeys[0]].get();
 }
 
 void SceneParticlesTest::OnHandleEvent(const SDL_Event& event)

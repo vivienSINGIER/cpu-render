@@ -12,6 +12,7 @@
 #include "GraphicsShaders/LitT_BP_Cube.hpp"
 #include "GraphicsShaders/LitC_BP_Cube.hpp"
 #include "GraphicsShaders/LitC_BP_Transparent.hpp"
+#include "GraphicsShaders/LitT_BP_Model.hpp"
 
 #include "GraphicsShaders/PBR.hpp"
 

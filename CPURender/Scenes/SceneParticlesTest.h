@@ -5,6 +5,7 @@
 #include "../Maths/Transform.h"
 #include "../Core/FrameBuffer.hpp"
 #include "../Shaders/ShaderBase/Material.h"
+#include "../Animation/AnimationData.h"
 
 #include "../Datas/Particle.h"
 
@@ -34,7 +35,7 @@ private:
     UAVView m_uav_view;
 
     Mesh mesh_particle;
-
+    Model m_test;
 
     Object* obj = nullptr;
     ParticleEmitter fire;

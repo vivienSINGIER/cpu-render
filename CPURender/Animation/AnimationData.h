@@ -7,6 +7,7 @@
 
 #include "../Datas/Mesh.h"
 #include "../Datas/Texture.h"
+#include "../Shaders/ShaderBase/Material.h"
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
@@ -184,10 +185,13 @@ public:
     // model data 
     std::vector<Handle> textures_loaded;
     std::vector<Mesh> meshes;
+    std::map<std::string, Material> m_materials;
+    std::vector<std::string> m_materialKeys;
     std::string directory = "";
     bool gammaCorrection = false;
 
     // constructor, expects a filepath to a 3D model.
+    Model() {};
     Model(std::string const& path, bool gamma = false) : gammaCorrection(gamma)
     {
         loadModel(path);
@@ -196,12 +200,12 @@ public:
     auto& GetBoneInfoMap() { return m_BoneInfoMap; }
     int& GetBoneCount() { return m_BoneCounter; }
 
+    // loads a model with supported ASSIMP extensions from file and stores the resulting meshes in the meshes vector.
+    void loadModel(std::string const& path);
+
 private:
     std::map<std::string, BoneInfo> m_BoneInfoMap; //
     int m_BoneCounter = 0;
-
-    // loads a model with supported ASSIMP extensions from file and stores the resulting meshes in the meshes vector.
-    void loadModel(std::string const& path);
 
     // processes a node in a recursive fashion. Processes each individual mesh located at the node and repeats this process on its children nodes (if any).
     void processNode(aiNode* node, const aiScene* scene);
@@ -214,5 +218,5 @@ private:
 
     void ExtractBoneWeightForVertices(std::vector<Vertex>& vertices, aiMesh* mesh, const aiScene* scene);
 
-    std::vector<Handle> loadMaterialTextures(aiMaterial* mat, aiTextureType type, std::string typeName);
+    std::vector<Handle> loadMaterialTextures(aiMaterial* mat, aiTextureType type);
 };

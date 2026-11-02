@@ -147,6 +147,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Animation\Animation.cpp" />
     <ClCompile Include="Animation\AnimationData.cpp" />
     <ClCompile Include="Animation\AnimationPlayer.cpp" />
     <ClCompile Include="Camera.cpp" />
@@ -185,6 +186,7 @@
     <ClCompile Include="Maths\Transform.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Animation\Animation.h" />
     <ClInclude Include="Animation\AnimationData.h" />
     <ClInclude Include="Animation\AnimationPlayer.h" />
     <ClInclude Include="Animation\AssimpGLMHelpers.h" />
@@ -244,6 +246,7 @@
     <ClInclude Include="Shaders\ComputeShaders\GammaCorrection_CS.hpp" />
     <ClInclude Include="Shaders\ComputeShaders\TexCopy_CS.hpp" />
     <ClInclude Include="Shaders\ComputeShaders\ParticleCS.hpp" />
+    <ClInclude Include="Shaders\GraphicsShaders\LitT_BP_Model.hpp" />
     <ClInclude Include="Shaders\GraphicsShaders\UnlitParticle.hpp" />
     <ClInclude Include="Shaders\GraphicsShaders\LitC_BP_Cube.hpp" />
     <ClInclude Include="Shaders\GraphicsShaders\LitC_BP_Transparent.hpp" />

@@ -7,7 +7,9 @@
 
 #include "AnimationPlayer.h"
 #include "AssimpGLMHelpers.h"
+#include "../Shaders/Shaders.h"
 #include "../Factories/TextureFactory.h"
+#include "../Factories/ShaderFactory.h"
 #include "../Factories/GeometryFactory.h"
 
 Bone::Bone(const std::string& name, int ID, const NodeAnim* channel) :
@@ -61,6 +63,8 @@ void Model::SetVertexBoneDataToDefault(Vertex& vertex)
 // loads a model with supported ASSIMP extensions from file and stores the resulting meshes in the meshes vector.
 void Model::loadModel(std::string const& path)
 {
+    m_materials.clear();
+
     // read file via ASSIMP
     Assimp::Importer importer;
     const aiScene* scene = importer.ReadFile(path, aiProcess_Triangulate | aiProcess_GenSmoothNormals | aiProcess_CalcTangentSpace);
@@ -115,7 +119,7 @@ Mesh Model::processMesh(aiMesh* mesh, const aiScene* scene)
         {
             glm::vec2 vec;
             vec.x = mesh->mTextureCoords[0][i].x;
-            vec.y = mesh->mTextureCoords[0][i].y;
+            vec.y = 1-mesh->mTextureCoords[0][i].y;
             vertex.uv = vec;
         }
         else
@@ -134,14 +138,71 @@ Mesh Model::processMesh(aiMesh* mesh, const aiScene* scene)
 
     aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
 
-    std::vector<Handle> diffuseMaps = loadMaterialTextures(material, aiTextureType_DIFFUSE, "texture_diffuse");
-    textures.insert(textures.end(), diffuseMaps.begin(), diffuseMaps.end());
-    std::vector<Handle> specularMaps = loadMaterialTextures(material, aiTextureType_SPECULAR, "texture_specular");
-    textures.insert(textures.end(), specularMaps.begin(), specularMaps.end());
-    std::vector<Handle> normalMaps = loadMaterialTextures(material, aiTextureType_HEIGHT, "texture_normal");
-    textures.insert(textures.end(), normalMaps.begin(), normalMaps.end());
-    std::vector<Handle> heightMaps = loadMaterialTextures(material, aiTextureType_AMBIENT, "texture_height");
-    textures.insert(textures.end(), heightMaps.begin(), heightMaps.end());
+    std::string matName = material->GetName().C_Str();
+    auto it = m_materials.find(matName);
+    bool materialExists = it != m_materials.end();
+    if (materialExists == false)
+    {
+        std::vector<Handle> diffuseMaps = loadMaterialTextures(material, aiTextureType_DIFFUSE);
+        std::vector<Handle> metalnessMaps = loadMaterialTextures(material, aiTextureType_METALNESS);
+        std::vector<Handle> normalMaps = loadMaterialTextures(material, aiTextureType_HEIGHT);
+        std::vector<Handle> heightMaps = loadMaterialTextures(material, aiTextureType_AMBIENT);
+
+        m_materials[matName] = ShaderFactory::Instance()->CreateMaterial("LitT_BP_Model");
+        if (diffuseMaps.size() != 0) m_materials[matName]->SetTexture(LitT_BP_PS::TEX_SLOT_diffuse, diffuseMaps[0]);
+        if (metalnessMaps.size() != 0) m_materials[matName]->SetTexture(LitT_BP_PS::TEX_SLOT_metal, metalnessMaps[0]);
+        if (normalMaps.size() != 0) m_materials[matName]->SetTexture(LitT_BP_PS::TEX_SLOT_normal, normalMaps[0]);
+        if (heightMaps.size() != 0) m_materials[matName]->SetTexture(LitT_BP_PS::TEX_SLOT_displacement, heightMaps[0]);
+
+        //for (int i = 0; i < material->mNumProperties; i++)
+        //{
+        //    std::cout << material->mProperties[i]->mKey.C_Str();
+        //    switch (material->mProperties[i]->mType)
+        //    {
+        //    case aiPTI_Buffer: std::cout << "Buffer"; break;
+        //    case aiPTI_Double: std::cout << "Double"; break;
+        //    case aiPTI_Float: std::cout << "Float"; break;
+        //    case aiPTI_Integer: std::cout << "Int"; break;
+        //    case aiPTI_String: std::cout << "String"; break;
+        //    }
+        //    std::cout << ":";
+        //    for (int j = 0; j < material->mProperties[i]->mDataLength; j++)
+        //    {
+        //        std::cout << material->mProperties[i]->mData[j];
+        //    }
+        //    std::cout << std::endl;
+
+        //    //if(material->mProperties[i]->mType == aiPTI_Double)
+        //    //{
+        //    //    //double res;
+        //    //    memcpy(&res, material->mProperties[i]->mData, material->mProperties[i]->mDataLength);
+        //    //    std::cout << material->mProperties[i]->mKey.C_Str() << ":" << res << std::endl;
+        //    //}
+        //    //if(material->mProperties[i]->mType == aiPTI_Float)
+        //    //{
+        //    //    //float res;
+        //    //    memcpy(&res, material->mProperties[i]->mData, material->mProperties[i]->mDataLength);
+        //    //    std::cout << material->mProperties[i]->mKey.C_Str() << ":" << res << std::endl;
+        //    //}
+        //    //if(material->mProperties[i]->mType == aiPTI_String)
+        //    //{
+        //    //    //std::string res;
+        //    //   // memcpy(&res, material->mProperties[i]->mData, material->mProperties[i]->mDataLength);
+        //    //    std::cout << material->mProperties[i]->mKey.C_Str() << ":" << res << std::endl;
+        //    //}
+        //    //if(material->mProperties[i]->mType == aiPTI_Integer)
+        //    //{
+        //    //    //int res;
+        //    //    memcpy(&res, material->mProperties[i]->mData, material->mProperties[i]->mDataLength);
+        //    //    std::cout << material->mProperties[i]->mKey.C_Str() << ":" << res << std::endl;
+        //    //}
+        //}
+
+        LitT_BP_PS::MaterialCB cb = { glm::vec4(1, 1, 1, 1), glm::vec3(0, 0, 0), 0.5f, 1.0f, 0.5f };
+        m_materials[matName]->SetParams(LitT_BP_PS::CB_SLOT_mat, cb);
+    }
+
+    m_materialKeys.push_back(matName);
 
     ExtractBoneWeightForVertices(vertices, mesh, scene);
 
@@ -200,7 +261,7 @@ void Model::ExtractBoneWeightForVertices(std::vector<Vertex>& vertices, aiMesh* 
 
 // checks all material textures of a given type and loads the textures if they're not loaded yet.
  // the required info is returned as a Texture struct.
-std::vector<Handle> Model::loadMaterialTextures(aiMaterial* mat, aiTextureType type, std::string typeName)
+std::vector<Handle> Model::loadMaterialTextures(aiMaterial* mat, aiTextureType type)
 {
     std::vector<Handle> textures;
     for (unsigned int i = 0; i < mat->GetTextureCount(type); i++)
@@ -212,7 +273,7 @@ std::vector<Handle> Model::loadMaterialTextures(aiMaterial* mat, aiTextureType t
         unsigned char* data = stbi_load(str.C_Str(), &width, &height, &nrComponents, 0);
         if (data)
         {
-            Handle result = TextureFactory::Instance()->CreateTexture(typeName, str.C_Str());
+            Handle result = TextureFactory::Instance()->CreateTexture(str.C_Str(), str.C_Str());
             textures.push_back(result);
             textures_loaded.push_back(result);  // store it as texture loaded for entire model, to ensure we won't unnecessary load duplicate textures.
 
