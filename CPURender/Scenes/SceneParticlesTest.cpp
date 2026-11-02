@@ -24,6 +24,7 @@ void SceneParticlesTest::OnInit(Device* _pDevice)
 
     m_particlesPass.fb = _pDevice->GetDefaultFrameBuffer();
     m_particlesPass.isCompute = true;
+    m_particlesPass.state.blendMode = Blending::ALPHA;
 
     _pDevice->SetLightData(m_lightData);
 
@@ -80,18 +81,18 @@ void SceneParticlesTest::OnInit(Device* _pDevice)
     ParticleManager::Instance()->m_uavBuffer = m_uav_buffer;
 
     ParticleDesc fireDesc;
-    fireDesc.amount = 3;
-    fireDesc.spawnRadius = 0.9f;
-    fireDesc.particleBeginSize = 0.15f;
-    fireDesc.particleEndSize = 0.f;
+    fireDesc.amount = 5;
+    fireDesc.spawnRadius = 0.75f;
+    fireDesc.particleBeginSize = 0.1f;
+    fireDesc.particleEndSize = 0.01f;
 
     fireDesc.rotationSpeed = 10.f;
     fireDesc.floorDir = glm::vec3(-0.25f, 0.5f, -0.25f);
     fireDesc.ceilDir = glm::vec3(0.25f, 1, 0.25f);
     fireDesc.minSpeed = 0.33f;
-    fireDesc.maxSpeed = 3.f;
-    fireDesc.beginColor = glm::vec4(1, 0, 0, 1);
-    fireDesc.endColor = glm::vec4(1, 1, 0, 1);
+    fireDesc.maxSpeed = 4.f;
+    fireDesc.beginColor = glm::vec4(1, 0, 0, 1.f);
+    fireDesc.endColor = glm::vec4(1, 1, 0, 0.f);
     fireDesc.minLifeTime = 1.f;
     fireDesc.maxLifeTime = 3.f;
 

@@ -518,7 +518,7 @@ void Device::RasterStep(std::vector<Vertex_OUT> const& _vBuffer, ShaderStages _s
 						continue;
 					
 					glm::vec4 src = _s.ps->Execute(px);
-					if (src.a <= 0.1f)
+					if (src.a <= 1e-8f)
 						continue;
 					
 					glm::vec4 dest = fb->Load(x, y);
