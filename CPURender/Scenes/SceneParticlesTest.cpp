@@ -64,22 +64,22 @@ void SceneParticlesTest::OnInit(Device* _pDevice)
     floor->transform.SetScale(glm::vec3(25.0f, 0.2f, 25.0f));
 
     ParticleDesc fireDesc;
-    fireDesc.amount = 5;
+    fireDesc.amount = 15;
     fireDesc.spawnRadius = 0.75f;
     fireDesc.particleBeginSize = 0.1f;
     fireDesc.particleEndSize = 0.01f;
 
-    fireDesc.rotationSpeed = 10.f;
-    fireDesc.floorDir = glm::vec3(-0.25f, 0.5f, -0.25f);
-    fireDesc.ceilDir = glm::vec3(0.25f, 1, 0.25f);
-    fireDesc.minSpeed = 0.33f;
-    fireDesc.maxSpeed = 4.f;
-    fireDesc.beginColor = glm::vec4(1, 0, 0, 1.f);
-    fireDesc.endColor = glm::vec4(1, 1, 0, 0.f);
-    fireDesc.minLifeTime = 1.f;
-    fireDesc.maxLifeTime = 3.f;
+    fireDesc.rotationSpeed = 0.f;
+    fireDesc.floorDir = glm::vec3(-0.5f, 1.f, -0.5f);
+    fireDesc.ceilDir = glm::vec3(0.5f, 1, 0.5f);
+    fireDesc.minSpeed = 5.f;
+    fireDesc.maxSpeed = 10.f;
+    fireDesc.beginColor = glm::vec4(1, 0, 1, 0.5f);
+    fireDesc.endColor = glm::vec4(0, 1, 1, 0.5f);
+    fireDesc.minLifeTime = 0.5f;
+    fireDesc.maxLifeTime = 1.5f;
 
-    fire = ParticleManager::Instance()->CreateEmitter({ 0, 2, 0 }, fireDesc, 0.0f);
+    fire = ParticleManager::Instance()->CreateEmitter({ 0, 2.5f, 0 }, fireDesc, 0.0f);
 
     ParticleDesc rainDesc;
     rainDesc.amount = 200;
@@ -148,7 +148,7 @@ void SceneParticlesTest::OnHandleEvent(const SDL_Event& event)
 void SceneParticlesTest::OnUpdate(float dt)
 {
     obj->transform.AddYPR(glm::vec3(0, 0, 1.f*dt));
-    //obj->transform.Move(obj->transform.GetForward() * 1.5f * dt);
+    obj->transform.Move(obj->transform.GetRight() * 1.5f * dt);
     fire.center = obj->transform.GetPosition();
 
     ParticleManager::Instance()->UpdateEmitter(fire, dt);
