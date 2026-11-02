@@ -55,7 +55,7 @@ class TerrainGenerator
 public:
 	// Square grid
 	float m_cellSize; // Length of a side
-	uint32_t m_grid_size; // m_grid_size * m_grid_size => cellCount
+	uint32_t m_grid_size; // m_grid_size * m_grid_size => vertexCount
 
 	Handle textureWeights;
 

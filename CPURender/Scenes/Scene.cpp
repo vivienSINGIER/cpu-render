@@ -7,7 +7,7 @@
 
 namespace
 {
-	constexpr float CAM_MOVE_SPEED = 3.0f;          // world units per second
+	constexpr float CAM_MOVE_SPEED = 10.0f;          // world units per second
 	constexpr float CAM_KEY_ROT_SPEED = 1.5f;       // radians per second
 	constexpr float CAM_MOUSE_SENSITIVITY = 0.005f; // radians per pixel
 	constexpr float CAM_MAX_PITCH = glm::radians(89.0f);

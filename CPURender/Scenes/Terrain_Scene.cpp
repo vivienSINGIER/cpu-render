@@ -30,17 +30,22 @@ void Terrain_Scene::OnInit(Device* _pDevice)
     _pDevice->SetLightData(m_lightData);
 
     m_camera.SetShadowDistance(25.0f);
-    m_camTransform.SetPosition(glm::vec3(0.0f, 5.0f, -15.f));
+    m_camTransform.SetPosition(glm::vec3(0.0f, 40.0f, -90.f));
     
     m_terrainGenerator.m_grid_size = TERRAIN_GRID_SIZE;
     m_terrainGenerator.m_cellSize = TERRAIN_CELL_SIZE;
-    m_terrainDesc.frequency = 0.1f;
-    m_terrainDesc.octaveCount = 16;
-    // Mountain starts disabled, but with values that give a visible result when toggled on
-    m_terrainDesc.mountainCenter = glm::vec2(0.5f);
-    m_terrainDesc.mountainRadius = 0.4f;
+    m_terrainDesc.frequency = 0.008f;
+    m_terrainDesc.octaveCount = 6;
+    m_terrainDesc.heightScale = 7.0f;
+    m_terrainDesc.heightRedistribution = 1.7f;
+    m_terrainDesc.minHeight = -20.0f;                                                                                                                                                                                                 
+    m_terrainDesc.maxHeight = 25.0f;                                                                                                                                                                                                  
+    m_terrainDesc.domainWarpStrength = 0.25f;                                                                                                                                                                                         
+    m_terrainDesc.useCenterMountain = true;                                                                                                                                                                                           
+    m_terrainDesc.mountainCenter = glm::vec2(0.5f);                                                                                                                                                                                   
+    m_terrainDesc.mountainRadius = 0.35f;                                                                                                                                                                                             
+    m_terrainDesc.mountainHeight = 15.0f;
     m_terrainDesc.edgeWarp = 0.2f;
-    m_defaultTerrainDesc = m_terrainDesc;
 
     m_terrainGenerator.GenerateMesh(m_terrainDesc);
     PrintControls();
@@ -99,7 +104,7 @@ void Terrain_Scene::OnHandleEvent(const SDL_Event& event)
 
     switch (event.key.scancode)
     {
-    case SDL_SCANCODE_RETURN: m_eroder.Erode(m_terrain->mesh, TERRAIN_GRID_SIZE + 1, 1000); return;
+    case SDL_SCANCODE_RETURN: m_eroder.Erode(m_terrain->mesh, d, TERRAIN_GRID_SIZE, 50'000); return;
         
     // --- Arrows : noise offset | Shift : mountain center ---
     case SDL_SCANCODE_LEFT:  if (shift) add(d.mountainCenter.x, -centerStep, 0.0f, 1.0f); else d.noiseOffset.x -= offsetStep; break;

@@ -3,6 +3,7 @@
 #include <vector>
 
 #include "../Core/GraphicsContext.h"
+#include "TerrainGenerator.h"
 
 class Erosion
 {
@@ -26,7 +27,9 @@ public:
     
     void Init(GraphicsContext* _ctx);
     
-    void Erode(Mesh const& _mesh, int _mapSize, int _numIterations = 1);
+    // Heights are normalized from [baseHeight - heightScale, baseHeight + heightScale] to [0, 1] for the
+    // simulation, so the erosion parameters behave the same whatever the terrain's vertical scale.
+    void Erode(Mesh const& _mesh, TerrainDesc const& _desc, int _mapSize, int _numIterations = 1);
     
 private:
     
@@ -39,9 +42,14 @@ private:
     
     Vertex* m_map;
     int m_mapSize;
+
+    std::vector<float> m_heights; // normalized heights the simulation works on
+    float m_heightMin = 0.0f;     // world height mapped to 0
+    float m_heightRange = 1.0f;   // world height span mapped to [0, 1]
     
     void InitializeBrushIndices(int _mapSize, int _radius);
     HeightGradient CalcHeightGradient(float _posX, float _posY);
+    void RecomputeNormals();
     
     std::vector<std::vector<int>> m_erosionBrushIndices;
     std::vector<std::vector<float>> m_erosionBrushWeights;
