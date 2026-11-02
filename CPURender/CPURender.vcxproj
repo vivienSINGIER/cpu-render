@@ -178,8 +178,8 @@
     <ClCompile Include="Maths\Ray.cpp" />
     <ClCompile Include="Maths\Transform.cpp" />
     <ClCompile Include="Terrain\Erosion.cpp" />
-    <ClCompile Include="Terrain\PerlinNoise.cpp"/>
-    <ClCompile Include="Terrain\TerrainGenerator.cpp"/>
+    <ClCompile Include="Terrain\PerlinNoise.cpp" />
+    <ClCompile Include="Terrain\TerrainGenerator.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Camera.h" />
@@ -238,6 +238,7 @@
     <ClInclude Include="Shaders\ComputeShaders\GammaCorrection_CS.hpp" />
     <ClInclude Include="Shaders\ComputeShaders\TexCopy_CS.hpp" />
     <ClInclude Include="Shaders\ComputeShaders\ParticleCS.hpp" />
+    <ClInclude Include="Shaders\GraphicsShaders\Lit4T_BP.hpp" />
     <ClInclude Include="Shaders\GraphicsShaders\UnlitParticle.hpp" />
     <ClInclude Include="Shaders\GraphicsShaders\LitC_BP_Cube.hpp" />
     <ClInclude Include="Shaders\GraphicsShaders\LitC_BP_Transparent.hpp" />

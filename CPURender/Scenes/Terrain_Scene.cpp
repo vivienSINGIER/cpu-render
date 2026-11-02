@@ -3,6 +3,7 @@
 #include "../Core/Device.h"
 
 #include "../Factories/ShaderFactory.h"
+#include "../Factories/TextureFactory.h"
 #include "../Shaders/Shaders.h"
 #include "../Datas/Lights/LightHelpers.hpp"
 
@@ -45,15 +46,33 @@ void Terrain_Scene::OnInit(Device* _pDevice)
     PrintControls();
     PrintTerrainDesc();
 
-    LitT_BP_PS::MaterialCB cb = {
-        {0.45f, 0.6f, 0.3f, 1.0f},
+    Lit4T_BP_PS::MaterialCB cb = {
+        {1.0f, 1.0f, 1.0f, 1.0f},
             Lighting::g_fresnelR0Templates[PLASTIC],
                 0.9f, 0.0f, 0.0f
     };
 
-    m_mat = ShaderFactory::Instance()->CreateMaterial("LitT_BP");
-    m_mat->SetParams<LitT_BP_PS::MaterialCB>(LitT_BP_PS::CB_SLOT_mat, cb);
-    // m_mat->SetTexture(LitT_BP_PS::TEX_SLOT_shadow, m_shadowPass.fb.depthBuffer);
+    Handle Rock = TextureFactory::Instance()->CreateTexture("Rock", "Assets/Textures/Rock/diffuse.jpg");
+    Handle Sand = TextureFactory::Instance()->CreateTexture("Sand", "Assets/Textures/Sand/diffuse.jpg");
+    Handle Dirt = TextureFactory::Instance()->CreateTexture("Dirt", "Assets/Textures/Dirt/diffuse.jpg");
+    Handle Grass = TextureFactory::Instance()->CreateTexture("Grass", "Assets/Textures/Grass/diffuse.jpg");
+
+    m_mat = ShaderFactory::Instance()->CreateMaterial("Lit4T_BP");
+    m_mat->SetParams<Lit4T_BP_PS::MaterialCB>(Lit4T_BP_PS::CB_SLOT_mat, cb);
+    m_mat->SetTexture(Lit4T_BP_VS::TEX_SLOT_texWeight, m_terrainGenerator.textureWeights);
+    m_mat->SetTexture(Lit4T_BP_PS::TEX_SLOT_diffuse1, Dirt);
+    m_mat->SetTexture(Lit4T_BP_PS::TEX_SLOT_diffuse2, Sand);
+    m_mat->SetTexture(Lit4T_BP_PS::TEX_SLOT_diffuse3, Grass);
+    m_mat->SetTexture(Lit4T_BP_PS::TEX_SLOT_diffuse4, Rock);
+
+    //LitT_BP_PS::MaterialCB cb = {
+    //{1.0f, 1.0f, 1.0f, 1.0f},
+    //    Lighting::g_fresnelR0Templates[PLASTIC],
+    //        0.9f, 0.0f, 0.0f
+    //};
+
+    //m_mat = ShaderFactory::Instance()->CreateMaterial("LitT_BP");
+    //m_mat->SetParams<LitT_BP_PS::MaterialCB>(LitT_BP_PS::CB_SLOT_mat, cb);
 
     m_terrain = CreateObject(STATIC);
     m_terrain->mesh = m_terrainGenerator.GetTerrainMesh();

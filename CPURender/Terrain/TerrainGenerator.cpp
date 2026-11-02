@@ -1,6 +1,7 @@
 #include "TerrainGenerator.h"
 #include <vector>
 #include "../Factories/GeometryFactory.h"
+#include "../Factories/TextureFactory.h"
 #include "../Datas/Texture.h"
 
 float TerrainGenerator::SampleHeight(TerrainDesc const& _d, float _x, float _y, glm::vec2 _uv)
@@ -39,6 +40,28 @@ float TerrainGenerator::SampleHeight(TerrainDesc const& _d, float _x, float _y, 
 	return glm::clamp(h, _d.minHeight, _d.maxHeight);
 }
 
+glm::vec4 TerrainGenerator::SampleTex(TerrainDesc const& _d, float _x, float _y)
+{
+	//float rockyness = PerlinNoise::FractalBrownianMotion(_x + 15.0f, _y + 42.0f, 0.1f, 2) - 0.3f;
+	//float humidity = PerlinNoise::FractalBrownianMotion(_x + 42.0f, _y + 15.0f, 0.1f, 2) - 0.3f;
+
+	//float rockFactor = max(0.0f, rockyness + humidity);
+	//float sandFactor = max(0.0f, rockyness - humidity);
+	//float grassFactor = max(0.0f, -rockyness + humidity);
+	//float dirtFactor = max(0.0f, -rockyness - humidity);
+
+	float rockyness = (PerlinNoise::FractalBrownianMotion(_x * 1.2f + 4.2f, _y * 0.8f + 7.6f, 0.02f, 4)+1) / 2.0f;
+	float humidity = (PerlinNoise::FractalBrownianMotion(_x * 0.9f + 2.1f, _y + 18.7, 0.01f, 4)+1) / 2.0f;
+
+	float grassFactor = 0;
+	float dirtFactor = 0;
+
+	//glm::vec4 weights = glm::vec4(0.0f, 0.0f, 1.0f, 0.0f);
+	glm::vec4 weights = glm::vec4(rockyness, humidity, 0.0f, 0.0f);
+
+	return weights;
+}
+
 Mesh TerrainGenerator::GetTerrainMesh()
 {
 	return m_terrain;
@@ -47,6 +70,7 @@ Mesh TerrainGenerator::GetTerrainMesh()
 void TerrainGenerator::GenerateMesh(TerrainDesc const& _desc)
 {
 	uint32_t sideVertexCount = m_grid_size + 1; 
+
 
 	std::vector<Vertex> gridV;
 	std::vector<Index> gridI;
@@ -65,7 +89,7 @@ void TerrainGenerator::GenerateMesh(TerrainDesc const& _desc)
 		glm::vec2 uv = glm::vec2(x, y) / (float)(sideVertexCount - 1);
 		float value = SampleHeight(_desc, (float)x, (float)y, uv);
 		
-		heightmap.Store(x, y, vec4(value, value, value, 1.0f));// +2.0f * PerlinNoise::FractalBrownianMotion(x / 4, y / 4, 0.05f, 5));
+		heightmap.Store(x, y, vec4(value, value, value, 1.0f));
 		
 		vec3 pos = { ((float)x - (float)((int32)m_grid_size / 2)) * m_cellSize, value, ((float)y - (float)((int32)m_grid_size / 2)) * m_cellSize };
 		
@@ -149,5 +173,17 @@ void TerrainGenerator::GenerateMesh(TerrainDesc const& _desc)
 		gridI.push_back(tr);
 	}
 
+	// Create Terrain Mesh
 	m_terrain = GeometryFactory::Instance()->CreateMesh(gridV, gridI);
+
+	// Fill Texture Weight Texture
+	textureWeights = TextureFactory::Instance()->CreateTexture("terrainTextureWeight", sideVertexCount, sideVertexCount);
+	Texture* texWeight = TextureFactory::Instance()->GetTexture(textureWeights);
+	for (size_t i = 0; i < vertexCount; i++)
+	{
+		int x = i % (sideVertexCount);
+		int y = i / (sideVertexCount);
+		glm::vec4 weight = SampleTex(_desc, x, y);
+		texWeight->SetPixelData<glm::vec4>(x, y, weight);
+	}
 }
