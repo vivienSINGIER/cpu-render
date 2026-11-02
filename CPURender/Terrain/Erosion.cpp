@@ -21,8 +21,8 @@ void Erosion::Erode(Mesh const& _mesh, int _mapSize, int _numIterations)
     
     for (int it = 0; it < _numIterations; it++)
     {
-        float posX = (float)(rand() % (_mapSize - 1));
-        float posY = (float)(rand() % (_mapSize - 1));
+        float posX = (float)(rand() % (_mapSize));
+        float posY = (float)(rand() % (_mapSize));
         
         float dirX = 0.0f;
         float dirY = 0.0f;
@@ -57,7 +57,7 @@ void Erosion::Erode(Mesh const& _mesh, int _mapSize, int _numIterations)
             // Stop simulating droplet if it's not moving or has flowed over edge of map
             if (dirX == 0.0f && dirY == 0.0f)
                 break;
-            if (posX < 0 || posY < 0 || posX >= (float)m_mapSize || posY >= (float)m_mapSize)
+            if (posX < 0 || posY < 0 || posX >= (float)(m_mapSize - 1) || posY >= (float)(m_mapSize - 1))
                 break;
             
             float newHeight = CalcHeightGradient(posX, posY).height;
@@ -98,10 +98,12 @@ void Erosion::Erode(Mesh const& _mesh, int _mapSize, int _numIterations)
             }
 
             // Update droplet's speed and water content
-            speed = glm::sqrt(speed * speed + deltaHeight * gravity);
+            speed = glm::sqrt(glm::max(0.0f, speed * speed + deltaHeight * gravity));
             water *= (1 - evaporateSpeed);
         }
     }
+    
+    RecomputeNormals();
 }
 
 void Erosion::InitializeBrushIndices(int _mapSize, int _radius)
@@ -123,34 +125,34 @@ void Erosion::InitializeBrushIndices(int _mapSize, int _radius)
         
         bool valid = centreY <= _radius || centreY >= _mapSize - _radius || centreX <= _radius + 1 || centreX >= _mapSize - _radius;
         
-        if (valid == false)
-            continue;
-        
-        addIndex = 0;
-        weightSum = 0.0f;
-        for (int y = -_radius; y <= _radius; y++)
+        if (valid)
         {
-            for (int x = -_radius; x <= _radius; x++)
+            addIndex = 0;
+            weightSum = 0.0f;
+            for (int y = -_radius; y <= _radius; y++)
             {
-                float sqrDist = (float)(x * x + y * y);
-                if (sqrDist >= float(_radius * _radius))
-                    continue;
+                for (int x = -_radius; x <= _radius; x++)
+                {
+                    float sqrDist = (float)(x * x + y * y);
+                    if (sqrDist >= float(_radius * _radius))
+                        continue;
                 
-                int coordX = centreX + x;
-                int coordY = centreY + y;
+                    int coordX = centreX + x;
+                    int coordY = centreY + y;
                 
-                if (coordX < 0 || coordY < 0)
-                    continue;
-                if (coordX >= _mapSize || coordY >= _mapSize)
-                    continue;
+                    if (coordX < 0 || coordY < 0)
+                        continue;
+                    if (coordX >= _mapSize || coordY >= _mapSize)
+                        continue;
                 
-                float weight = 1.0f - glm::sqrt(sqrDist) / (float)_radius;
-                weightSum += weight;
-                weights[addIndex] = weight;
-                xOffsets[addIndex] = coordX;
-                yOffsets[addIndex] = coordY;
-                addIndex++;
-            }
+                    float weight = 1.0f - glm::sqrt(sqrDist) / (float)_radius;
+                    weightSum += weight;
+                    weights[addIndex] = weight;
+                    xOffsets[addIndex] = x;
+                    yOffsets[addIndex] = y;
+                    addIndex++;
+                }
+            }   
         }
         
         int numEntries = addIndex;
@@ -185,8 +187,34 @@ Erosion::HeightGradient Erosion::CalcHeightGradient(float _posX, float _posY)
     float gradientX = (heightNE - heightNW) * (1 - y) + (heightSE - heightSW) * y;
     float gradientY = (heightSW - heightNW) * (1 - x) + (heightSE - heightNE) * x;
 
+    assert(gradientX == gradientX && gradientY == gradientY);
+    
     // Calculate height with bilinear interpolation of the heights of the nodes of the cell
     float height = heightNW * (1 - x) * (1 - y) + heightNE * x * (1 - y) + heightSW * (1 - x) * y + heightSE * x * y;
 
     return { height, gradientX, gradientY };
+}
+
+void Erosion::RecomputeNormals()
+{
+    const int n = m_mapSize;
+
+    // Clamped fetch so edge vertices use a one-sided difference
+    auto P = [&](int x, int y) -> vec3
+    {
+        x = glm::clamp(x, 0, n - 1);
+        y = glm::clamp(y, 0, n - 1);
+        return m_map[y * n + x].position;
+    };
+
+    for (int y = 0; y < n; y++)
+    {
+        for (int x = 0; x < n; x++)
+        {
+            vec3 dx = P(x + 1, y) - P(x - 1, y);   // tangent along columns
+            vec3 dz = P(x, y + 1) - P(x, y - 1);   // tangent along rows
+
+            m_map[y * n + x].normal = glm::normalize(glm::cross(dz, dx));
+        }
+    }
 }

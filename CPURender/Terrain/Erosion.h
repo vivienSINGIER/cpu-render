@@ -9,7 +9,7 @@ class Erosion
 public:
     int seed = 1;
     
-    int erosionRadius = 3;
+    int erosionRadius = 1;
     float inertia = .05f; // At zero, water will instantly change direction to flow downhill. At 1, water will never change direction. 
     float sedimentCapacityFactor = 4; // Multiplier for how much sediment a droplet can carry
     float minSedimentCapacity = .01f; // Used to prevent carry capacity getting too close to zero on flatter terrain
@@ -42,6 +42,7 @@ private:
     
     void InitializeBrushIndices(int _mapSize, int _radius);
     HeightGradient CalcHeightGradient(float _posX, float _posY);
+    void RecomputeNormals();
     
     std::vector<std::vector<int>> m_erosionBrushIndices;
     std::vector<std::vector<float>> m_erosionBrushWeights;

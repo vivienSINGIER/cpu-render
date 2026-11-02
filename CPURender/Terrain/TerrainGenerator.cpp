@@ -65,6 +65,8 @@ void TerrainGenerator::GenerateMesh(TerrainDesc const& _desc)
 		glm::vec2 uv = glm::vec2(x, y) / (float)(sideVertexCount - 1);
 		float value = SampleHeight(_desc, (float)x, (float)y, uv);
 		
+		assert(value == value);
+		
 		heightmap.Store(x, y, vec4(value, value, value, 1.0f));// +2.0f * PerlinNoise::FractalBrownianMotion(x / 4, y / 4, 0.05f, 5));
 		
 		vec3 pos = { ((float)x - (float)((int32)m_grid_size / 2)) * m_cellSize, value, ((float)y - (float)((int32)m_grid_size / 2)) * m_cellSize };
