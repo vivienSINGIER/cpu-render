@@ -98,29 +98,6 @@ void SceneParticlesTest::OnInit(Device* _pDevice)
 
     rain = ParticleManager::Instance()->CreateEmitter({0, 15.f, 0}, rainDesc, 0.1f);
 
-    std::vector<Vertex> vertices;
-    std::vector<uint32_t> indices;
-
-    for (int k = 0; k < MAX_PARTICLES; k++)
-    {
-        for (int v = 0; v < 6; v++)
-        {
-            Vertex vert = Vertex();
-            vert.id = (size_t)(k*6 + v);
-
-            vertices.push_back(vert);
-        }
-
-        indices.push_back(k*6);
-        indices.push_back(k*6 + 2);
-        indices.push_back(k*6 + 1);
-
-        indices.push_back(k*6 + 3);
-        indices.push_back(k*6 + 1);
-        indices.push_back(k*6 + 2);
-    }
-
-    mesh_particle = GeometryFactory::Instance()->CreateMesh(vertices, indices);
 #pragma endregion PARTICLE_INIT
 
     Model test("Assets/Fbx/dance.fbx");
