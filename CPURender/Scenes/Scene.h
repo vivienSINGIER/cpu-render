@@ -5,6 +5,7 @@
 
 #include "../Camera.h"
 #include "../Datas/Object.h"
+#include "../Datas/SkinnedObject.h"
 #include "../Maths/Transform.h"
 #include "../Heaps/Handle.hpp"
 
@@ -20,7 +21,8 @@ public:
 	Scene();
 	virtual ~Scene();
 
-	Object* CreateObject(ObjectType type);
+	Object* CreateObject(UpdateObjectType type);
+	SkinnedObject* CreateSkinnedObject(const std::string& path);
 	void RemoveObject(Object* o);
 
 protected:
@@ -41,9 +43,8 @@ protected:
 	float m_totalTime = 0.0f;
 
 	Device* m_pDevice = nullptr;
-private:
-	std::vector<Object*>* GetObjects(ObjectType type);
 
+private:
 	void UpdateCamera(float _dt);
 	void RotateCamera(float _yaw, float _pitch);
 	void UpdateFps(float _dt);
@@ -62,8 +63,8 @@ private:
 
 	size_t obj_id = 0;
 
-	std::vector<Object*> m_static_objects = {};
-	std::vector<Object*> m_dynamic_objects = {};
+	std::vector<IObject*> m_static_objects = {};
+	std::vector<IObject*> m_dynamic_objects = {};
 
 	void Init(Device* _pDevice);
 	void HandleEvent(const SDL_Event& event);

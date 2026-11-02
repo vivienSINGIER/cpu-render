@@ -11,12 +11,12 @@
 #include "../Shaders/ComputeShaders/ParticleCS.hpp"
 #include "../Factories/BufferFactory.h"
 
-#include "../Animation/AnimationData.h"
+#include "../Datas/SkinnedObject.h"
 
 void SceneParticlesTest::OnInit(Device* _pDevice)
 {
 #pragma region PARTICLE_INIT
-    m_lightData.lights[0] = MakeDirectionalLight({ 1.0f, -1.0f, 1.0f }, 1.f, Color::WHITE);
+    m_lightData.lights[0] = MakeDirectionalLight({ 1.0f, -1.0f, 1.0f }, 5.f, Color::WHITE);
     m_lightData.ambient = 0.2f;
 
     m_mainPass.fb = _pDevice->GetDefaultFrameBuffer();
@@ -50,8 +50,8 @@ void SceneParticlesTest::OnInit(Device* _pDevice)
     m_mat = ShaderFactory::Instance()->CreateMaterial("LitT_BP");
     m_mat->SetParams<LitT_BP_PS::MaterialCB>(LitT_BP_PS::CB_SLOT_mat, cb);
     m_mat->SetTexture(LitT_BP_PS::TEX_SLOT_diffuse, diff);
-    // m_mat->SetTexture(LitT_BP_PS::TEX_SLOT_ambient, ambient);
-    // m_mat->SetTexture(LitT_BP_PS::TEX_SLOT_normal, normal);
+    m_mat->SetTexture(LitT_BP_PS::TEX_SLOT_ambient, ambient);
+    m_mat->SetTexture(LitT_BP_PS::TEX_SLOT_normal, normal);
 
     m_mat->SetTexture(LitT_BP_PS::TEX_SLOT_roughness, roughness);
     m_mat->SetTexture(LitT_BP_PS::TEX_SLOT_displacement, displacement);
@@ -81,44 +81,31 @@ void SceneParticlesTest::OnInit(Device* _pDevice)
 
     fire = ParticleManager::Instance()->CreateEmitter({ 0, 2.5f, 0 }, fireDesc, 0.0f);
 
-    ParticleDesc rainDesc;
-    rainDesc.amount = 200;
-    rainDesc.spawnRadius = 12.5f;
-    rainDesc.particleBeginSize = 0.025f;
-    rainDesc.particleEndSize = 0.025f;
-    rainDesc.rotationSpeed = 0.f;
-    rainDesc.floorDir = glm::vec3(-0.25f, -1, -0.25f);
-    rainDesc.ceilDir = glm::vec3(0.25f, -0.5f, 0.25f);
-    rainDesc.minSpeed = 15.f;
-    rainDesc.maxSpeed = 20.;
-    rainDesc.beginColor = glm::vec4(0, 0, 1, 1);
-    rainDesc.endColor = glm::vec4(0, 0, 1, 1);
-    rainDesc.minLifeTime = 0.5f;
-    rainDesc.maxLifeTime = 1.f;
-
-    rain = ParticleManager::Instance()->CreateEmitter({0, 15.f, 0}, rainDesc, 0.1f);
-
 #pragma endregion PARTICLE_INIT
-
-    Model test("Assets/Fbx/dance.fbx");
-    std::cout << "Bones = " << test.GetBoneCount() << std::endl;
 
     ShaderFactory::Instance()->RegisterGroup<LitT_BP_VS, LitT_BP_PS>("TestMaterial");
 
     model_mat = ShaderFactory::Instance()->CreateMaterial(std::string("TestMaterial"));
     model_mat->SetParams<LitT_BP_PS::MaterialCB>(LitT_BP_PS::CB_SLOT_mat, cb);
 
-    Handle tex = TextureFactory::Instance()->CreateTexture("fbx_tex", "Assets/Fbx/Character_Male_34.png");
+    Handle tex = TextureFactory::Instance()->CreateTexture("Character_Male_34", "Assets/Fbx/Character_Male_34.png");
     model_mat->SetTexture(LitT_BP_PS::TEX_SLOT_diffuse, tex);
 
-    obj = CreateObject(DYNAMIC);
-    obj->mesh = test.meshes[0];
-    obj->mat = model_mat.get();
+    obj = CreateSkinnedObject("Assets/Fbx/dance.fbx");
+    obj->AddAnimation("Dancing", "Assets/Fbx/dance.fbx");
+    obj->animator.PlayAnimation(obj->GetAnimation("Dancing"));
 
-    obj->transform.SetIdentity();
+    obj->mat = model_mat.get();
+    obj->transform.SetYPR(glm::vec3(0, pi<float>(), 0));
     obj->transform.SetScale(2.f);
-  //  obj->transform.SetScale(0.025f);
-    obj->transform.SetYPR(glm::vec3(-pi<float>()*0.5f, pi<float>(), 0));
+
+    SkinnedObject* t = CreateSkinnedObject("Assets/Fbx/theHand.fbx");
+    t->AddAnimation("Hold", "Assets/Fbx/theHand.fbx");
+    t->animator.PlayAnimation(t->GetAnimation("Hold"));
+
+    t->mat = m_mat.get();
+    t->transform.SetPosition(glm::vec3(-1.5f, 1.f, 0));
+    t->transform.SetScale(0.02f);
 }
 
 void SceneParticlesTest::OnHandleEvent(const SDL_Event& event)
@@ -147,12 +134,8 @@ void SceneParticlesTest::OnHandleEvent(const SDL_Event& event)
 
 void SceneParticlesTest::OnUpdate(float dt)
 {
-    obj->transform.AddYPR(glm::vec3(0, 0, 1.f*dt));
-    obj->transform.Move(obj->transform.GetRight() * 1.5f * dt);
     fire.center = obj->transform.GetPosition();
-
     ParticleManager::Instance()->UpdateEmitter(fire, dt);
-    ParticleManager::Instance()->UpdateEmitter(rain, dt);
 }
 
 void SceneParticlesTest::OnDraw(Device* _pDevice)

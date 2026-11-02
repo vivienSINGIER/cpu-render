@@ -17,14 +17,43 @@ public:
 
     inline Vertex_OUT Execute(Vertex const& _in) const override
     {
+        vec4 totalPosition = vec4(0.0f);
+        vec3 totalNormal = vec3(0.0f);
+
+        bool hasBones = false;
+        for (int i = 0; i < MAX_BONE_INFLUENCE; i++)
+        {
+            if (_in.bone_ids[i] == -1)
+                continue;
+
+            if (_in.bone_ids[i] >= MAX_BONES)
+            {
+                totalPosition = vec4(_in.position, 1.0f);
+                break;
+            }
+
+            hasBones = true;
+
+            vec4 localPosition = Object().finalBonesMatrices[_in.bone_ids[i]] * glm::vec4(_in.position, 1.0f);
+            totalPosition += localPosition * _in.weights[i];
+
+            vec3 localNormal = mat3(Object().finalBonesMatrices[_in.bone_ids[i]]) * _in.normal;
+            totalNormal += localNormal * _in.weights[i];
+        }
+
+        if (!hasBones)
+        {
+            totalPosition = vec4(_in.position, 1.f);
+            totalNormal = _in.normal;
+        }
+
         Vertex_OUT v;
         v.color = _in.color;
-        v.posModel = Object().model * glm::vec4({ _in.position, 1 });
-        v.posH = v.posModel * Pass().viewProj;
-        v.posLightSpace = v.posModel * Pass().lightSpace;
-        v.normal = glm::mat3x3(Object().normalMatrix) * _in.normal;
-        v.tangent = glm::mat3x3(Object().normalMatrix) * _in.tangent;
+        v.posModel = Object().model * totalPosition;
+        v.posH = Pass().proj * Pass().view * v.posModel;
+        v.normal = glm::mat3x3(Object().normalMatrix) * totalNormal;
         v.uv = _in.uv;
+
         return v;
     }
 };

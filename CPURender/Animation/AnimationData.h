@@ -3,10 +3,7 @@
 #include <glm/gtc/quaternion.hpp>
 #include <string>
 #include <vector>
-#include <map>
 
-#include "../Datas/Mesh.h"
-#include "../Datas/Texture.h"
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
@@ -37,12 +34,6 @@ struct VertexWeight
 	float weight;
 };
 
-struct BoneInfo
-{
-	int id;
-	glm::mat4 offset;
-};
-
 class Bone
 {
 private:
@@ -58,7 +49,7 @@ private:
     int m_ID;
 
 public:
-    Bone(const std::string& name, int ID, const NodeAnim* channel);
+    Bone(const std::string& name, int ID, const aiNodeAnim* channel);
 
     /*interpolates  b/w positions,rotations & scaling keys based on the curren time of
     the animation and prepares the local transformation matrix by combining all keys
@@ -176,44 +167,4 @@ private:
         return glm::scale(glm::mat4(1.0f), finalScale);
     }
 
-};
-
-class Model
-{
-public:
-    // model data 
-    std::unordered_map<size_t, Handle> textures_loaded;
-    std::vector<Mesh> meshes;
-    std::string directory = "";
-    bool gammaCorrection = false;
-
-    // constructor, expects a filepath to a 3D model.
-    Model(std::string const& path, bool gamma = false) : gammaCorrection(gamma)
-    {
-        loadModel(path);
-    }
-
-    auto& GetBoneInfoMap() { return m_BoneInfoMap; }
-    int& GetBoneCount() { return m_BoneCounter; }
-
-private:
-    size_t current_mesh_id = 0;
-    std::map<std::string, BoneInfo> m_BoneInfoMap; //
-    int m_BoneCounter = 0;
-
-    // loads a model with supported ASSIMP extensions from file and stores the resulting meshes in the meshes vector.
-    void loadModel(std::string const& path);
-
-    // processes a node in a recursive fashion. Processes each individual mesh located at the node and repeats this process on its children nodes (if any).
-    void processNode(aiNode* node, const aiScene* scene);
-
-    void SetVertexBoneDataToDefault(Vertex& vertex);
-
-    Mesh processMesh(aiMesh* mesh, const aiScene* scene);
-
-    void SetVertexBoneData(Vertex& vertex, int boneID, float weight);
-
-    void ExtractBoneWeightForVertices(std::vector<Vertex>& vertices, aiMesh* mesh, const aiScene* scene);
-
-    std::vector<Handle> loadMaterialTextures(aiMaterial* mat, aiTextureType type, std::string typeName);
 };

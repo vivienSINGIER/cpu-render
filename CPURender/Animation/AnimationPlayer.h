@@ -2,37 +2,71 @@
 #include <glm/glm.hpp>
 #include <string>
 #include <vector>
+#include <map>
 
 #include "AnimationData.h"
 
-struct Node
+struct SkinnedObject;
+
+struct AssimpNodeData
 {
-	std::string name = "";
-	glm::mat4x4 transform = {};
-	Node* parent = nullptr;
-	std::vector<Node*> children = {};
+	glm::mat4 transformation;
+	std::string name;
+	int childrenCount;
+	std::vector<AssimpNodeData> children;
 };
 
-struct NodeAnim
+struct BoneInfo
 {
-	std::string name = "";
-	std::vector<KeyPosition> mPositionKeys = {};
-	std::vector<KeyRotation> mRotationKeys = {};
-	std::vector<KeyScale> mScalingKeys = {};
+	int id;
+	glm::mat4 offset;
 };
 
-struct Animation
+class Animation
 {
-	double duration = 0.0;
-	double ticks_per_sec = 0.0;
+public:
+	Animation() = default;
 
-	std::vector<NodeAnim> channels = {};
+	Animation(const std::string& animationPath, SkinnedObject* model);
+
+	~Animation() = default;
+
+	Bone* FindBone(const std::string& name);
+
+	inline float GetTicksPerSecond() { return m_TicksPerSecond; }
+	inline float GetDuration() { return m_Duration; }
+	inline const AssimpNodeData& GetRootNode() { return m_RootNode; }
+	inline const std::map<std::string, BoneInfo>& GetBoneIDMap() { return m_BoneInfoMap; }
+
+private:
+	float m_Duration;
+	int m_TicksPerSecond;
+	std::vector<Bone> m_Bones;
+	AssimpNodeData m_RootNode;
+	std::map<std::string, BoneInfo> m_BoneInfoMap;
+
+	void ReadMissingBones(const aiAnimation* animation, SkinnedObject* model);
+
+	void ReadHierarchyData(AssimpNodeData& dest, const aiNode* src);
 };
-//
-//struct AnimationScene
-//{
-//	Node* root_node = nullptr;
-//	Model mesh;
-//	std::vector<Animation> animations;
-//};
 
+class Animator
+{
+public:
+	Animator();
+
+	void UpdateAnimation(float dt);
+
+	void PlayAnimation(Animation* pAnimation);
+
+	void CalculateBoneTransform(const AssimpNodeData* node, glm::mat4 parentTransform);
+
+	std::vector<glm::mat4> GetFinalBoneMatrices();
+
+private:
+	std::vector<glm::mat4> m_FinalBoneMatrices;
+	Animation* m_CurrentAnimation = nullptr;
+	float m_CurrentTime;
+	float m_DeltaTime;
+
+};

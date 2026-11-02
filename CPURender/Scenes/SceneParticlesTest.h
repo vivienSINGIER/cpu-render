@@ -27,8 +27,7 @@ private:
 
     Material model_mat;
     
-    Object* obj = nullptr;
+    SkinnedObject* obj = nullptr;
     ParticleEmitter fire;
-    ParticleEmitter rain;
 };
 

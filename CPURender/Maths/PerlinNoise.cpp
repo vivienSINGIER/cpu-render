@@ -1,6 +1,7 @@
 #include <iostream>
 #include "PerlinNoise.h"
 #include "../main.h"
+#include <algorithm>
 
 std::vector<int> PerlinNoise::m_permutation_table = {};
 
@@ -51,8 +52,7 @@ float PerlinNoise::FractalBrownianMotion(float x, float y, float frequency, int 
 		frequency *= 2.0f;
 	}
 
-	if (result > 1)
-		result = 1.f;
+	result = std::clamp(result, -1.f, 1.f);
 
 	return result;
 }

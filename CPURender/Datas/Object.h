@@ -8,21 +8,34 @@
 
 class Device;
 
-enum ObjectType
+enum UpdateObjectType
 {
 	STATIC,
 	DYNAMIC
 };
 
-struct Object
+enum ObjectType : uint8_t
+{
+	OBJECT,
+	SKINNED
+};
+
+struct IObject
 {
 	size_t id = 0;
-	ObjectType type;
+
+	ObjectType obj_type = ObjectType::OBJECT;
+	UpdateObjectType update_type;
 
 	Mesh mesh;
 
 	Transform transform;
 	MaterialData const* mat;
 	uint8_t drawMask = 0b1111'1111;
+};
+
+struct Object : public IObject
+{
+	Object() { obj_type = ObjectType::OBJECT; }
 };
 

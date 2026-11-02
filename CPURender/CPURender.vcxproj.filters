@@ -37,6 +37,7 @@
     <ClCompile Include="Maths\Transform.cpp" />
     <ClCompile Include="Animation\AnimationPlayer.cpp" />
     <ClCompile Include="Animation\AnimationData.cpp" />
+    <ClCompile Include="Datas\SkinnedObject.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Camera.h" />
@@ -118,5 +119,6 @@
     <ClInclude Include="Animation\AnimationPlayer.h" />
     <ClInclude Include="Animation\AnimationData.h" />
     <ClInclude Include="Animation\AssimpGLMHelpers.h" />
+    <ClInclude Include="Datas\SkinnedObject.h" />
   </ItemGroup>
 </Project>

@@ -5,12 +5,12 @@
 #include "Maths/AABB.h"
 #include "Maths/Frustum.h"
 
-struct Object;
+struct IObject;
 
 struct Point
 {
 	glm::vec3 pos = glm::vec3(0, 0, 0);
-	Object* data = nullptr;
+	IObject* data = nullptr;
 };
 
 static size_t total_cube_count = 1;
@@ -25,10 +25,10 @@ struct OctreeNode
 	std::vector<Point> points;
 	int depth;
 
-	bool Insert(glm::vec3 point, Object* data);
+	bool Insert(glm::vec3 point, IObject* data);
 	void Subdivide();
 
-	void GetDatasInFrustum(Frustum const& frustum, std::vector<Object*>& result);
+	void GetDatasInFrustum(Frustum const& frustum, std::vector<IObject*>& result);
 
 	void Clear();
 };
@@ -45,10 +45,10 @@ public:
 	//Call every frame
 	void UpdateDynamic();
 
-	std::vector<Object*> GetDatasInFrustum(Frustum const& frustum);
+	std::vector<IObject*> GetDatasInFrustum(Frustum const& frustum);
 
-	void SetStaticObjects(std::vector<Object*>* objects);
-	void SetDynamicObjects(std::vector<Object*>* objects);
+	void SetStaticObjects(std::vector<IObject*>* objects);
+	void SetDynamicObjects(std::vector<IObject*>* objects);
 
 public:
 	static int max_capacity;
@@ -56,9 +56,9 @@ public:
 
 private:
 	OctreeNode m_static_octree;
-	std::vector<Object*>* m_static_objects;
+	std::vector<IObject*>* m_static_objects;
 
 	OctreeNode m_dynamic_octree;
-	std::vector<Object*>* m_dynamic_objects;
+	std::vector<IObject*>* m_dynamic_objects;
 };
 

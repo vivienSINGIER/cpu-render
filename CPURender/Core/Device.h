@@ -34,7 +34,7 @@ public:
 	void EndFrame();
 	
 	void Clear(FrameBuffer _fb, ClearFlags _flags);
-	void RegisterCommand(Mesh const& _m, glm::mat4x4 _world, MaterialData const* _mat);
+	void RegisterCommand(Mesh const& _m, glm::mat4x4 _world, MaterialData const* _mat, std::vector<glm::mat4x4> _finalBoneMatrices = {});
 	void Dispatch(MaterialData const* _mat, uint32_t _groupsX, uint32_t _groupsY, uint32_t _groupsZ);
 	
 	void Present(Handle _texH);

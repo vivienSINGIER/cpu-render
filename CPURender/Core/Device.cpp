@@ -69,11 +69,11 @@ void Device::Clear(FrameBuffer _fb, ClearFlags _flags)
 	depth->Clear(glm::vec4(1.0f));
 }
 
-void Device::RegisterCommand(Mesh const& _m, glm::mat4x4 _world, MaterialData const* _mat)
+void Device::RegisterCommand(Mesh const& _m, glm::mat4x4 _world, MaterialData const* _mat, std::vector<glm::mat4x4> _finalBoneMatrices)
 {
 	assert(m_hasOpenPass == true && "Can't push command into close pass queue");
 	
-	DrawCommand d = { _m, _world, _mat };
+	DrawCommand d = { _m, _world, _mat, _finalBoneMatrices };
 	m_pendingPasses.back().cmds.push_back(d);
 }
 
@@ -189,7 +189,12 @@ void Device::ExecCommand(DrawCommand const& _cmd)
 	PerObjectCB cb;
 	cb.model = _cmd.world;
 	cb.normalMatrix = glm::transpose(glm::inverse(cb.model));
-	
+
+	if (!_cmd.finalBoneMatrices.empty())
+	{
+		memcpy(cb.finalBonesMatrices, _cmd.finalBoneMatrices.data(), sizeof(glm::mat4x4) * MAX_BONES);
+	}
+
 	m_ctx.constantBufferHeap.Write<PerObjectCB>(m_perObjectCB, cb);
 	
 	ShaderResources res;

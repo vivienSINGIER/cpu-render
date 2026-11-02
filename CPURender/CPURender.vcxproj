@@ -157,6 +157,7 @@
     <ClCompile Include="Datas\Mesh.cpp" />
     <ClCompile Include="Datas\Object.cpp" />
     <ClCompile Include="Datas\Particle.cpp" />
+    <ClCompile Include="Datas\SkinnedObject.cpp" />
     <ClCompile Include="Datas\Texture.cpp" />
     <ClCompile Include="Datas\Triangle.cpp" />
     <ClCompile Include="engine.cpp" />
@@ -206,6 +207,7 @@
     <ClInclude Include="Datas\Morton.hpp" />
     <ClInclude Include="Datas\Object.h" />
     <ClInclude Include="Datas\Particle.h" />
+    <ClInclude Include="Datas\SkinnedObject.h" />
     <ClInclude Include="Datas\Texture.h" />
     <ClInclude Include="Datas\Texture.inl" />
     <ClInclude Include="Datas\Triangle.h" />

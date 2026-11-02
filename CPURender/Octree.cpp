@@ -12,7 +12,7 @@ OctreeNode::OctreeNode()
 	depth = 0;
 }
 
-bool OctreeNode::Insert(glm::vec3 point, Object* data)
+bool OctreeNode::Insert(glm::vec3 point, IObject* data)
 {
 	if (box.Contains(point) == false)
 		return false;
@@ -99,7 +99,7 @@ void OctreeNode::Subdivide()
 	}
 }
 
-void OctreeNode::GetDatasInFrustum(Frustum const& frustum, std::vector<Object*>& result)
+void OctreeNode::GetDatasInFrustum(Frustum const& frustum, std::vector<IObject*>& result)
 {
 	//Outside Boxes
 	if (!frustum.Intersects(box) && !frustum.Contains(box.Center()))
@@ -153,7 +153,7 @@ void Octree::UpdateStatic()
 	if (m_static_objects == nullptr)
 		return;
 
-	for (Object* o : *m_static_objects)
+	for (IObject* o : *m_static_objects)
 	{
 		m_static_octree.Insert(o->transform.GetPosition(), o);
 	}
@@ -166,15 +166,15 @@ void Octree::UpdateDynamic()
 	if (m_dynamic_objects == nullptr)
 		return;
 
-	for (Object* o : *m_dynamic_objects)
+	for (IObject* o : *m_dynamic_objects)
 	{
 		m_dynamic_octree.Insert(o->transform.GetPosition(), o);
 	}
 }
 
-std::vector<Object*> Octree::GetDatasInFrustum(Frustum const& frustum)
+std::vector<IObject*> Octree::GetDatasInFrustum(Frustum const& frustum)
 {
-	std::vector<Object*> result;
+	std::vector<IObject*> result;
 
 	m_static_octree.GetDatasInFrustum(frustum, result);
 	m_dynamic_octree.GetDatasInFrustum(frustum, result);
@@ -182,12 +182,12 @@ std::vector<Object*> Octree::GetDatasInFrustum(Frustum const& frustum)
 	return result;
 }
 
-void Octree::SetStaticObjects(std::vector<Object*>* objects)
+void Octree::SetStaticObjects(std::vector<IObject*>* objects)
 {
 	m_static_objects = objects;
 }
 
-void Octree::SetDynamicObjects(std::vector<Object*>* objects)
+void Octree::SetDynamicObjects(std::vector<IObject*>* objects)
 {
 	m_dynamic_objects = objects;
 }
