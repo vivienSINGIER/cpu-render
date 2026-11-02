@@ -165,34 +165,6 @@ void TerrainGenerator::GenerateMesh(TerrainDesc const& _desc)
 	}
 	// Vertice normals
 	size_t cellCount = m_grid_size * m_grid_size;
-	// for (size_t i = 0; i < cellCount; i++)
-	// {
-	// 	int x = i % m_grid_size;
-	// 	int y = i / m_grid_size;
-	// 	glm::vec3 normal = glm::vec3(0, 0, 0);
-	//
-	// 	if (x > 0 && y > 0) // Get top left
-	// 	{
-	// 		normal += cellNormalMap[i - 1 - m_grid_size];
-	// 	}; 
-	//
-	// 	if (x < m_grid_size - 1 && y > 0) // Get top right
-	// 	{
-	// 		normal += cellNormalMap[i + 1 - m_grid_size];
-	// 	};
-	//
-	// 	if (x > 0 && y < m_grid_size - 1) // Get bottom left
-	// 	{
-	// 		normal += cellNormalMap[i - 1 + m_grid_size];
-	// 	}
-	//
-	// 	if (x < m_grid_size - 1 && y < m_grid_size - 1) // Get bottom right
-	// 	{
-	// 		normal += cellNormalMap[i + 1 + m_grid_size];
-	// 	}
-	//
-	// 	normalmap[i] = glm::normalize(normal);
-	// }
 
 	// Fill Vertex and Index buffer
 	for (size_t i = 0; i < cellCount; i++)
