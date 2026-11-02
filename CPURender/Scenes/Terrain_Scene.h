@@ -23,7 +23,7 @@ private:
     void PrintTerrainDesc() const;
     void PrintControls() const;
 
-    static constexpr uint32_t TERRAIN_GRID_SIZE = 99;
+    static constexpr uint32_t TERRAIN_GRID_SIZE = 512;
     static constexpr float TERRAIN_CELL_SIZE = 0.25f;
 
     Erosion m_eroder; 

@@ -80,7 +80,7 @@ void Terrain_Scene::OnHandleEvent(const SDL_Event& event)
 
     switch (event.key.scancode)
     {
-    case SDL_SCANCODE_RETURN: m_eroder.Erode(m_terrain->mesh, TERRAIN_GRID_SIZE + 1, 1000); return;
+    case SDL_SCANCODE_RETURN: m_eroder.Erode(m_terrain->mesh, TERRAIN_GRID_SIZE, 1000); return;
         
     // --- Arrows : noise offset | Shift : mountain center ---
     case SDL_SCANCODE_LEFT:  if (shift) add(d.mountainCenter.x, -centerStep, 0.0f, 1.0f); else d.noiseOffset.x -= offsetStep; break;
