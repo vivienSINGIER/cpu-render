@@ -11,7 +11,9 @@ class BufferHeap : public RawBufferHeap
 public:
     Handle Create(T const* _data, uint32_t _count);
 
+    T* GetData(Handle _h);
     T const* GetData(Handle _h) const;
+    T* GetData(Handle _h, uint32_t& _count);
     T const* GetData(Handle _h, uint32_t& _count) const;
 
 private:

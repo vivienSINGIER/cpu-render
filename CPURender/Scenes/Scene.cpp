@@ -7,7 +7,7 @@
 
 namespace
 {
-	constexpr float CAM_MOVE_SPEED = 3.0f;          // world units per second
+	constexpr float CAM_MOVE_SPEED = 10.0f;          // world units per second
 	constexpr float CAM_KEY_ROT_SPEED = 1.5f;       // radians per second
 	constexpr float CAM_MOUSE_SENSITIVITY = 0.005f; // radians per pixel
 	constexpr float CAM_MAX_PITCH = glm::radians(89.0f);
@@ -78,8 +78,13 @@ void Scene::Update(float dt)
 	
 	if (dirty_static)
 	{
-		dirty_static = false;
-		m_octTree.UpdateStatic();
+		dirty_static = false;                                                                                                                                                                                                                             
+		for (Object* o : m_static_objects)                                                                                                                                                                                                                
+		{                                                                                                                                                                                                                                                 
+			o->transform.UpdateMatrix();                                                                                                                                                                                                              
+			o->mesh.world_box = o->mesh.local_box.Transformed(o->transform.GetMatrix());                                                                                                                                                              
+		}                                                                                                                                                                                                                                                 
+		m_octTree.UpdateStatic(); 
 	}
 
 	bool dirty = false;
@@ -228,14 +233,4 @@ void Scene::UpdateCamera(float _dt)
 
 	if (glm::dot(move, move) > 0.0f)
 		m_camTransform.Move(glm::normalize(move), CAM_MOVE_SPEED * _dt);
-
-	float yaw = 0.0f;
-	float pitch = 0.0f;
-	if (keys[SDL_SCANCODE_LEFT])  yaw -= 1.0f;
-	if (keys[SDL_SCANCODE_RIGHT]) yaw += 1.0f;
-	if (keys[SDL_SCANCODE_UP])    pitch -= 1.0f;
-	if (keys[SDL_SCANCODE_DOWN])  pitch += 1.0f;
-
-	if (yaw != 0.0f || pitch != 0.0f)
-		RotateCamera(yaw * CAM_KEY_ROT_SPEED * _dt, pitch * CAM_KEY_ROT_SPEED * _dt);
 }
