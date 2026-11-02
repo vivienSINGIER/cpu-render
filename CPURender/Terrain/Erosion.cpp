@@ -9,20 +9,30 @@ void Erosion::Init(GraphicsContext* _ctx)
     m_ctx = _ctx;
 }
 
-void Erosion::Erode(Mesh const& _mesh, int _mapSize, int _numIterations)
+void Erosion::Erode(Mesh const& _mesh, TerrainDesc const& _desc, int _mapSize, int _numIterations)
 {
     m_mapSize = _mapSize;
-    
+
     m_map = m_ctx->vertexBufferHeap.GetData(_mesh.vertexBuffer);
-    
+
+    // The noise part of the terrain spans [baseHeight - heightScale, baseHeight + heightScale] : map it to [0, 1]
+    // (mountains can go above 1, that's fine). Guard against a flat terrain to avoid dividing by zero.
+    m_heightRange = glm::max(2.0f * glm::abs(_desc.heightScale), 1e-4f);
+    m_heightMin = _desc.baseHeight - 0.5f * m_heightRange;
+
+    const size_t vertexCount = (size_t)_mapSize * (size_t)_mapSize;
+    m_heights.resize(vertexCount);
+    for (size_t i = 0; i < vertexCount; i++)
+        m_heights[i] = (m_map[i].position.y - m_heightMin) / m_heightRange;
+
     InitializeBrushIndices(_mapSize, erosionRadius);
     
     srand(seed);
     
     for (int it = 0; it < _numIterations; it++)
     {
-        float posX = (float)(rand() % (_mapSize));
-        float posY = (float)(rand() % (_mapSize));
+        float posX = (float)(rand() % (_mapSize - 1));
+        float posY = (float)(rand() % (_mapSize - 1));
         
         float dirX = 0.0f;
         float dirY = 0.0f;
@@ -75,10 +85,10 @@ void Erosion::Erode(Mesh const& _mesh, int _mapSize, int _numIterations)
 
                 // Add the sediment to the four nodes of the current cell using bilinear interpolation
                 // Deposition is not distributed over a radius (like erosion) so that it can fill small pits
-                m_map[dropletIndex].position.y += amountToDeposit * (1 - cellOffsetX) * (1 - cellOffsetY);
-                m_map[dropletIndex + 1].position.y += amountToDeposit * cellOffsetX * (1 - cellOffsetY);
-                m_map[dropletIndex + m_mapSize].position.y += amountToDeposit * (1 - cellOffsetX) * cellOffsetY;
-                m_map[dropletIndex + m_mapSize + 1].position.y += amountToDeposit * cellOffsetX * cellOffsetY;
+                m_heights[dropletIndex] += amountToDeposit * (1 - cellOffsetX) * (1 - cellOffsetY);
+                m_heights[dropletIndex + 1] += amountToDeposit * cellOffsetX * (1 - cellOffsetY);
+                m_heights[dropletIndex + m_mapSize] += amountToDeposit * (1 - cellOffsetX) * cellOffsetY;
+                m_heights[dropletIndex + m_mapSize + 1] += amountToDeposit * cellOffsetX * cellOffsetY;
             }
             else 
             {
@@ -91,8 +101,9 @@ void Erosion::Erode(Mesh const& _mesh, int _mapSize, int _numIterations)
                 {
                     int nodeIndex = m_erosionBrushIndices[dropletIndex][brushPointIndex];
                     float weighedErodeAmount = amountToErode * m_erosionBrushWeights[dropletIndex][brushPointIndex];
-                    float deltaSediment = (m_map[nodeIndex].position.y < weighedErodeAmount) ? m_map[nodeIndex].position.y : weighedErodeAmount;
-                    m_map[nodeIndex].position.y -= deltaSediment;
+                    // Never dig below the normalized floor (baseHeight - heightScale)
+                    float deltaSediment = glm::clamp(m_heights[nodeIndex], 0.0f, weighedErodeAmount);
+                    m_heights[nodeIndex] -= deltaSediment;
                     sediment += deltaSediment;
                 }
             }
@@ -102,7 +113,11 @@ void Erosion::Erode(Mesh const& _mesh, int _mapSize, int _numIterations)
             water *= (1 - evaporateSpeed);
         }
     }
-    
+
+    // Back to world heights
+    for (size_t i = 0; i < vertexCount; i++)
+        m_map[i].position.y = m_heightMin + m_heights[i] * m_heightRange;
+
     RecomputeNormals();
 }
 
@@ -178,10 +193,10 @@ Erosion::HeightGradient Erosion::CalcHeightGradient(float _posX, float _posY)
 
     // Calculate heights of the four nodes of the droplet's cell
     int nodeIndexNW = coordY * m_mapSize + coordX;
-    float heightNW = m_map[nodeIndexNW].position.y;
-    float heightNE = m_map[nodeIndexNW + 1].position.y;
-    float heightSW = m_map[nodeIndexNW + m_mapSize].position.y;
-    float heightSE = m_map[nodeIndexNW + m_mapSize + 1].position.y;
+    float heightNW = m_heights[nodeIndexNW];
+    float heightNE = m_heights[nodeIndexNW + 1];
+    float heightSW = m_heights[nodeIndexNW + m_mapSize];
+    float heightSE = m_heights[nodeIndexNW + m_mapSize + 1];
 
     // Calculate droplet's direction of flow with bilinear interpolation of height difference along the edges
     float gradientX = (heightNE - heightNW) * (1 - y) + (heightSE - heightSW) * y;

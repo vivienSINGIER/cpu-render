@@ -62,7 +62,7 @@ void TerrainGenerator::GenerateMesh(TerrainDesc const& _desc)
 		int x = i % sideVertexCount;
 		int y = i / sideVertexCount;
 
-		glm::vec2 uv = glm::vec2(x, y) / (float)(sideVertexCount);
+		glm::vec2 uv = glm::vec2(x, y) / (float)(sideVertexCount - 1);
 		float value = SampleHeight(_desc, (float)x, (float)y, uv);
 		
 		assert(value == value);
@@ -130,12 +130,13 @@ void TerrainGenerator::GenerateMesh(TerrainDesc const& _desc)
 		gridV[i].normal = normal;
 	}
 	
+	uint32_t cellPerRow = m_grid_size - 1;
 	size_t cellCount = (m_grid_size - 1) * (m_grid_size - 1);
 	// Fill Index buffer
 	for (size_t i = 0; i < cellCount; i++)
 	{
-		int x = (int32)i % (int32)m_grid_size - 1;
-		int y = (int32)i / (int32)m_grid_size - 1;
+		int x = (int32)(i % cellPerRow);
+		int y = (int32)(i / cellPerRow);
 		
 		uint32_t s = sideVertexCount; // vertices per row
 		Index tl = y * s + x;             // top left
