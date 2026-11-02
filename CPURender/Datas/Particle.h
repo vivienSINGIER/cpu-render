@@ -4,6 +4,9 @@
 #include <vector>
 
 #include "../Heaps/Handle.hpp"
+#include "../Shaders/ShaderBase/Material.h"
+#include "../Core/FrameBuffer.hpp"
+#include "../Maths/Transform.h"
 
 #define MAX_PARTICLES 16'000
 
@@ -75,8 +78,6 @@ friend class ParticleManager;
 class ParticleManager
 {
 public:
-	Handle m_uavBuffer = {};
-
 	static ParticleManager* Instance();
 
 	//floorDir et Ceildir are the limits of the random from each member of the vec3, example : if (-1, -1, -1) and (1, 1, 1) each value will be betweeen -1 and 1
@@ -85,9 +86,24 @@ public:
 	ParticleEmitter CreateEmitter(glm::vec3 _center, ParticleDesc _desc, float _spawnDelay);
 
 	void UpdateEmitter(ParticleEmitter& pe, float dt);
+
+	//Recommended to create a Particle Pass before with isCompute = true
+	void Draw(Device* _pDevice);
 private:
+	void Init();
+
 	static ParticleManager* m_pInstance;
 
 	size_t m_freeOffset = 0;
+	Mesh m_mesh;
 
+	Material m_unlitParticle;
+	Material m_particleMat;
+
+	PassDesc m_particlesPass;
+
+	Handle m_CS_handle;
+	Handle m_uav_buffer;
+
+	Transform identity;
 };

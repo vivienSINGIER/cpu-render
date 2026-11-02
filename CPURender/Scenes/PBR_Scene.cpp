@@ -132,8 +132,10 @@ void PBR_Scene::LoadCubemaps()
             paths[i] = dir + faces[i] + "." + d.ext;
 
         std::cout << "Loading cubemap " << d.name << "... ";
-        m_cubemaps.push_back(Cubemap((std::string("Skybox_") + d.name).c_str(), paths[0].c_str(), paths[1].c_str(),
-            paths[2].c_str(), paths[3].c_str(), paths[4].c_str(), paths[5].c_str(), true, 32));
+        Cubemap cubemap;
+        cubemap.SetTexture((std::string("Skybox_") + d.name).c_str(), paths[0].c_str(), paths[1].c_str(),
+            paths[2].c_str(), paths[3].c_str(), paths[4].c_str(), paths[5].c_str(), true, 32);
+        m_cubemaps.push_back(cubemap);
         m_cubemapNames.push_back(d.name);
     }
 }

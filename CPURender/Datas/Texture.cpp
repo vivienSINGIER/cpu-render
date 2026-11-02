@@ -73,11 +73,14 @@ uint32 Texture::Height() const
 
 void Texture::SetSize(uint32 _width, uint32 _height)
 {
-    uint32 s = NearestPowerOf2(std::max(_width, _height));
-    m_size = s * s;
+    m_side = NearestPowerOf2(std::max(_width, _height));
+    m_size = m_side * m_side;
     m_width = _width;
     m_height = _height;
+    m_mipCount = 1;
     m_data.resize(m_size);
+    
+    assert(m_width % 2 == 0 && m_height % 2 == 0 && "Can't init texture with uneven dimensions");
 }
 
 glm::vec4 Texture::SampleNP(glm::vec2 uv) const
@@ -92,6 +95,62 @@ glm::vec4 Texture::SampleNP(glm::vec2 uv) const
     if (y >= m_height) y = m_height - 1;
 
     return Load(x, y);
+}
+
+glm::vec4 Texture::SampleBilinear(glm::vec2 _uv, uint32 _lod) const
+{
+    uvec2 dims = MipDims(_lod);
+    
+    vec2 p  = (_uv - floor(_uv)) * vec2(dims) - 0.5f;
+    vec2 base = glm::floor(p);
+    vec2 f = p - base;
+    
+    int32 x0 = (int32)base.x;
+    int32 y0 = (int32)base.y;
+    int32 x1 = x0 + 1;
+    int32 y1 = y0 + 1;
+    
+    if (x0 < 0) 
+        x0 += (int32)dims.x;
+    if (y0 < 0)
+        y0 += (int32)dims.y;
+    if (x1 >= (int32)dims.x)
+        x1 -= (int32)dims.x;
+    if (y1 >= (int32)dims.y)
+        y1 -= (int32)dims.y;
+    
+    vec4 top = glm::mix(Load(x0, y0, _lod), Load(x1, y0, _lod), f.x);
+    vec4 bot = glm::mix(Load(x0, y1, _lod), Load(x1, y1, _lod), f.x);
+    return glm::mix(top, bot, f.y);
+}
+
+glm::vec4 Texture::SampleLod(glm::vec2 _uv, float _lod) const
+{
+    if (m_mipCount == 1)                                                                                                                                                                                                     
+          return SampleNP(_uv);                                                                                                                                                                                                
+                                                                                                                                                                                                                               
+      _lod = glm::clamp(_lod, 0.0f, (float)(m_mipCount - 1));                                                                                                                                                                  
+      uint32 l0 = (uint32)_lod;                                                                                                                                                                                                
+      uint32 l1 = glm::min(l0 + 1, m_mipCount - 1);                                                                                                                                                                            
+      float blend = _lod - (float)l0;                                                                                                                                                                                          
+                                                                                                                                                                                                                               
+      vec4 c0 = SampleBilinear(_uv, l0);                                                                                                                                                                                       
+      if (blend == 0.0f)                                                                                                                                                                                                       
+          return c0;                                                                                                                                                                                                           
+                                                                                                                                                                                                                               
+      return glm::mix(c0, SampleBilinear(_uv, l1), blend);
+}
+
+glm::vec4 Texture::SampleGrad(glm::vec2 _uv, glm::vec2 _ddx, glm::vec2 _ddy) const
+{
+    // footprint of the pixel in level 0 texels, each axis scaled by its own size
+    vec2 size = vec2(m_width, m_height);
+    vec2 dx = _ddx * size;
+    vec2 dy = _ddy * size;
+
+    // log2(sqrt(x)) = 0.5 * log2(x), avoids the two square roots
+    float rho2 = glm::max(glm::dot(dx, dx), glm::dot(dy, dy));
+    return SampleLod(_uv, 0.5f * glm::log2(glm::max(rho2, 1e-12f)));
 }
 
 glm::vec4 Texture::SampleNPCube(glm::vec3 _dir) const
@@ -134,10 +193,31 @@ glm::vec4 Texture::Load(uvec2 _c) const
     return Load(_c.x, _c.y);
 }
 
+glm::vec4 Texture::Load(uvec2 _c, uint32 _lod) const
+{
+    return Load(_c.x, _c.y, _lod);
+}
+
 glm::vec4 Texture::Load(uint32 _x, uint32 _y) const
 {
     uint32_t index = GetIndex(_x, _y);
     vec4 c = m_data[index];
+
+    switch (m_format)
+    {
+    case RGBA32:
+        return c;
+    case R32F:
+        return { c.r, 0.0f, 0.0f, 1.0f };
+    }
+
+    assert(false && "Unhandled texture format");
+    return { 0.0f, 0.0f, 0.0f, 0.0f };
+}
+
+glm::vec4 Texture::Load(uint32 _x, uint32 _y, uint32 _lod) const
+{
+    vec4 c = m_data[GetIndex(_x, _y, _lod)];
 
     switch (m_format)
     {
@@ -156,9 +236,19 @@ void Texture::Store(uvec2 _c, glm::vec4 _v)
     Store(_c.x, _c.y, _v);
 }
 
+void Texture::Store(uvec2 _c, uint32 _lod, glm::vec4 _v)
+{
+    Store(_c.x, _c.y, _lod, _v);
+}
+
 void Texture::Store(uint32 _x, uint32 _y, glm::vec4 _v)
 {
     m_data[GetIndex(_x, _y)] = EncodeTexel(m_format, _v);;
+}
+
+void Texture::Store(uint32 _x, uint32 _y, uint32 _lod, glm::vec4 _v)
+{
+    m_data[GetIndex(_x, _y, _lod)] = EncodeTexel(m_format, _v);
 }
 
 void Texture::StoreCube(uint32 _lod, uint32 _face, uint32 _x, uint32 _y, vec4 _c)
@@ -173,7 +263,7 @@ void Texture::StoreCube(uint32 _lod, uint32 _face, uvec2 _uv, vec4 _c)
 
 void Texture::Clear(glm::vec4 _color)
 {
-    m_data.assign(m_size, EncodeTexel(m_format, _color));
+    m_data.assign(m_data.size(), EncodeTexel(m_format, _color));
 }
 
 Texture Texture::ToLinear() const
@@ -387,6 +477,10 @@ void Texture::Load(std::string const& _filePath, bool _isSrgb)
     assert(data != nullptr && "failed to load texture");
     
     SetSize(width, height);
+#ifndef NDEBUG
+    m_data.assign(m_data.size(), vec4(1.0f, 0.0f, 1.0f, 1.0f)); // magenta padding
+#endif
+
     
 #pragma omp parallel for collapse(2)
     for (int y = 0; y < height; ++y)
@@ -421,6 +515,42 @@ Texture::Format Texture::GetFormat() const
 vec4* Texture::GetData()
 {
     return m_data.data();
+}
+
+void Texture::GenerateMips()
+{
+    assert(m_encoding == MORTON && "Mips require morton encoding");
+    
+    m_mipCount = MaxLod() + 1;
+    m_data.resize(MipChainSize());
+    
+    for (uint32 l = 1; l < m_mipCount; l++)
+    {
+        uvec2 dst = MipDims(l);
+        uvec2 src = MipDims(l - 1);
+        
+        int32 dstX = (int32)dst.x;
+        int32 dstY = (int32)dst.y;
+        
+#pragma omp parallel for collapse(2)
+        for (int32 y = 0; y < dstY; ++y)
+        {
+            for (int32 x = 0; x < dstX; ++x)
+            {
+                uint32 x0 = 2 * (uint32)x;
+                uint32 y0 = 2 * (uint32)y;
+                uint32 x1 = glm::min(x0 + 1, src.x - 1);
+                uint32 y1 = glm::min(y0 + 1, src.y - 1);
+
+                vec4 sum =  Load(x0, y0, l - 1);
+                sum +=      Load(x1, y0, l - 1);
+                sum +=      Load(x0, y1, l - 1);
+                sum +=      Load(x1, y1, l - 1);
+                
+                Store(x, y, l, sum / 4.0f);
+            }
+        }
+    }
 }
 
 void Texture::GenerateCubeMips()
@@ -513,19 +643,60 @@ uint32 Texture::GetIndex(uint32 _x, uint32 _y) const
     return 0;
 }
 
+uint32 Texture::GetIndex(uint32 _x, uint32 _y, uint32 _lod) const
+{
+    assert(m_encoding == MORTON && "Mips require morton encoding");
+    assert(_lod < m_mipCount && "Lod not generated");
+    assert(_x < MipDims(_lod).x && _y < MipDims(_lod).y && "Texel out of the level, reading padding");
+    return MipOffset(_lod) + EncodeMorton2(_x, _y); 
+}
+
+uint32 Texture::LodCount() const
+{
+    return (uint32)floor(glm::log2((float)glm::max(m_width, m_height))) + 1;
+}
+
+uint32 Texture::MaxLod() const
+{
+    return glm::min((uint32)m_mipMapMax, LodCount() - 1);
+}
+
+uvec2 Texture::MipDims(uint32 _lod) const
+{
+    return glm::max(uvec2(1), uvec2(m_width, m_height) >> _lod);
+}
+
+uint32 Texture::MipSide(uint32 _lod) const
+{
+    return m_side >> _lod;
+}
+
+uint32 Texture::MipOffset(uint32 _lod) const
+{
+    uint32 s2 = m_side * m_side;
+    uint32 l2 = MipSide(_lod) * MipSide(_lod);
+    return 4 * (s2 - l2) / 3;
+}
+
+uint32 Texture::MipChainSize() const
+{
+    uint32 last = m_mipCount - 1;
+    return MipOffset(last) + MipSide(last) * MipSide(last);
+}
+
 uint32 Texture::CubeFaceSize() const
 {
     return m_width / 3;
 }
 
-uint32 Texture::LodCount() const
+uint32 Texture::CubeLodCount() const
 {
     return (uint32)glm::log2((float)CubeFaceSize()) + 1;
 }
 
 uint32 Texture::MaxCubeLod() const
 {
-    return glm::min((uint32)m_mipMapLast, LodCount() - 1);
+    return glm::min((uint32)m_mipMapMax, CubeLodCount() - 1);
 }
 
 uvec2 Texture::CubeTexel(uint32 _lod, uint32 _face, uint32 _x, uint32 _y) const

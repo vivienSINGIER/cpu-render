@@ -42,21 +42,7 @@ void SceneParticlesTest::OnInit(Device* _pDevice)
                 0.5f, 0.02f, 0.8f
     };
 
-    UnlitParticle_PS::ParticleColor color = { glm::vec4(1, 1, 1, 1) };
-    UnlitC_PS::UnlitColor unlit_color = { glm::vec4(1, 0.25f, 0, 1) };
-
-    m_uav_buffer = BufferFactory::Instance()->CreateUAVBuffer<UavParticle>(MAX_PARTICLES);
-    m_CS_handle = ShaderFactory::Instance()->CreateComputeShader<ParticleCS>();
-
-    m_uav_view = m_pDevice->m_ctx.uavHeap.GetView(m_uav_buffer);
-
-    m_particleMat = ShaderFactory::Instance()->CreateComputeMaterial("Particle");
-    m_particleMat->SetUAVBuffer(0, m_uav_buffer);
-
-    ShaderFactory::Instance()->RegisterGroup<UnlitParticle_VS, UnlitParticle_PS>("UnlitParticle");
-    m_unlitParticle = ShaderFactory::Instance()->CreateMaterial("UnlitParticle");
-    m_unlitParticle->SetUAVBuffer(0, m_uav_buffer);
-    m_unlitParticle->SetParams<UnlitParticle_PS::ParticleColor>(UnlitParticle_PS::CB_SLOT_pcolor, color);
+    UnlitC_PS::UnlitColor unlit_color = { glm::vec4(0, 1, 1, 1) };
 
     m_unlit = ShaderFactory::Instance()->CreateMaterial("UnlitC");
     m_unlit->SetParams<UnlitC_PS::UnlitColor>(UnlitC_PS::CB_SLOT_mat, unlit_color);
@@ -64,8 +50,8 @@ void SceneParticlesTest::OnInit(Device* _pDevice)
     m_mat = ShaderFactory::Instance()->CreateMaterial("LitT_BP");
     m_mat->SetParams<LitT_BP_PS::MaterialCB>(LitT_BP_PS::CB_SLOT_mat, cb);
     m_mat->SetTexture(LitT_BP_PS::TEX_SLOT_diffuse, diff);
-    m_mat->SetTexture(LitT_BP_PS::TEX_SLOT_ambient, ambient);
-    m_mat->SetTexture(LitT_BP_PS::TEX_SLOT_normal, normal);
+    // m_mat->SetTexture(LitT_BP_PS::TEX_SLOT_ambient, ambient);
+    // m_mat->SetTexture(LitT_BP_PS::TEX_SLOT_normal, normal);
 
     m_mat->SetTexture(LitT_BP_PS::TEX_SLOT_roughness, roughness);
     m_mat->SetTexture(LitT_BP_PS::TEX_SLOT_displacement, displacement);
@@ -76,9 +62,6 @@ void SceneParticlesTest::OnInit(Device* _pDevice)
     floor->mat = m_mat.get();
     floor->transform.SetPosition(glm::vec3(0.0f, -2.f, 0.f));
     floor->transform.SetScale(glm::vec3(25.0f, 0.2f, 25.0f));
-
-    BufferFactory::Instance()->Fill(m_uav_buffer, UavParticle());
-    ParticleManager::Instance()->m_uavBuffer = m_uav_buffer;
 
     ParticleDesc fireDesc;
     fireDesc.amount = 5;
@@ -99,7 +82,7 @@ void SceneParticlesTest::OnInit(Device* _pDevice)
     fire = ParticleManager::Instance()->CreateEmitter({ 0, 2, 0 }, fireDesc, 0.0f);
 
     ParticleDesc rainDesc;
-    rainDesc.amount = 0;
+    rainDesc.amount = 200;
     rainDesc.spawnRadius = 12.5f;
     rainDesc.particleBeginSize = 0.025f;
     rainDesc.particleEndSize = 0.025f;
@@ -206,12 +189,6 @@ void SceneParticlesTest::OnDraw(Device* _pDevice)
     _pDevice->EndPass();
 
     _pDevice->BeginPass(m_particlesPass);
-
-    size_t count = m_uav_view.count;
-    _pDevice->Dispatch(m_particleMat.get(), count / ParticleCS::GROUP_SIZE + 1, 1, 1);
-
-    Transform world = {};
-    world.SetIdentity();
-    _pDevice->RegisterCommand(mesh_particle, world.GetMatrix(), m_unlitParticle.get());
+    ParticleManager::Instance()->Draw(_pDevice);
     _pDevice->EndPass();
 }
