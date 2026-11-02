@@ -50,8 +50,11 @@ glm::vec4 TerrainGenerator::SampleTex(TerrainDesc const& _d, float _x, float _y)
 	//float grassFactor = max(0.0f, -rockyness + humidity);
 	//float dirtFactor = max(0.0f, -rockyness - humidity);
 
-	float rockyness = (PerlinNoise::FractalBrownianMotion(_x * 1.2f + 4.2f, _y * 0.8f + 7.6f, 0.02f, 4)+1) / 2.0f;
-	float humidity = (PerlinNoise::FractalBrownianMotion(_x * 0.9f + 2.1f, _y + 18.7, 0.01f, 4)+1) / 2.0f;
+	//float rockyness = (PerlinNoise::FractalBrownianMotion(_x * 1.2f + 4.2f, _y * 0.8f + 7.6f, 0.02f, 4)+1) / 2.0f;
+	uint32_t sideVertexCount = m_grid_size;
+	glm::vec2 uv = glm::vec2(_x, _y) / (float)(sideVertexCount - 1);
+	float rockyness = (SampleHeight(_d, _x, _y, uv) - _d.minHeight) / (_d.maxHeight - _d.minHeight);
+	float humidity = (PerlinNoise::FractalBrownianMotion(_x * 0.8f + 2.1f, _y * 0.6f + 16.7f, 0.005f, 4)+1) / 2.0f;
 
 	float grassFactor = 0;
 	float dirtFactor = 0;

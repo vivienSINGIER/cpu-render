@@ -117,15 +117,17 @@ public:
         );
 
         glm::vec4 albedo = glm::vec4(0, 0, 0, 0);
-        glm::vec2 worldUv = { _in.posModel.x, _in.posModel.z };
+        glm::vec2 worldUv = { _in.posModel.x / 4.0f, _in.posModel.z / 4.0f };
         if (Has_diffuse1() && weight.x > 0.0f)
-            albedo += Sample_Grad_diffuse1(worldUv, _in.uvDdx, _in.uvDdy) * mat().diffuseAlbedo * weight.x;
+            albedo += Sample_Grad_diffuse1(worldUv, _in.uvDdx, _in.uvDdy) * weight.x;
         if (Has_diffuse2() && weight.y > 0.0f)
-            albedo += Sample_Grad_diffuse2(worldUv, _in.uvDdx, _in.uvDdy) * mat().diffuseAlbedo * weight.y;
+            albedo += Sample_Grad_diffuse2(worldUv, _in.uvDdx, _in.uvDdy) * weight.y;
         if (Has_diffuse3() && weight.z > 0.0f)
-            albedo += Sample_Grad_diffuse3(worldUv, _in.uvDdx, _in.uvDdy) * mat().diffuseAlbedo * weight.z;
+            albedo += Sample_Grad_diffuse3(worldUv, _in.uvDdx, _in.uvDdy) * weight.z;
         if (Has_diffuse4() && weight.w > 0.0f)
-            albedo += Sample_Grad_diffuse4(worldUv, _in.uvDdx, _in.uvDdy) * mat().diffuseAlbedo * weight.w;
+            albedo += Sample_Grad_diffuse4(worldUv, _in.uvDdx, _in.uvDdy) * weight.w;
+
+        albedo *= mat().diffuseAlbedo;
 
         glm::vec3 normalW;
         if (Has_normal())
