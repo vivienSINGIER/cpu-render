@@ -1,23 +1,35 @@
 #include "Particle.h"
 #include <iostream>
-
-#include "../Factories/BufferFactory.h"
 #include <random>
 #include <omp.h>
+
+#include "Mesh.h"
+
+#include "../Factories/BufferFactory.h"
+#include "../Factories/GeometryFactory.h"
+#include "../Factories/ShaderFactory.h"
+#include "../Shaders/ComputeShaders/ParticleCS.hpp"
+#include "../Shaders/GraphicsShaders/UnlitParticle.hpp"
+#include "../Shaders/Shaders.h"
+
+#include "../Core/Device.h"
 
 ParticleManager* ParticleManager::m_pInstance = nullptr;
 
 ParticleManager* ParticleManager::Instance()
 {
 	if (m_pInstance == nullptr)
+	{
 		m_pInstance = new ParticleManager();
+		m_pInstance->Init();
+	}
 
 	return m_pInstance;
 }
 
 void ParticleManager::Spawn(glm::vec3 _center, ParticleDesc _desc)
 {
-	if (m_uavBuffer.IsValid() == false)
+	if (m_uav_buffer.IsValid() == false)
 	{
 		std::cout << "Set UAV Buffer to use ParticleManager\n";
 		return;
@@ -64,7 +76,7 @@ void ParticleManager::Spawn(glm::vec3 _center, ParticleDesc _desc)
 		p.rotationRad = 0.f;
 		p.rotSpeed = _desc.rotationSpeed;
 
-		BufferFactory::Instance()->Write(m_uavBuffer, current_index, p);
+		BufferFactory::Instance()->Write(m_uav_buffer, current_index, p);
 	}
 
 	m_freeOffset = (m_freeOffset + _desc.amount) % MAX_PARTICLES;
@@ -86,3 +98,52 @@ void ParticleManager::UpdateEmitter(ParticleEmitter& pe, float dt)
 	Spawn(pe.center, pe.desc);
 	pe.spawnProgress = 0.f;
 }
+
+void ParticleManager::Draw(Device* _pDevice)
+{
+	size_t count = MAX_PARTICLES;
+	_pDevice->Dispatch(m_particleMat.get(), count / ParticleCS::GROUP_SIZE + 1, 1, 1);
+	_pDevice->RegisterCommand(m_mesh, identity.GetMatrix(), m_unlitParticle.get());
+}
+
+void ParticleManager::Init()
+{
+	UnlitParticle_PS::ParticleColor color = { glm::vec4(1, 1, 1, 1) };
+	m_uav_buffer = BufferFactory::Instance()->CreateUAVBuffer<UavParticle>(MAX_PARTICLES);
+	m_CS_handle = ShaderFactory::Instance()->CreateComputeShader<ParticleCS>();
+
+	m_particleMat = ShaderFactory::Instance()->CreateComputeMaterial("Particle");
+	m_particleMat->SetUAVBuffer(0, m_uav_buffer);
+
+	ShaderFactory::Instance()->RegisterGroup<UnlitParticle_VS, UnlitParticle_PS>("UnlitParticle");
+	m_unlitParticle = ShaderFactory::Instance()->CreateMaterial("UnlitParticle");
+	m_unlitParticle->SetUAVBuffer(0, m_uav_buffer);
+	m_unlitParticle->SetParams<UnlitParticle_PS::ParticleColor>(UnlitParticle_PS::CB_SLOT_pcolor, color);
+
+	BufferFactory::Instance()->Fill(m_uav_buffer, UavParticle());
+
+	std::vector<Vertex> vertices;
+	std::vector<uint32_t> indices;
+
+	for (int k = 0; k < MAX_PARTICLES; k++)
+	{
+		for (int v = 0; v < 6; v++)
+		{
+			Vertex vert = Vertex();
+			vert.id = (size_t)(k * 6 + v);
+
+			vertices.push_back(vert);
+		}
+
+		indices.push_back(k * 6);
+		indices.push_back(k * 6 + 2);
+		indices.push_back(k * 6 + 1);
+
+		indices.push_back(k * 6 + 3);
+		indices.push_back(k * 6 + 1);
+		indices.push_back(k * 6 + 2);
+	}
+
+	m_mesh = GeometryFactory::Instance()->CreateMesh(vertices, indices);
+}
+
