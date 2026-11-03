@@ -227,6 +227,7 @@
     <ClInclude Include="Maths\Plane.h" />
     <ClInclude Include="Maths\Ray.h" />
     <ClInclude Include="Maths\Transform.h" />
+    <ClInclude Include="Maths\WaveSim.hpp" />
     <ClInclude Include="Octree.h" />
     <ClInclude Include="Scenes\PBR_Scene.h" />
     <ClInclude Include="Scenes\Scene.h" />

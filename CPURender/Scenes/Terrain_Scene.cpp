@@ -9,7 +9,7 @@
 
 void Terrain_Scene::InitLightScene()
 {
-    m_lightData.lights[0] = MakeDirectionalLight({1.0f, -1.0f, 1.0f}, 1.0f, Color::WHITE);
+    m_lightData.lights[0] = MakeDirectionalLight(glm::normalize(vec3(1, -1, 1)), 1.0f, Color::WHITE);
     m_lightData.ambient = 0.3f;
 }
 
@@ -62,18 +62,17 @@ void Terrain_Scene::OnInit(Device* _pDevice)
             Lighting::g_fresnelR0Templates[PLASTIC],
                 0.9f, 0.0f, 0.0f
     };
-    
-    LitT_BP_PS::MaterialCB wcb = {
-        {0.1f, 0.1f, 0.8f, 1.0f},
-            Lighting::g_fresnelR0Templates[PLASTIC],
-                0.2f, 0.0f, 0.5f
-    };
 
     m_mat = ShaderFactory::Instance()->CreateMaterial("LitT_BP");
     m_mat->SetParams<LitT_BP_PS::MaterialCB>(LitT_BP_PS::CB_SLOT_mat, cb);
     // m_mat->SetTexture(LitT_BP_PS::TEX_SLOT_shadow, m_shadowPass.fb.depthBuffer);
 
+    Water_PS::WaterMat wCb = {};
+    Water_VS::WaveCB waveCb = { {{ 1, 0, 0.25, 16}, {0.7, 0.7, 0.2, 10}, {-0.3, 1, 0.15, 8} }, 3 };
+    
     m_waterMaterial = ShaderFactory::Instance()->CreateMaterial("Water");
+    m_waterMaterial->SetParams(Water_PS::CB_SLOT_mat, wCb);
+    m_waterMaterial->SetParams(Water_VS::CB_SLOT_waves, waveCb);
     m_waterMaterial->SetTexture(Water_PS::TEX_SLOT_depth, m_mainPass.fb.depthBuffer);
     m_waterMaterial->SetTexture(Water_PS::TEX_SLOT_screen, m_mainPass.fb.gBuffer[0]);
     
@@ -88,7 +87,7 @@ void Terrain_Scene::OnInit(Device* _pDevice)
     float scaleW = TERRAIN_GRID_SIZE * TERRAIN_CELL_SIZE;
     
     m_water = CreateObject(STATIC);
-    m_water->mesh = GeometryFactory::Instance()->BuildPlane(false, 0);
+    m_water->mesh = GeometryFactory::Instance()->BuildPlane(false, 6);
     m_water->mat = m_waterMaterial.get();
     m_water->transform.SetPosition(glm::vec3(0.0f, 0.0f, 0.0f));
     m_water->transform.SetScale(vec3(scaleW, 1.0f, scaleW));
