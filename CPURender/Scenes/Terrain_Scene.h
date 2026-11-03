@@ -23,7 +23,7 @@ private:
     void PrintTerrainDesc() const;
     void PrintControls() const;
 
-    static constexpr uint32_t TERRAIN_GRID_SIZE = 512;
+    static constexpr uint32_t TERRAIN_GRID_SIZE = 256;
     static constexpr float TERRAIN_CELL_SIZE = 0.25f;
 
     Erosion m_eroder; 
@@ -32,11 +32,15 @@ private:
     TerrainDesc m_defaultTerrainDesc; // restored with numpad 5
     bool m_terrainDirty = false;
     Object* m_terrain = nullptr;
+    
+    Object* m_water = nullptr;
+    Material m_waterMaterial;
 
     Material m_mat;
 
     PassDesc m_shadowPass;
     PassDesc m_mainPass;
+    PassDesc m_waterPass;
 
     LightData m_lightData;
 };

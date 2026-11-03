@@ -474,7 +474,9 @@ void Device::RasterStep(ShaderStages _s)
 					px.uvDdx = InterpolateUV(tri, baryPX) - px.uv;
 					px.uvDdy = InterpolateUV(tri, baryPY) - px.uv;
 					
-					if (state.depthWrite && db && px.color.a >= 1.0f || state.blendMode == Blending::OPAQUE)
+					px.screenUV = vec2( ((float)x + 0.5f) / (float)m_boundFB.width, ((float)y + 0.5f) / (float)m_boundFB.height);
+					
+					if (state.depthWrite && db)
 						db->Store(x, y, vec4(pixelDepth, 0.0f, 0.0f, 1.0f));
 					
 					if (writeColor == false)

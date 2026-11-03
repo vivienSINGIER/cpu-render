@@ -14,8 +14,9 @@ class GeometryFactory
 public:
 	static GeometryFactory* Instance();
 
+	Mesh BuildPlane(bool _randomColors = false, int _subdivisions = 0);
 	Mesh BuildPyramid(bool _randomColors = false);
-	Mesh BuildCube(bool _randomColors = false);
+	Mesh BuildCube(bool _randomColors = false, int _subdivisions = 0);
 	Mesh BuildSkybox();
 	Mesh BuildTriangle(bool _randomColors = false);
 	Mesh BuildIcosphere(int _subdivisions, bool _randomColors = false);

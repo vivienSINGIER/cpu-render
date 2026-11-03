@@ -25,6 +25,32 @@ GeometryFactory* GeometryFactory::Instance()
 	return g_instance;
 }
 
+Mesh GeometryFactory::BuildPlane(bool _randomColors, int _subdivisions)
+{
+	std::vector<Vertex> vertices;
+	std::vector<uint32_t> indices;
+	
+	vertices = {
+		Vertex{glm::vec3(-0.5f, 0.0f, -0.5f), glm::vec2(0.0f, 0.0f)}, // 0
+		Vertex{glm::vec3(-0.5f, 0.0f,  0.5f), glm::vec2(0.0f, 1.0f)}, // 1
+		Vertex{glm::vec3( 0.5f, 0.0f, -0.5f), glm::vec2(1.0f, 0.0f)}, // 2
+		Vertex{glm::vec3( 0.5f, 0.0f,  0.5f), glm::vec2(1.0f, 1.0f)}, // 3
+	 };
+
+	indices = {
+		0, 1, 2,   3, 2, 1,
+	 };
+
+	for (int i = 0; i < _subdivisions; i++)
+		Subdivide(indices, vertices);
+
+	vertices = CalculateNormalsAndTangents(vertices, indices);
+	if (_randomColors)
+		ApplyPaletteColors(vertices);
+
+	return CreateMesh(vertices, indices);
+}
+
 GeometryFactory::GeometryFactory(GraphicsContext* _pContext) : m_ctx(_pContext)
 {
 }
@@ -109,7 +135,7 @@ Mesh GeometryFactory::BuildPyramid(bool _randomColors)
 //// CUBE
 ////////////////////////////////////////////
 
-Mesh GeometryFactory::BuildCube(bool _randomColors)
+Mesh GeometryFactory::BuildCube(bool _randomColors, int _subdivisions)
 {
 	std::vector<Vertex> vertices;
 	std::vector<uint32_t> indices;
@@ -162,6 +188,12 @@ Mesh GeometryFactory::BuildCube(bool _randomColors)
 	   20, 21, 22,  21, 23, 22,
    };
 
+	if (_subdivisions > 0)
+	{
+		for (int i = 0; i < _subdivisions; i++)
+			Subdivide(indices, vertices);
+	}
+	
 	vertices = CalculateNormalsAndTangents(vertices, indices);
 	if (_randomColors)
 		ApplyPaletteColors(vertices);
@@ -229,7 +261,7 @@ Mesh GeometryFactory::BuildSkybox()
 		// BACK
 		20, 22, 21,  21, 22, 23,
 	};
-
+	
 	vertices = CalculateNormalsAndTangents(vertices, indices);
 	return CreateMesh(vertices, indices);
 }

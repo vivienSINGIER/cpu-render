@@ -5,6 +5,7 @@
 #include "../Factories/ShaderFactory.h"
 #include "../Shaders/Shaders.h"
 #include "../Datas/Lights/LightHelpers.hpp"
+#include "../Factories/GeometryFactory.h"
 
 void Terrain_Scene::InitLightScene()
 {
@@ -24,7 +25,13 @@ void Terrain_Scene::OnInit(Device* _pDevice)
     m_shadowPass.fb = _pDevice->CreateFrameBuffer(1024, 1024, 0, true);
     m_shadowPass.state.cullMode = CullMode::FRONT;
     
-    m_presentTarget = m_mainPass.fb.gBuffer[0];
+    m_waterPass.fb = _pDevice->GetDefaultFrameBuffer();
+    m_waterPass.state.cullMode = CullMode::NONE;
+    m_waterPass.state.depthWrite = false;
+    m_waterPass.clearFlags.clearGBuffer[0] = false;
+    m_waterPass.clearFlags.clearDepth = false;
+    
+    m_presentTarget = m_waterPass.fb.gBuffer[0];
 
     _pDevice->SetLightData(m_lightData);
 
@@ -55,15 +62,37 @@ void Terrain_Scene::OnInit(Device* _pDevice)
             Lighting::g_fresnelR0Templates[PLASTIC],
                 0.9f, 0.0f, 0.0f
     };
+    
+    LitT_BP_PS::MaterialCB wcb = {
+        {0.1f, 0.1f, 0.8f, 1.0f},
+            Lighting::g_fresnelR0Templates[PLASTIC],
+                0.2f, 0.0f, 0.5f
+    };
 
     m_mat = ShaderFactory::Instance()->CreateMaterial("LitT_BP");
     m_mat->SetParams<LitT_BP_PS::MaterialCB>(LitT_BP_PS::CB_SLOT_mat, cb);
     // m_mat->SetTexture(LitT_BP_PS::TEX_SLOT_shadow, m_shadowPass.fb.depthBuffer);
 
+    m_waterMaterial = ShaderFactory::Instance()->CreateMaterial("Water");
+    m_waterMaterial->SetTexture(Water_PS::TEX_SLOT_depth, m_mainPass.fb.depthBuffer);
+    m_waterMaterial->SetTexture(Water_PS::TEX_SLOT_screen, m_mainPass.fb.gBuffer[0]);
+    
+    float terrY = m_terrainDesc.baseHeight + (m_terrainDesc.maxHeight - m_terrainDesc.minHeight) / 2.0f;
+    
     m_terrain = CreateObject(STATIC);
     m_terrain->mesh = m_terrainGenerator.GetTerrainMesh();
     m_terrain->mat = m_mat.get();
     m_terrain->transform.SetPosition(glm::vec3(0.0f, 0.0f, 0.0f));
+    m_terrain->drawMask = 0b10;
+    
+    float scaleW = TERRAIN_GRID_SIZE * TERRAIN_CELL_SIZE;
+    
+    m_water = CreateObject(STATIC);
+    m_water->mesh = GeometryFactory::Instance()->BuildPlane(false, 0);
+    m_water->mat = m_waterMaterial.get();
+    m_water->transform.SetPosition(glm::vec3(0.0f, 0.0f, 0.0f));
+    m_water->transform.SetScale(vec3(scaleW, 1.0f, scaleW));
+    m_water->drawMask = 0b01;
 }
 
 // Terrain controls, physical keys (scancodes) so the numpad works with NumLock on or off. Hold to repeat.
@@ -194,12 +223,20 @@ void Terrain_Scene::OnDraw(Device* _pDevice)
 
     m_camera.FillData(&m_shadowPass.passData);
     m_shadowPass.passData.viewProj = lightSpace;
+    
+    m_camera.FillData(&m_waterPass.passData);
+    m_waterPass.passData.deltaTime = m_deltaTime;
+    m_waterPass.passData.totalTime = m_totalTime;
 
     // _pDevice->BeginPass(m_shadowPass);
     //     DrawObjects(_pDevice, shadowFrustum);
     // _pDevice->EndPass();
 
     _pDevice->BeginPass(m_mainPass);
-        DrawObjects(_pDevice, m_camera.GetFrustum());
+        DrawObjects(_pDevice, m_camera.GetFrustum(), 0b10);
+    _pDevice->EndPass();
+    
+    _pDevice->BeginPass(m_waterPass);
+        DrawObjects(_pDevice, m_camera.GetFrustum(), 0b01);
     _pDevice->EndPass();
 }

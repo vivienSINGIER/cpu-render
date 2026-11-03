@@ -129,16 +129,16 @@ glm::vec4 Texture::SampleLod(glm::vec2 _uv, float _lod) const
     if (m_mipCount == 1)                                                                                                                                                                                                     
           return SampleNP(_uv);                                                                                                                                                                                                
                                                                                                                                                                                                                                
-      _lod = glm::clamp(_lod, 0.0f, (float)(m_mipCount - 1));                                                                                                                                                                  
-      uint32 l0 = (uint32)_lod;                                                                                                                                                                                                
-      uint32 l1 = glm::min(l0 + 1, m_mipCount - 1);                                                                                                                                                                            
-      float blend = _lod - (float)l0;                                                                                                                                                                                          
-                                                                                                                                                                                                                               
-      vec4 c0 = SampleBilinear(_uv, l0);                                                                                                                                                                                       
-      if (blend == 0.0f)                                                                                                                                                                                                       
-          return c0;                                                                                                                                                                                                           
-                                                                                                                                                                                                                               
-      return glm::mix(c0, SampleBilinear(_uv, l1), blend);
+    _lod = glm::clamp(_lod, 0.0f, (float)(m_mipCount - 1));                                                                                                                                                                  
+    uint32 l0 = (uint32)_lod;                                                                                                                                                                                                
+    uint32 l1 = glm::min(l0 + 1, m_mipCount - 1);                                                                                                                                                                            
+    float blend = _lod - (float)l0;                                                                                                                                                                                          
+                                                                                                                                                                                                                           
+    vec4 c0 = SampleBilinear(_uv, l0);                                                                                                                                                                                       
+    if (blend == 0.0f)                                                                                                                                                                                                       
+      return c0;                                                                                                                                                                                                           
+                                                                                                                                                                                                                           
+    return glm::mix(c0, SampleBilinear(_uv, l1), blend);
 }
 
 glm::vec4 Texture::SampleGrad(glm::vec2 _uv, glm::vec2 _ddx, glm::vec2 _ddy) const

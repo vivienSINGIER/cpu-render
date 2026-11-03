@@ -113,6 +113,7 @@ void ShaderFactory::RegisterPrebuilts()
     RegisterGroup<LitC_BP_Transparent_VS, LitC_BP_Transparent_PS>("LitC_BP_Transparent");
     
     RegisterGroup<PBR_VS, PBR_PS>("PBR");
+    RegisterGroup<Water_VS, Water_PS>("Water");
     RegisterGroup<LitT_BP_Cube_VS, LitT_BP_Cube_PS>("LitT_BP_Cube");
 
     RegisterCompute<FB_Fusion_CS>("FBFusion");
