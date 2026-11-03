@@ -13,6 +13,7 @@
 #include "Core/Device.h"
 #include "Scenes/PBR_Scene.h"
 #include "Scenes/Transparency_Scene.h"
+#include "Scenes/Terrain_Scene.h"
 //Students cannot change anything in this file
 
 

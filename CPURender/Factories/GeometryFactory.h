@@ -24,8 +24,9 @@ public:
 	Mesh BuildCylinder(int _stackCount, bool _randomColors = false);
 	Mesh BuildDonut(float _majorRadius, float _minorRadius, uint32_t _majorSlices, uint32_t _minorSlices, bool _randomColors = false);
 	Mesh LoadMesh(std::string const& _path);
-
+	
 	Mesh CreateMesh(std::vector<Vertex>& _vertices, std::vector<Index>& _indices);
+
 private:
 	static inline GeometryFactory* g_instance = nullptr;
 	GraphicsContext* m_ctx = nullptr;

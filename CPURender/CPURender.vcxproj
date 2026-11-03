@@ -169,13 +169,13 @@
     <ClCompile Include="Heaps\RawBufferHeap.cpp" />
     <ClCompile Include="Heaps\UAVHeap.cpp" />
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="Maths\PerlinNoise.cpp" />
     <ClCompile Include="Octree.cpp" />
     <ClCompile Include="Scenes\PBR_Scene.cpp" />
     <ClCompile Include="Scenes\Scene.cpp" />
     <ClCompile Include="Scenes\SceneParticlesTest.cpp" />
     <ClCompile Include="Scenes\TexturedBP_Scene.cpp" />
     <ClCompile Include="Scenes\Transparency_Scene.cpp" />
+    <ClCompile Include="Scenes\Terrain_Scene.cpp" />
     <ClCompile Include="Shaders\ShaderBase\Material.cpp" />
     <ClCompile Include="Shaders\ShaderBase\Shader.cpp" />
     <ClCompile Include="Shaders\ShaderBase\ShaderGroup.cpp" />
@@ -184,6 +184,9 @@
     <ClCompile Include="Maths\Plane.cpp" />
     <ClCompile Include="Maths\Ray.cpp" />
     <ClCompile Include="Maths\Transform.cpp" />
+    <ClCompile Include="Terrain\Erosion.cpp" />
+    <ClCompile Include="Terrain\PerlinNoise.cpp"/>
+    <ClCompile Include="Terrain\TerrainGenerator.cpp"/>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Animation\AnimationData.h" />
@@ -232,7 +235,6 @@
     <ClInclude Include="main.h" />
     <ClInclude Include="Maths\AABB.h" />
     <ClInclude Include="Maths\Frustum.h" />
-    <ClInclude Include="Maths\PerlinNoise.h" />
     <ClInclude Include="Maths\Plane.h" />
     <ClInclude Include="Maths\Ray.h" />
     <ClInclude Include="Maths\Transform.h" />
@@ -242,6 +244,7 @@
     <ClInclude Include="Scenes\SceneParticlesTest.h" />
     <ClInclude Include="Scenes\TexturedBP_Scene.h" />
     <ClInclude Include="Scenes\Transparency_Scene.h" />
+    <ClInclude Include="Scenes\Terrain_Scene.h" />
     <ClInclude Include="Shaders\ComputeShaders\FB_Fusion_CS.hpp" />
     <ClInclude Include="Shaders\ComputeShaders\GammaCorrection_CS.hpp" />
     <ClInclude Include="Shaders\ComputeShaders\TexCopy_CS.hpp" />
@@ -266,6 +269,9 @@
     <ClInclude Include="Shaders\GraphicsShaders\UnlitT.hpp" />
     <ClInclude Include="Shaders\ComputeShaders\GroupDebug_CS.hpp" />
     <ClInclude Include="stb_image.h" />
+    <ClInclude Include="Terrain\Erosion.h" />
+    <ClInclude Include="Terrain\PerlinNoise.h" />
+    <ClInclude Include="Terrain\TerrainGenerator.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

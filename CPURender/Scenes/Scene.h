@@ -34,6 +34,9 @@ protected:
 	// Registers every object inside the frustum to the device, to call between BeginPass / EndPass
 	void DrawObjects(Device* _pDevice, Frustum const& _frustum, uint8_t _drawMask = 0b11111111);
 
+	// Call after changing the mesh or transform of a STATIC object, rebuilds its bounds and the static octree
+	void MarkStaticDirty() { dirty_static = true; }
+
 	Handle m_presentTarget; // texture copied to the screen at the end of the frame, set it in OnInit
 
 	Camera m_camera;

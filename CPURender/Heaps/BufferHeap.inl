@@ -10,9 +10,22 @@ Handle BufferHeap<T>::Create(T const* _data, uint32_t _count)
 }
 
 template <typename T>
+T* BufferHeap<T>::GetData(Handle _h)
+{
+    return reinterpret_cast<T*>(GetRaw(_h));
+}
+
+template <typename T>
 T const* BufferHeap<T>::GetData(Handle _h) const
 {
     return reinterpret_cast<T const*>(GetRaw(_h));
+}
+
+template <typename T>
+T* BufferHeap<T>::GetData(Handle _h, uint32_t& _count)
+{
+    _count = _h.Count();
+    return reinterpret_cast<T*>(GetRaw(_h));
 }
 
 template <typename T>

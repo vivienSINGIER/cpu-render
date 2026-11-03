@@ -30,7 +30,7 @@ float PerlinNoise::Perlin(float x, float y, float frequency)
 	const float dotTopLeft = Dot(topLeft, GetConstantVector(valueTopLeft));
 	const float dotBottomRight = Dot(bottomRight, GetConstantVector(valueBottomRight));
 	const float dotBottomLeft = Dot(bottomLeft, GetConstantVector(valueBottomLeft));
-
+	
 	const float u = Fade(xf);
 	const float v = Fade(yf);
 
