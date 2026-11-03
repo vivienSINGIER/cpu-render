@@ -20,7 +20,7 @@ struct Vertex
 	glm::vec4 color = Color::WHITE;
 	size_t id = 0;
 
-	int bone_ids[MAX_BONE_INFLUENCE] = {};
+	int bone_ids[MAX_BONE_INFLUENCE] = {-1};
 	float weights[MAX_BONE_INFLUENCE] = {1.f};
 };
 

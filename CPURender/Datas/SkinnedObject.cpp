@@ -50,6 +50,8 @@ void SkinnedObject::processMesh(aiMesh* mesh, const aiScene* scene)
     std::vector<Vertex> vertices;
     std::vector<uint32_t> indices;
 
+    bool hasNormals = mesh->HasNormals();
+
     for (unsigned int i = 0; i < mesh->mNumVertices; i++)
     {
         Vertex vertex;
@@ -57,7 +59,14 @@ void SkinnedObject::processMesh(aiMesh* mesh, const aiScene* scene)
         SetVertexBoneDataToDefault(vertex);
 
         vertex.position = AssimpGLMHelpers::GetGLMVec(mesh->mVertices[i]);
-        vertex.normal = AssimpGLMHelpers::GetGLMVec(mesh->mNormals[i]);
+
+        if (hasNormals)
+            vertex.normal = AssimpGLMHelpers::GetGLMVec(mesh->mNormals[i]);
+        else
+        {
+            vertex.normal = glm::vec3(0, 1, 0);
+            vertex.tangent = glm::vec3(1, 0, 0);
+        }
 
         if (mesh->mTextureCoords[0])
         {
@@ -79,6 +88,7 @@ void SkinnedObject::processMesh(aiMesh* mesh, const aiScene* scene)
     }
 
     ExtractBoneWeightForVertices(vertices, mesh, scene);
+
     this->mesh = GeometryFactory::Instance()->CreateMesh(vertices, indices);
 }
 

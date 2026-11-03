@@ -24,7 +24,7 @@ public:
         for (int i = 0; i < MAX_BONE_INFLUENCE; i++)
         {
             if (_in.bone_ids[i] == -1)
-                continue;
+                break;
 
             if (_in.bone_ids[i] >= MAX_BONES)
             {

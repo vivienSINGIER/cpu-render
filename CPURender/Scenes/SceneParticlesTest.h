@@ -26,7 +26,8 @@ private:
     Material m_unlit;
 
     Material model_mat;
-    
+    Material hand_mat;
+
     SkinnedObject* obj = nullptr;
     ParticleEmitter* fire = nullptr;
 };
