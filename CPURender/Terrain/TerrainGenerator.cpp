@@ -74,7 +74,6 @@ void TerrainGenerator::GenerateMesh(TerrainDesc const& _desc)
 {
 	uint32_t sideVertexCount = m_grid_size; 
 
-
 	std::vector<Vertex> gridV;
 	std::vector<Index> gridI;
 	

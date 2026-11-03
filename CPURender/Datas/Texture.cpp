@@ -277,6 +277,38 @@ void Texture::StoreAsHDR(std::string _name, uint32_t _lod)
     stbi_write_hdr(_name.c_str(), sideLength, sideLength, 4, (float*)GetMipLinear(_lod).m_data.data());
 }
 
+void Texture::StoreAsHDR(std::string _name)
+{
+    stbi_write_hdr(_name.c_str(), m_width, m_height, 4, (float*)ToLinear().m_data.data());
+}
+
+void Texture::StoreAtlasHDR(std::vector<Texture*> _textures)
+{
+    int texCount = _textures.size();
+    size_t sideLength = ceil(sqrt(texCount));
+    glm::i32vec2 size = glm::i32vec2(_textures[0]->m_width, _textures[0]->m_height);
+    for (int i = 0; i < texCount; i++)
+    {
+        assert(size == glm::i32vec2(_textures[0]->m_width, _textures[0]->m_height) && "Texture size is not the same for every texture in the atlas");
+    }
+
+    Texture t(size.x * sideLength, size.y * sideLength, _textures[0]->m_format, LINEAR);
+
+    for (int i = 0; i < texCount; i++)
+    {
+        int xOffset = i % sideLength * size.x;
+        int yOffset = i / sideLength * size.x;
+        for (int j = 0; j < size.x * size.y; j++)
+        {
+            int x = j % size.x;
+            int y = j / size.x;
+            t.SetPixelData(xOffset + x, yOffset + y, _textures[i]->GetPixelData<glm::vec4>(x, y));
+        }
+    }
+
+    t.StoreAsHDR("Atlas.hdr");
+}
+
 Texture Texture::ToLinear() const
 {
     Texture t(m_width, m_height, m_format, LINEAR);

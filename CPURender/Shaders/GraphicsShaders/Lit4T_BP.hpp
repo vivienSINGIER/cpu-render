@@ -47,10 +47,7 @@ public:
     };
 
     SHADER_CB(MaterialCB, mat, CB_CUSTOM)
-        SHADER_TEX_OPT(diffuse1, 0)
-        SHADER_TEX_OPT(diffuse2, 1)
-        SHADER_TEX_OPT(diffuse3, 2)
-        SHADER_TEX_OPT(diffuse4, 3)
+        SHADER_TEX_OPT(diffuseAtlas, 0)
 
         SHADER_TEX_OPT(roughness, 5)
         SHADER_TEX_OPT(displacement, 6)
@@ -117,18 +114,23 @@ public:
         );
 
         glm::vec4 albedo = glm::vec4(0, 0, 0, 0);
-        const float tillingScale = 1 / 2.0f;
-        glm::vec2 worldUv = { _in.posModel.x * tillingScale, _in.posModel.z * tillingScale };
-        glm::vec2 factor = mat().uvWorldScale * glm::vec2(tillingScale, tillingScale);
+        const float tillingScale = 1 / 16.0f;
+        glm::vec2 worldUv = { _in.posModel.x * tillingScale - floor(_in.posModel.x * tillingScale), _in.posModel.z * tillingScale - floor(_in.posModel.z * tillingScale)};
+        worldUv *= 0.5f;
 
-        if (Has_diffuse1() && weight.x > 0.0f)
-            albedo += Sample_Grad_diffuse1(worldUv, _in.uvDdx * factor.x, _in.uvDdy * factor.y) * weight.x;
-        if (Has_diffuse2() && weight.y > 0.0f)
-            albedo += Sample_Grad_diffuse2(worldUv, _in.uvDdx * factor.x, _in.uvDdy * factor.y) * weight.y;
-        if (Has_diffuse3() && weight.z > 0.0f)
-            albedo += Sample_Grad_diffuse3(worldUv, _in.uvDdx * factor.x, _in.uvDdy * factor.y) * weight.z;
-        if (Has_diffuse4() && weight.w > 0.0f)
-            albedo += Sample_Grad_diffuse4(worldUv, _in.uvDdx * factor.x, _in.uvDdy * factor.y) * weight.w;
+        glm::vec2 factor = mat().uvWorldScale * glm::vec2(tillingScale, tillingScale) / 2.0f;
+
+        if (Has_diffuseAtlas())
+        {
+            if (weight.x > 0.0f)
+                albedo += Sample_Grad_diffuseAtlas(worldUv + glm::vec2(0.0f, 0.0f), _in.uvDdx * factor.x, _in.uvDdy * factor.y) * weight.x;
+            if (weight.y > 0.0f)
+                albedo += Sample_Grad_diffuseAtlas(worldUv + glm::vec2(0.5f, 0.0f), _in.uvDdx * factor.x, _in.uvDdy * factor.y) * weight.y;
+            if (weight.z > 0.0f)
+                albedo += Sample_Grad_diffuseAtlas(worldUv + glm::vec2(0.0f, 0.5f), _in.uvDdx * factor.x, _in.uvDdy * factor.y) * weight.z;
+            if (weight.w > 0.0f)
+                albedo += Sample_Grad_diffuseAtlas(worldUv + glm::vec2(0.5f, 0.5f), _in.uvDdx * factor.x, _in.uvDdy * factor.y) * weight.w;
+        }
 
         albedo *= mat().diffuseAlbedo;
 

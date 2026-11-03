@@ -59,6 +59,8 @@ public:
     void        Clear(glm::vec4 _color);
     
     void StoreAsHDR(std::string _name, uint32_t _lod);
+    void StoreAsHDR(std::string _name);
+    static void StoreAtlasHDR(std::vector<Texture*> _textures);
 
     template <typename T>
     T GetPixelData(uint32 _x, uint32 _y);
