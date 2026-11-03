@@ -50,17 +50,27 @@ void Terrain_Scene::OnInit(Device* _pDevice)
     m_terrainGenerator.GenerateMesh(m_terrainDesc);
     PrintControls();
     PrintTerrainDesc();
+    
+    float terrainSide = (m_terrainGenerator.m_grid_size-1) * TERRAIN_CELL_SIZE;
 
     Lit4T_BP_PS::MaterialCB cb = {
         {1.0f, 1.0f, 1.0f, 1.0f},
             Lighting::g_fresnelR0Templates[PLASTIC],
-                0.9f, 0.0f, 0.0f
+                0.9f, 0.0f, 0.0f, {terrainSide, terrainSide}
     };
 
     Handle Rock = TextureFactory::Instance()->CreateTexture("Rock", "Assets/Textures/Rock/diffuse.jpg");
     Handle Sand = TextureFactory::Instance()->CreateTexture("Sand", "Assets/Textures/Sand/diffuse.jpg");
     Handle Dirt = TextureFactory::Instance()->CreateTexture("Dirt", "Assets/Textures/Dirt/diffuse.jpg");
     Handle Grass = TextureFactory::Instance()->CreateTexture("Grass", "Assets/Textures/Grass/diffuse.jpg");
+
+    //for (int i = 0; i < 8; i++)
+    //{
+    //    TextureFactory::Instance()->GetTexture(Rock)->StoreAsHDR("RockTex" + std::to_string(i + 1) + std::string(".hdr"), i + 1);
+    //}
+    //TextureFactory::Instance()->GetTexture(Sand)->StoreAsHDR("SandTex.hdr", 3);
+    //TextureFactory::Instance()->GetTexture(Dirt)->StoreAsHDR("DirtTex.hdr", 3);
+    //TextureFactory::Instance()->GetTexture(Grass)->StoreAsHDR("GrassTex.hdr", 3);
 
     m_mat = ShaderFactory::Instance()->CreateMaterial("Lit4T_BP");
     m_mat->SetParams<Lit4T_BP_PS::MaterialCB>(Lit4T_BP_PS::CB_SLOT_mat, cb);

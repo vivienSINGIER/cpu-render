@@ -22,6 +22,7 @@ public:
     ~Texture() = default;
 
     Texture ToLinear() const;
+    Texture GetMipLinear(uint32_t _lod) const;
     
     void Load(std::string const& _filePath, bool _isSrgb = false);
     
@@ -57,6 +58,8 @@ public:
     
     void        Clear(glm::vec4 _color);
     
+    void StoreAsHDR(std::string _name, uint32_t _lod);
+
     template <typename T>
     T GetPixelData(uint32 _x, uint32 _y);
     template <typename T>

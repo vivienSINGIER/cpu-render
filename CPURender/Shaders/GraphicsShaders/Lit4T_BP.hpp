@@ -20,13 +20,13 @@ public:
     inline Vertex_OUT Execute(Vertex const& _in) const override
     {
         Vertex_OUT v;
-        v.color = _in.color;
+        v.color = texWeight(_in.uv);
         v.posModel = Object().model * glm::vec4({ _in.position, 1 });
         v.posH = v.posModel * Pass().viewProj;
         v.posLightSpace = v.posModel * Pass().lightSpace;
         v.normal = glm::mat3x3(Object().normalMatrix) * _in.normal;
         v.tangent = glm::mat3x3(Object().normalMatrix) * _in.tangent;
-        v.uv = texWeight(_in.uv);
+        v.uv = _in.uv;
         return v;
     }
 };
@@ -43,6 +43,7 @@ public:
 
         float heightScale;
         float metalness;
+        glm::vec2 uvWorldScale; // how many units is "one uv side"
     };
 
     SHADER_CB(MaterialCB, mat, CB_CUSTOM)
@@ -50,7 +51,7 @@ public:
         SHADER_TEX_OPT(diffuse2, 1)
         SHADER_TEX_OPT(diffuse3, 2)
         SHADER_TEX_OPT(diffuse4, 3)
-        //SHADER_TEX_OPT(texWeight, 4)
+
         SHADER_TEX_OPT(roughness, 5)
         SHADER_TEX_OPT(displacement, 6)
         SHADER_TEX_OPT(normal, 7)
@@ -106,10 +107,9 @@ public:
         if (Has_displacement())
             uv = _in.uv - glm::vec2(viewT) / glm::max(viewT.z, 0.3f) * (Depth(_in.uv, _in.uvDdx, _in.uvDdy) * mat().heightScale);
 
-
         const float blendDistance = 0.05f;
-        float rock = smoothstep(0.5f - blendDistance, 0.5f + blendDistance, uv.x);
-        float humid = smoothstep(0.5f - blendDistance, 0.5f + blendDistance, uv.y);
+        float rock = smoothstep(0.5f - blendDistance, 0.5f + blendDistance, _in.color.x);
+        float humid = smoothstep(0.5f - blendDistance, 0.5f + blendDistance, _in.color.y);
         glm::vec4 weight = glm::vec4((1.0f - rock) * (1.0f - humid),    // -rock, -humid
             rock * (1.0f - humid),                                      // +rock, -humid
             (1.0f - rock) * humid,                                      // -rock, +humid
@@ -117,15 +117,18 @@ public:
         );
 
         glm::vec4 albedo = glm::vec4(0, 0, 0, 0);
-        glm::vec2 worldUv = { _in.posModel.x / 4.0f, _in.posModel.z / 4.0f };
+        const float tillingScale = 1 / 2.0f;
+        glm::vec2 worldUv = { _in.posModel.x * tillingScale, _in.posModel.z * tillingScale };
+        glm::vec2 factor = mat().uvWorldScale * glm::vec2(tillingScale, tillingScale);
+
         if (Has_diffuse1() && weight.x > 0.0f)
-            albedo += Sample_Grad_diffuse1(worldUv, _in.uvDdx, _in.uvDdy) * weight.x;
+            albedo += Sample_Grad_diffuse1(worldUv, _in.uvDdx * factor.x, _in.uvDdy * factor.y) * weight.x;
         if (Has_diffuse2() && weight.y > 0.0f)
-            albedo += Sample_Grad_diffuse2(worldUv, _in.uvDdx, _in.uvDdy) * weight.y;
+            albedo += Sample_Grad_diffuse2(worldUv, _in.uvDdx * factor.x, _in.uvDdy * factor.y) * weight.y;
         if (Has_diffuse3() && weight.z > 0.0f)
-            albedo += Sample_Grad_diffuse3(worldUv, _in.uvDdx, _in.uvDdy) * weight.z;
+            albedo += Sample_Grad_diffuse3(worldUv, _in.uvDdx * factor.x, _in.uvDdy * factor.y) * weight.z;
         if (Has_diffuse4() && weight.w > 0.0f)
-            albedo += Sample_Grad_diffuse4(worldUv, _in.uvDdx, _in.uvDdy) * weight.w;
+            albedo += Sample_Grad_diffuse4(worldUv, _in.uvDdx * factor.x, _in.uvDdy * factor.y) * weight.w;
 
         albedo *= mat().diffuseAlbedo;
 

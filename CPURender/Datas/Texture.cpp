@@ -13,6 +13,10 @@
 #include "Lights/LightHelpers.hpp"
 #include "Lights/PBRHelpers.hpp"
 
+#define STB_IMAGE_WRITE_IMPLEMENTATION
+#define __STDC_LIB_EXT1__
+#include "../stb_image_write.h"
+
 namespace
 {
     uint32 NearestPowerOf2(uint32 _value)
@@ -266,6 +270,13 @@ void Texture::Clear(glm::vec4 _color)
     m_data.assign(m_data.size(), EncodeTexel(m_format, _color));
 }
 
+void Texture::StoreAsHDR(std::string _name, uint32_t _lod)
+{
+    uint32_t sideLength = MipSide(_lod);
+
+    stbi_write_hdr(_name.c_str(), sideLength, sideLength, 4, (float*)GetMipLinear(_lod).m_data.data());
+}
+
 Texture Texture::ToLinear() const
 {
     Texture t(m_width, m_height, m_format, LINEAR);
@@ -278,6 +289,22 @@ Texture Texture::ToLinear() const
             t.Store(x, y, m_data[index]);
         }
     }
+    return t;
+}
+
+Texture Texture::GetMipLinear(uint32_t _lod) const
+{
+    uint32_t side = MipSide(_lod);
+    Texture t(side, side, m_format, LINEAR);
+    for (uint32 y = 0; y < side; ++y)
+    {
+        for (uint32 x = 0; x < side; ++x)
+        {
+            uint32 index = GetIndex(x, y, _lod);
+            t.Store(x, y, m_data[index]);
+        }
+    }
+
     return t;
 }
 
