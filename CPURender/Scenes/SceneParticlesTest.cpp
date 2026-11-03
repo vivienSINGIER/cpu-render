@@ -64,27 +64,64 @@ void SceneParticlesTest::OnInit(Device* _pDevice)
     floor->transform.SetScale(glm::vec3(25.0f, 0.2f, 25.0f));
 
     ParticleDesc fireDesc;
-    fireDesc.amount = 15;
+    fireDesc.amount = 10;
     fireDesc.spawnRadius = 0.75f;
-    fireDesc.particleBeginSize = 0.1f;
-    fireDesc.particleEndSize = 0.01f;
+    fireDesc.particleBeginSize = 0.2f;
+    fireDesc.particleEndSize = 0.02f;
 
     fireDesc.rotationSpeed = 0.f;
     fireDesc.floorDir = glm::vec3(-0.5f, 1.f, -0.5f);
     fireDesc.ceilDir = glm::vec3(0.5f, 1, 0.5f);
-    fireDesc.minSpeed = 5.f;
-    fireDesc.maxSpeed = 10.f;
-    fireDesc.beginColor = glm::vec4(1, 0, 1, 0.5f);
-    fireDesc.endColor = glm::vec4(0, 1, 1, 0.5f);
-    fireDesc.minLifeTime = 0.5f;
-    fireDesc.maxLifeTime = 1.5f;
+    fireDesc.minSpeed = 2.5f;
+    fireDesc.maxSpeed = 5.f;
+    fireDesc.beginColor = glm::vec4(1, 0, 0, 1);
+    fireDesc.endColor = glm::vec4(1, 1, 0, 1);
+    fireDesc.minLifeTime = 1.f;
+    fireDesc.maxLifeTime = 2.f;
 
-    fire = ParticleManager::Instance()->CreateEmitter({ 0, 2.5f, 0 }, fireDesc, 0.0f);
+    std::string heart = ParticleManager::Instance()->BindSlot("heartUwU", "Assets/Textures/Particles/heart.png");
+    fire = ParticleManager::Instance()->CreateEmitter({ 0, 2.5f, 0 }, fireDesc, 0.0f, heart);
+
+    ParticleDesc test;
+    test.amount = 10;
+    test.spawnRadius = 0.75f;
+    test.particleBeginSize = 0.1f;
+    test.particleEndSize = 0.1f;
+
+    test.rotationSpeed = 10.f;
+    test.floorDir = glm::vec3(-1, -1, -1);
+    test.ceilDir = glm::vec3(1, 1, 1);
+    test.minSpeed = 0.3f;
+    test.maxSpeed = 3.f;
+    test.beginColor = glm::vec4(1, 0, 1, 1);
+    test.endColor = glm::vec4(0, 0, 1, 1);
+    test.minLifeTime = 1.f;
+    test.maxLifeTime = 2.f;
+
+    ParticleEmitter* d = ParticleManager::Instance()->CreateEmitter({ -1.f, 0.f, 0 }, test, 0.0f);
+
+    ParticleDesc r;
+    r.amount = 5;
+    r.spawnRadius = 0.75f;
+    r.particleBeginSize = 0.3f;
+    r.particleEndSize = 0.1f;
+    
+    r.rotationSpeed = 100.f;
+    r.floorDir = glm::vec3(-1, -1, -1);
+    r.ceilDir = glm::vec3(1, -1, 1);
+    r.minSpeed = 5.f;
+    r.maxSpeed = 10.f;
+    r.beginColor = glm::vec4(1, 1, 1, 1);
+    r.endColor = glm::vec4(1, 1, 1, 1);
+    r.minLifeTime = 0.5f;
+    r.maxLifeTime = 1.f;
+
+    std::string rainbow = ParticleManager::Instance()->BindSlot("rainbow", "Assets/Textures/Particles/rainbow.png");
+    ParticleEmitter* e = ParticleManager::Instance()->CreateEmitter({ 1.f, 0.f, 0 }, test, 0.0f, rainbow);
 
 #pragma endregion PARTICLE_INIT
 
     ShaderFactory::Instance()->RegisterGroup<LitT_BP_VS, LitT_BP_PS>("TestMaterial");
-
     model_mat = ShaderFactory::Instance()->CreateMaterial(std::string("TestMaterial"));
     model_mat->SetParams<LitT_BP_PS::MaterialCB>(LitT_BP_PS::CB_SLOT_mat, cb);
 
@@ -112,7 +149,7 @@ void SceneParticlesTest::OnHandleEvent(const SDL_Event& event)
 {
     if (event.type == SDL_EVENT_KEY_DOWN && (event.key.key == SDLK_A))
     {
-        ParticleDesc fireDesc;
+       /* ParticleDesc fireDesc;
         fireDesc.amount = 100;
         fireDesc.spawnRadius = 0.9f;
         fireDesc.particleBeginSize = 0.15f;
@@ -128,14 +165,14 @@ void SceneParticlesTest::OnHandleEvent(const SDL_Event& event)
         fireDesc.minLifeTime = 1.f;
         fireDesc.maxLifeTime = 3.f;
 
-        ParticleManager::Instance()->Spawn({ 0, 0, 0 }, fireDesc);
+        ParticleManager::Instance()->Spawn({ 0, 0, 0 }, fireDesc);*/
     }
 }
 
 void SceneParticlesTest::OnUpdate(float dt)
 {
-    fire.center = obj->transform.GetPosition();
-    ParticleManager::Instance()->UpdateEmitter(fire, dt);
+    //fire->center = obj->transform.GetPosition();
+    ParticleManager::Instance()->Update(dt);
 }
 
 void SceneParticlesTest::OnDraw(Device* _pDevice)

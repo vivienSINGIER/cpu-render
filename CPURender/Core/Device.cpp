@@ -22,7 +22,7 @@ Device::Device() : m_ctx()
 	m_defaultFB.height = HEIGHT;
 	m_defaultFB.gBuffer[0] = m_ctx.textureHeap.Create<Texture>(WIDTH, HEIGHT, Texture::RGBA32, Texture::MORTON, Color::WHITE);
 	m_defaultFB.depthBuffer = m_ctx.textureHeap.Create<Texture>(WIDTH, HEIGHT, Texture::R32F, Texture::MORTON, Color::BLACK);
-	m_defaultFB.clearColor = vec4(0.0f, 0.0f, 0.0f, 1.0f);
+	m_defaultFB.clearColor = vec4(0.f, 0.f, 0.f, 1.0f);
 	
 	m_perPassCB = m_ctx.constantBufferHeap.Create(sizeof(PerPassCB));
 	m_lightCB = m_ctx.constantBufferHeap.Create(sizeof(LightPassCB));

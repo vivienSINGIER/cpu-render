@@ -28,6 +28,6 @@ private:
     Material model_mat;
     
     SkinnedObject* obj = nullptr;
-    ParticleEmitter fire;
+    ParticleEmitter* fire = nullptr;
 };
 
