@@ -64,7 +64,7 @@ public:
         float currentDepth = projCoords.z;
         
         float bias = 0.005f;
-        float shadow = currentDepth - bias > closestDepth  ? 1.0 : 0.0;
+        float shadow = currentDepth - bias > closestDepth  ? 1.0f : 0.0f;
         if(projCoords.z > 1.0)
             shadow = 0.0;
         

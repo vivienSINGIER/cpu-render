@@ -25,7 +25,7 @@ public:
 
         float r = (float)local.x / (float)(gs.x - 1);
         float g = (float)local.y / (float)(gs.y - 1);
-        float b = ((group.x + group.y) & 1) ? 1.0 : 0.0;
+        float b = ((group.x + group.y) & 1) ? 1.0f : 0.0f;
         
         glm::vec4 scene = Load_target(_id.x, _id.y);
         Store_target(_id.x, _id.y, { (scene.r + r) / 2.0f, (scene.g + g) / 2.0f, (scene.b + b) / 2.0f, 1.0f });

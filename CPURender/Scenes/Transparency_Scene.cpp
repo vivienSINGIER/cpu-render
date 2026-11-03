@@ -194,7 +194,7 @@ void Transparency_Scene::OnDraw(Device* _pDevice)
     }
 
    _pDevice->BeginPass(m_depthCopyPass);
-       _pDevice->Dispatch(m_depthCopyMat.get(), ceil(WIDTH / 32.0f), ceil(HEIGHT / 32.0f), 1);
+       _pDevice->Dispatch(m_depthCopyMat.get(), (uint32_t)ceil(WIDTH / 32.0f), (uint32_t)ceil(HEIGHT / 32.0f), 1);
    _pDevice->EndPass();
 
     _pDevice->BeginPass(m_refractionPass);
@@ -202,7 +202,7 @@ void Transparency_Scene::OnDraw(Device* _pDevice)
     _pDevice->EndPass();
 
    _pDevice->BeginPass(m_postProcPass);
-       _pDevice->Dispatch(m_postProcMat.get(), ceil(WIDTH / 32.0f), ceil(HEIGHT / 32.0f), 1);
+       _pDevice->Dispatch(m_postProcMat.get(), (uint32_t)ceil(WIDTH / 32.0f), (uint32_t)ceil(HEIGHT / 32.0f), 1);
    _pDevice->EndPass();
 
 
