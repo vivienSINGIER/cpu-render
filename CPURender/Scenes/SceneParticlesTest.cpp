@@ -80,9 +80,10 @@ void SceneParticlesTest::OnInit(Device* _pDevice)
     heartDesc.minLifeTime = 2.f;
     heartDesc.maxLifeTime = 3.f;
     }
-
     std::string heart = ParticleManager::Instance()->BindSlot("heartUwU", "Assets/Textures/Particles/heart.png");
     fire = ParticleManager::Instance()->CreateEmitter({ 0, 2.5f, 0 }, heartDesc, 0.0f, heart);
+
+    ///
 
     ParticleDesc test;
     {
@@ -101,8 +102,9 @@ void SceneParticlesTest::OnInit(Device* _pDevice)
         test.minLifeTime = 1.f;
         test.maxLifeTime = 2.f;
     }
-
     ParticleEmitter* d = ParticleManager::Instance()->CreateEmitter({ 0.f, 0.f, 0 }, test, 0.0f);
+
+    ///
 
     ParticleDesc r;
     {
@@ -122,7 +124,6 @@ void SceneParticlesTest::OnInit(Device* _pDevice)
         r.maxLifeTime = 2.f;
 
     }
-  
     std::string rainbow = ParticleManager::Instance()->BindSlot("rainbow", "Assets/Textures/Particles/rainbow.png");
     ParticleEmitter* e = ParticleManager::Instance()->CreateEmitter({ 0.f, 15.f, 0 }, r, 0.0f, rainbow);
 
