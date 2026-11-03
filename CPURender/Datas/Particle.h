@@ -8,7 +8,7 @@
 #include "../Core/FrameBuffer.hpp"
 #include "../Maths/Transform.h"
 
-#define MAX_PARTICLES 32'000
+#define MAX_PARTICLES 16'000
 
 struct alignas(128) UavParticle
 {
@@ -75,35 +75,47 @@ private:
 friend class ParticleManager;
 };
 
+constexpr const char* notex = "NoTexture";
+
 class ParticleManager
 {
 public:
 	static ParticleManager* Instance();
 
 	//floorDir et Ceildir are the limits of the random from each member of the vec3, example : if (-1, -1, -1) and (1, 1, 1) each value will be betweeen -1 and 1
-	void Spawn(glm::vec3 _center, ParticleDesc _desc);
+	void Spawn(glm::vec3 _center, ParticleDesc& _desc, std::string texture_name = notex);
 
-	ParticleEmitter CreateEmitter(glm::vec3 _center, ParticleDesc _desc, float _spawnDelay);
+	std::string BindSlot(std::string _texture_name, std::string const& _path, bool _isSrgb = false, bool _genMips = true);
 
-	void UpdateEmitter(ParticleEmitter& pe, float dt);
+	ParticleEmitter* CreateEmitter(glm::vec3 _center, ParticleDesc& _desc, float _spawnDelay, std::string texture_name = notex);
+
+	void Update(float dt);
 
 	//Recommended to create a Particle Pass before with isCompute = true
 	void Draw(Device* _pDevice);
 private:
-	void Init();
-
 	static ParticleManager* m_pInstance;
 
-	size_t m_freeOffset = 0;
-	Mesh m_mesh;
+	std::unordered_map<std::string, Handle> m_textures;
 
-	Material m_unlitParticle;
-	Material m_particleMat;
+	std::unordered_map<std::string, std::vector<ParticleEmitter>> m_emitters;
+
+	std::unordered_map<std::string, size_t> m_freeOffsets;
+
+	std::unordered_map<std::string, Mesh> m_meshes;
+
+	std::unordered_map<std::string, Handle> m_uav_buffers;
+	std::unordered_map<std::string, int> m_max_particles;
+
+	std::unordered_map<std::string, Material> m_unlitParticles;
+	std::unordered_map<std::string, Material> m_particleMats;
 
 	PassDesc m_particlesPass;
 
 	Handle m_CS_handle;
-	Handle m_uav_buffer;
-
 	Transform identity;
+
+	void Init();
+
+	void BindSlot(std::string texture_name, Handle tex);
 };

@@ -2,6 +2,7 @@
 #define DATAS_CONSTANT_BUFFERS_HPP_DEFINED
 
 #include <glm/mat4x4.hpp>
+#include "Mesh.h"
 
 struct PerPassCB
 {
@@ -32,6 +33,8 @@ struct PerObjectCB
 {
     glm::mat4x4 model;
     glm::mat4x4 normalMatrix; // Transpose de l'inverse de la matrice model
+
+    glm::mat4x4 finalBonesMatrices[MAX_BONES] = {};
 };
 
 struct DispatchCB

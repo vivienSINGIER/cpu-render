@@ -11,9 +11,12 @@
 #include "../Shaders/ComputeShaders/ParticleCS.hpp"
 #include "../Factories/BufferFactory.h"
 
+#include "../Datas/SkinnedObject.h"
+
 void SceneParticlesTest::OnInit(Device* _pDevice)
 {
-    m_lightData.lights[0] = MakeDirectionalLight({ 1.0f, -1.0f, 1.0f }, 20.0f, Color::WHITE);
+#pragma region PARTICLE_INIT
+    m_lightData.lights[0] = MakeDirectionalLight({ 1.0f, -1.0f, 1.0f }, 10.f, Color::WHITE);
     m_lightData.ambient = 0.2f;
 
     m_mainPass.fb = _pDevice->GetDefaultFrameBuffer();
@@ -21,17 +24,17 @@ void SceneParticlesTest::OnInit(Device* _pDevice)
 
     m_particlesPass.fb = _pDevice->GetDefaultFrameBuffer();
     m_particlesPass.isCompute = true;
+    m_particlesPass.state.blendMode = Blending::ALPHA;
 
     _pDevice->SetLightData(m_lightData);
 
     m_camTransform.SetPosition(glm::vec3(0.0f, 0.0f, -10.f));
 
-    Handle diff = TextureFactory::Instance()->CreateTexture("dark_rock_diffuse", "Assets/Obj/Plane/PaletteBaseColor_6.png");
-    // Handle ambient = TextureFactory::Instance()->CreateTexture("dark_rock_ambient", "Assets/Obj/Plane/nimrod_bottom_col_5.png");
-    // Handle normal = TextureFactory::Instance()->CreateTexture("dark_rock_normal", "Assets/Obj/Plane/nimrod_bottom_nrm_4.png");
-    // Handle roughness = TextureFactory::Instance()->CreateTexture("dark_rock_roughness", "Assets/Obj/Plane/PaletteMetallicRoughness.png");
-   // Handle displacement = TextureFactory::Instance()->CreateTexture("dark_rock_displacement", "Assets/Textures/DarkRock/displacement.png");
-    // Handle metalness = TextureFactory::Instance()->CreateTexture("dark_rock_metalness", "Assets/Obj/Plane/PaletteMetallicRoughness2.png");
+    Handle diff = TextureFactory::Instance()->CreateTexture("dark_rock_diffuse", "Assets/Textures/DarkRock/diffuse.png", true);
+    Handle ambient = TextureFactory::Instance()->CreateTexture("dark_rock_ambient", "Assets/Textures/DarkRock/ambient.png");
+    Handle normal = TextureFactory::Instance()->CreateTexture("dark_rock_normal", "Assets/Textures/DarkRock/normal.png");
+    Handle roughness = TextureFactory::Instance()->CreateTexture("dark_rock_roughness", "Assets/Textures/DarkRock/roughness.png");
+    Handle displacement = TextureFactory::Instance()->CreateTexture("dark_rock_displacement", "Assets/Textures/DarkRock/displacement.png");
 
     LitT_BP_PS::MaterialCB cb = {
         {1.0f, 1.0f, 1.0f, 1.0f},
@@ -47,96 +50,127 @@ void SceneParticlesTest::OnInit(Device* _pDevice)
     m_mat = ShaderFactory::Instance()->CreateMaterial("LitT_BP");
     m_mat->SetParams<LitT_BP_PS::MaterialCB>(LitT_BP_PS::CB_SLOT_mat, cb);
     m_mat->SetTexture(LitT_BP_PS::TEX_SLOT_diffuse, diff);
-    // m_mat->SetTexture(LitT_BP_PS::TEX_SLOT_ambient, ambient);
-    // m_mat->SetTexture(LitT_BP_PS::TEX_SLOT_normal, normal);
+    //m_mat->SetTexture(LitT_BP_PS::TEX_SLOT_ambient, ambient);
+    //m_mat->SetTexture(LitT_BP_PS::TEX_SLOT_normal, normal);
 
-    // m_mat->SetTexture(LitT_BP_PS::TEX_SLOT_roughness, roughness);
+    //m_mat->SetTexture(LitT_BP_PS::TEX_SLOT_roughness, roughness);
     //m_mat->SetTexture(LitT_BP_PS::TEX_SLOT_displacement, displacement);
-    // m_mat->SetTexture(LitT_BP_PS::TEX_SLOT_metal, metalness);
-
-    Mesh m = GeometryFactory::Instance()->LoadMesh("Assets/Obj/Plane/plane.obj");
-
-    obj = CreateObject(DYNAMIC);
-    obj->mesh = m; // GeometryFactory::Instance()->BuildCube();
-    obj->mat = m_mat.get();
-    obj->transform.SetPosition(glm::vec3(-1.5f, 1.5f, -1.5f));
-    obj->transform.SetScale(0.1f);
 
     Mesh cube = GeometryFactory::Instance()->BuildCube();
     Object* floor = CreateObject(DYNAMIC);
     floor->mesh = cube;
-    floor->mat = m_unlit.get();
+    floor->mat = m_mat.get();
     floor->transform.SetPosition(glm::vec3(0.0f, -2.f, 0.f));
     floor->transform.SetScale(glm::vec3(25.0f, 0.2f, 25.0f));
 
-    ParticleDesc fireDesc;
-    fireDesc.amount = 100;
-    fireDesc.spawnRadius = 0.9f;
-    fireDesc.particleBeginSize = 0.15f;
-    fireDesc.particleEndSize = 0.f;
+    ParticleDesc heartDesc;
+    {
+    heartDesc.amount = 1;
+    heartDesc.spawnRadius = 0.75f;
+    heartDesc.particleBeginSize = 0.02f;
+    heartDesc.particleEndSize = 0.5f;
 
-    fireDesc.rotationSpeed = 10.f;
-    fireDesc.floorDir = glm::vec3(-0.25f, 0.5f, -0.25f);
-    fireDesc.ceilDir = glm::vec3(0.25f, 1, 0.25f);
-    fireDesc.minSpeed = 0.33f;
-    fireDesc.maxSpeed = 3.f;
-    fireDesc.beginColor = glm::vec4(1, 0, 0, 1);
-    fireDesc.endColor = glm::vec4(1, 1, 0, 1);
-    fireDesc.minLifeTime = 1.f;
-    fireDesc.maxLifeTime = 3.f;
+    heartDesc.rotationSpeed = 0.f;
+    heartDesc.floorDir = glm::vec3(-0.5f, 1.f, -0.5f);
+    heartDesc.ceilDir = glm::vec3(0.5f, 1, 0.5f);
+    heartDesc.minSpeed = 1.f;
+    heartDesc.maxSpeed = 3.f;
+    heartDesc.beginColor = glm::vec4(1, 0, 0, 1);
+    heartDesc.endColor = glm::vec4(1, 1, 0, 1);
+    heartDesc.minLifeTime = 2.f;
+    heartDesc.maxLifeTime = 3.f;
+    }
+    std::string heart = ParticleManager::Instance()->BindSlot("heartUwU", "Assets/Textures/Particles/heart.png");
+    fire = ParticleManager::Instance()->CreateEmitter({ 0, 2.5f, 0 }, heartDesc, 0.0f, heart);
 
-    fire = ParticleManager::Instance()->CreateEmitter({ 0, 2, 0 }, fireDesc, 0.2f);
+    ///
 
-    ParticleDesc rainDesc;
-    rainDesc.amount = 200;
-    rainDesc.spawnRadius = 12.5f;
-    rainDesc.particleBeginSize = 0.025f;
-    rainDesc.particleEndSize = 0.025f;
-    rainDesc.rotationSpeed = 0.f;
-    rainDesc.floorDir = glm::vec3(-0.25f, -1, -0.25f);
-    rainDesc.ceilDir = glm::vec3(0.25f, -0.5f, 0.25f);
-    rainDesc.minSpeed = 15.f;
-    rainDesc.maxSpeed = 20.;
-    rainDesc.beginColor = glm::vec4(0, 0, 1, 1);
-    rainDesc.endColor = glm::vec4(0, 0, 1, 1);
-    rainDesc.minLifeTime = 0.5f;
-    rainDesc.maxLifeTime = 1.f;
+    ParticleDesc test;
+    {
+        test.amount = 5;
+        test.spawnRadius = 0.75f;
+        test.particleBeginSize = 0.1f;
+        test.particleEndSize = 0.1f;
 
-    rain = ParticleManager::Instance()->CreateEmitter({0, 15.f, 0}, rainDesc, 0.1f);
+        test.rotationSpeed = 10.f;
+        test.floorDir = glm::vec3(-1, -1, -1);
+        test.ceilDir = glm::vec3(1, 1, 1);
+        test.minSpeed = 0.3f;
+        test.maxSpeed = 3.f;
+        test.beginColor = glm::vec4(1, 0, 1, 1);
+        test.endColor = glm::vec4(0, 0, 1, 1);
+        test.minLifeTime = 1.f;
+        test.maxLifeTime = 2.f;
+    }
+    ParticleEmitter* d = ParticleManager::Instance()->CreateEmitter({ 0.f, 0.f, 0 }, test, 0.0f);
+
+    ///
+
+    ParticleDesc r;
+    {
+        r.amount = 50;
+        r.spawnRadius = 20.f;
+        r.particleBeginSize = 0.2f;
+        r.particleEndSize = 0.01f;
+
+        r.rotationSpeed = 10.f;
+        r.floorDir = glm::vec3(-0.25f, -1, -0.25f);
+        r.ceilDir = glm::vec3(0.25f, -1, 0.25f);
+        r.minSpeed = 15.f;
+        r.maxSpeed = 20.f;
+        r.beginColor = glm::vec4(1, 1, 1, 1);
+        r.endColor = glm::vec4(1, 1, 1, 1);
+        r.minLifeTime = 1.f;
+        r.maxLifeTime = 2.f;
+
+    }
+    std::string rainbow = ParticleManager::Instance()->BindSlot("rainbow", "Assets/Textures/Particles/rainbow.png");
+    ParticleEmitter* e = ParticleManager::Instance()->CreateEmitter({ 0.f, 15.f, 0 }, r, 0.0f, rainbow);
+
+#pragma endregion PARTICLE_INIT
+
+    ShaderFactory::Instance()->RegisterGroup<LitT_BP_VS, LitT_BP_PS>("TestMaterial");
+    model_mat = ShaderFactory::Instance()->CreateMaterial(std::string("TestMaterial"));
+    model_mat->SetParams<LitT_BP_PS::MaterialCB>(LitT_BP_PS::CB_SLOT_mat, cb);
+
+    Handle tex = TextureFactory::Instance()->CreateTexture("Character_Male_34", "Assets/Fbx/Character_Male_34.png");
+    model_mat->SetTexture(LitT_BP_PS::TEX_SLOT_diffuse, tex);
+
+    obj = CreateSkinnedObject("Assets/Fbx/dance.fbx");
+    obj->AddAnimation("Dancing", "Assets/Fbx/dance.fbx");
+    obj->animator.PlayAnimation(obj->GetAnimation("Dancing"));
+
+    obj->mat = model_mat.get();
+    obj->transform.SetPosition(glm::vec3(0, -1.9f, 0));
+    obj->transform.SetYPR(glm::vec3(0, pi<float>(), 0));
+    obj->transform.SetScale(2.f);
+
+    SkinnedObject* t = CreateSkinnedObject("Assets/Fbx/theHand.fbx");
+    t->AddAnimation("Hold", "Assets/Fbx/theHand.fbx");
+    t->animator.PlayAnimation(t->GetAnimation("Hold"));
+
+    hand_mat = ShaderFactory::Instance()->CreateMaterial(std::string("TestMaterial"));
+    hand_mat->SetParams<LitT_BP_PS::MaterialCB>(LitT_BP_PS::CB_SLOT_mat, cb);
+
+    t->mat = hand_mat.get();
+    t->transform.SetPosition(glm::vec3(-1.5f, 1.f, 0));
+    t->transform.SetScale(0.02f);
 }
 
 void SceneParticlesTest::OnHandleEvent(const SDL_Event& event)
 {
     if (event.type == SDL_EVENT_KEY_DOWN && (event.key.key == SDLK_A))
     {
-        ParticleDesc fireDesc;
-        fireDesc.amount = 100;
-        fireDesc.spawnRadius = 0.9f;
-        fireDesc.particleBeginSize = 0.15f;
-        fireDesc.particleEndSize = 0.f;
-
-        fireDesc.rotationSpeed = 10.f;
-        fireDesc.floorDir = glm::vec3(-0.25f, 0.5f, -0.25f);
-        fireDesc.ceilDir = glm::vec3(0.25f, 1, 0.25f);
-        fireDesc.minSpeed = 0.33f;
-        fireDesc.maxSpeed = 3.f;
-        fireDesc.beginColor = glm::vec4(1, 0, 0, 1);
-        fireDesc.endColor = glm::vec4(1, 1, 0, 1);
-        fireDesc.minLifeTime = 1.f;
-        fireDesc.maxLifeTime = 3.f;
-
-        ParticleManager::Instance()->Spawn({ 0, 0, 0 }, fireDesc);
     }
 }
 
 void SceneParticlesTest::OnUpdate(float dt)
 {
-    obj->transform.AddYPR(glm::vec3(0, 0.5f*dt, 0));
-    obj->transform.Move(obj->transform.GetForward() * 1.5f * dt);
-    fire.center = obj->transform.GetPosition();
+    obj->transform.AddYPR(glm::vec3(0, dt, 0));
+    obj->transform.Move(obj->transform.GetForward(), dt*3.f);
+    fire->center = obj->transform.GetPosition();
 
-    ParticleManager::Instance()->UpdateEmitter(fire, dt);
-    ParticleManager::Instance()->UpdateEmitter(rain, dt);
+    ParticleManager::Instance()->Update(dt);
 }
 
 void SceneParticlesTest::OnDraw(Device* _pDevice)

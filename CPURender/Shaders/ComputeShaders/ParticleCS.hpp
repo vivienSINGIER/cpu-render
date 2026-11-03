@@ -18,9 +18,7 @@ public:
 		if (_id.x >= MAX_PARTICLES)
 			return;
 
-		//TODO CHANGE
 		float dt = Pass().deltaTime;
-
 		UavParticle p = Load_data(_id.x);
 
 		if (p.lifeTime <= 0.f)

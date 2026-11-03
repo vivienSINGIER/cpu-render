@@ -14,6 +14,7 @@ struct DrawCommand
 	Mesh mesh;
 	glm::mat4x4 world;
 	MaterialData const* material;
+	std::vector<glm::mat4x4> finalBoneMatrices = {};
 };
 
 struct DispatchCommand

@@ -8,6 +8,9 @@
 #include "../Heaps/Handle.hpp"
 #include "../Maths/AABB.h"
 
+#define MAX_BONES 100
+#define MAX_BONE_INFLUENCE 4
+
 struct Vertex
 {
 	glm::vec3 position = { 0.0f, 0.0f, 0.0f };
@@ -16,6 +19,9 @@ struct Vertex
 	glm::vec3 tangent = { 1.0f, 0.0f, 0.0f };
 	glm::vec4 color = Color::WHITE;
 	size_t id = 0;
+
+	int bone_ids[MAX_BONE_INFLUENCE] = {-1};
+	float weights[MAX_BONE_INFLUENCE] = {1.f};
 };
 
 struct Vertex_OUT

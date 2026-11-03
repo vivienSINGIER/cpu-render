@@ -1,20 +1,125 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <Filter Include="Source Files">
-      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
-      <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
-    </Filter>
-    <Filter Include="Header Files">
-      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
-      <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
-    </Filter>
-    <Filter Include="Resource Files">
-      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
-      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
-    </Filter>
-  </ItemGroup>
-  <ItemGroup>
+    <ClCompile Include="Camera.cpp" />
+    <ClCompile Include="Clipping.cpp" />
+    <ClCompile Include="Core\Device.cpp" />
+    <ClCompile Include="Core\GraphicsContext.cpp" />
+    <ClCompile Include="Cubemap.cpp" />
+    <ClCompile Include="Datas\Mesh.cpp" />
+    <ClCompile Include="Datas\Object.cpp" />
+    <ClCompile Include="Datas\Particle.cpp" />
+    <ClCompile Include="Datas\Texture.cpp" />
+    <ClCompile Include="Datas\Triangle.cpp" />
+    <ClCompile Include="engine.cpp" />
+    <ClCompile Include="Factories\BufferFactory.cpp" />
+    <ClCompile Include="Factories\GeometryFactory.cpp" />
+    <ClCompile Include="Factories\ShaderFactory.cpp" />
+    <ClCompile Include="Factories\TextureFactory.cpp" />
+    <ClCompile Include="Heaps\ConstantBufferHeap.cpp" />
+    <ClCompile Include="Heaps\RawBufferHeap.cpp" />
+    <ClCompile Include="Heaps\UAVHeap.cpp" />
+    <ClCompile Include="main.cpp" />
+    <ClCompile Include="Maths\PerlinNoise.cpp" />
+    <ClCompile Include="Octree.cpp" />
+    <ClCompile Include="Scenes\PBR_Scene.cpp" />
+    <ClCompile Include="Scenes\Scene.cpp" />
+    <ClCompile Include="Scenes\SceneParticlesTest.cpp" />
+    <ClCompile Include="Scenes\TexturedBP_Scene.cpp" />
+    <ClCompile Include="Scenes\Transparency_Scene.cpp" />
+    <ClCompile Include="Shaders\ShaderBase\Material.cpp" />
+    <ClCompile Include="Shaders\ShaderBase\Shader.cpp" />
+    <ClCompile Include="Shaders\ShaderBase\ShaderGroup.cpp" />
+    <ClCompile Include="Maths\AABB.cpp" />
+    <ClCompile Include="Maths\Frustum.cpp" />
+    <ClCompile Include="Maths\Plane.cpp" />
+    <ClCompile Include="Maths\Ray.cpp" />
+    <ClCompile Include="Maths\Transform.cpp" />
+    <ClCompile Include="Animation\AnimationPlayer.cpp" />
+    <ClCompile Include="Animation\AnimationData.cpp" />
+    <ClCompile Include="Datas\SkinnedObject.cpp" />
+    <ClInclude Include="Camera.h" />
+    <ClInclude Include="Clipping.h" />
+    <ClInclude Include="Core\Binning.hpp" />
+    <ClInclude Include="Core\Blending.hpp" />
+    <ClInclude Include="Core\Device.h" />
+    <ClInclude Include="Core\FrameBuffer.hpp" />
+    <ClInclude Include="Core\GraphicsContext.h" />
+    <ClInclude Include="Cubemap.h" />
+    <ClInclude Include="Datas\Color.h" />
+    <ClInclude Include="Datas\ConstantBuffers.hpp" />
+    <ClInclude Include="Datas\DrawCommand.h" />
+    <ClInclude Include="Datas\Lights\LightData.hpp" />
+    <ClInclude Include="Datas\Lights\LightHelpers.hpp" />
+    <ClInclude Include="Datas\Lights\PBRHelpers.hpp" />
+    <ClInclude Include="Datas\Mesh.h" />
+    <ClInclude Include="Datas\Morton.hpp" />
+    <ClInclude Include="Datas\Object.h" />
+    <ClInclude Include="Datas\Particle.h" />
+    <ClInclude Include="Datas\Texture.h" />
+    <ClInclude Include="Datas\Texture.inl" />
+    <ClInclude Include="Datas\Triangle.h" />
+    <ClInclude Include="engine.hpp" />
+    <ClInclude Include="Factories\BufferFactory.h" />
+    <ClInclude Include="Factories\BufferFactory.inl" />
+    <ClInclude Include="Factories\GeometryFactory.h" />
+    <ClInclude Include="Factories\ShaderFactory.h" />
+    <ClInclude Include="Factories\ShaderFactory.inl" />
+    <ClInclude Include="Factories\TextureFactory.h" />
+    <ClInclude Include="Heaps\BufferHeap.h" />
+    <ClInclude Include="Heaps\BufferHeap.inl" />
+    <ClInclude Include="Heaps\ConstantBufferHeap.h" />
+    <ClInclude Include="Heaps\RawBufferHeap.h" />
+    <ClInclude Include="Heaps\RawBufferHeap.inl" />
+    <ClInclude Include="Heaps\UAVHeap.h" />
+    <ClInclude Include="Heaps\Handle.hpp" />
+    <ClInclude Include="Heaps\Heap.h" />
+    <ClInclude Include="Heaps\Heap.inl" />
+    <ClInclude Include="Heaps\Heaps.h" />
+    <ClInclude Include="Heaps\HeapUtils.hpp" />
+    <ClInclude Include="main.h" />
+    <ClInclude Include="Maths\AABB.h" />
+    <ClInclude Include="Maths\Frustum.h" />
+    <ClInclude Include="Maths\PerlinNoise.h" />
+    <ClInclude Include="Maths\Plane.h" />
+    <ClInclude Include="Maths\Ray.h" />
+    <ClInclude Include="Maths\Transform.h" />
+    <ClInclude Include="Octree.h" />
+    <ClInclude Include="Scenes\PBR_Scene.h" />
+    <ClInclude Include="Scenes\Scene.h" />
+    <ClInclude Include="Scenes\SceneParticlesTest.h" />
+    <ClInclude Include="Scenes\TexturedBP_Scene.h" />
+    <ClInclude Include="Scenes\Transparency_Scene.h" />
+    <ClInclude Include="Shaders\ComputeShaders\FB_Fusion_CS.hpp" />
+    <ClInclude Include="Shaders\ComputeShaders\GammaCorrection_CS.hpp" />
+    <ClInclude Include="Shaders\ComputeShaders\TexCopy_CS.hpp" />
+    <ClInclude Include="Shaders\ComputeShaders\ParticleCS.hpp" />
+    <ClInclude Include="Shaders\GraphicsShaders\UnlitParticle.hpp" />
+    <ClInclude Include="Shaders\GraphicsShaders\LitC_BP_Cube.hpp" />
+    <ClInclude Include="Shaders\GraphicsShaders\LitC_BP_Transparent.hpp" />
+    <ClInclude Include="Shaders\GraphicsShaders\PBR.hpp" />
+    <ClInclude Include="Shaders\GraphicsShaders\LitT_BP_Cube.hpp" />
+    <ClInclude Include="Shaders\GraphicsShaders\UnlitSkybox.hpp" />
+    <ClInclude Include="Shaders\ShaderBase\Material.h" />
+    <ClInclude Include="Shaders\ShaderBase\Material.inl" />
+    <ClInclude Include="Shaders\ShaderBase\ResourceLayout.hpp" />
+    <ClInclude Include="Shaders\ShaderBase\Shader.h" />
+    <ClInclude Include="Shaders\ShaderBase\Shader.inl" />
+    <ClInclude Include="Shaders\ShaderBase\ShaderGroup.h" />
+    <ClInclude Include="Shaders\Shaders.h" />
+    <ClInclude Include="Shaders\GraphicsShaders\LitC.hpp" />
+    <ClInclude Include="Shaders\GraphicsShaders\LitC_BP.hpp" />
+    <ClInclude Include="Shaders\GraphicsShaders\LitT_BP.hpp" />
+    <ClInclude Include="Shaders\GraphicsShaders\UnlitC.hpp" />
+    <ClInclude Include="Shaders\GraphicsShaders\UnlitT.hpp" />
+    <ClInclude Include="Shaders\ComputeShaders\GroupDebug_CS.hpp" />
+    <ClInclude Include="stb_image.h" />
+    <ClInclude Include="Animation\AnimationPlayer.h" />
+    <ClInclude Include="Animation\AnimationData.h" />
+    <ClInclude Include="Animation\AssimpGLMHelpers.h" />
+    <ClInclude Include="Datas\SkinnedObject.h" />
+   </ItemGroup>
+   <ItemGroup>
     <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -318,6 +423,8 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Shaders\GraphicsShaders\UnlitParticle.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="Shaders\GraphicsShaders\UnlitSkybox.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>

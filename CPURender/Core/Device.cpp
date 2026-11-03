@@ -22,7 +22,7 @@ Device::Device() : m_ctx()
 	m_defaultFB.height = HEIGHT;
 	m_defaultFB.gBuffer[0] = m_ctx.textureHeap.Create<Texture>(WIDTH, HEIGHT, Texture::RGBA32, Texture::MORTON, Color::WHITE);
 	m_defaultFB.depthBuffer = m_ctx.textureHeap.Create<Texture>(WIDTH, HEIGHT, Texture::R32F, Texture::MORTON, Color::BLACK);
-	m_defaultFB.clearColor = vec4(0.0f, 0.0f, 0.0f, 1.0f);
+	m_defaultFB.clearColor = vec4(0.f, 0.f, 0.f, 1.0f);
 	
 	m_perPassCB = m_ctx.constantBufferHeap.Create(sizeof(PerPassCB));
 	m_lightCB = m_ctx.constantBufferHeap.Create(sizeof(LightPassCB));
@@ -69,11 +69,11 @@ void Device::Clear(FrameBuffer _fb, ClearFlags _flags)
 	depth->Clear(glm::vec4(1.0f));
 }
 
-void Device::RegisterCommand(Mesh const& _m, glm::mat4x4 _world, MaterialData const* _mat)
+void Device::RegisterCommand(Mesh const& _m, glm::mat4x4 _world, MaterialData const* _mat, std::vector<glm::mat4x4> _finalBoneMatrices)
 {
 	assert(m_hasOpenPass == true && "Can't push command into close pass queue");
 	
-	DrawCommand d = { _m, _world, _mat };
+	DrawCommand d = { _m, _world, _mat, _finalBoneMatrices };
 	m_pendingPasses.back().cmds.push_back(d);
 }
 
@@ -189,7 +189,12 @@ void Device::ExecCommand(DrawCommand const& _cmd)
 	PerObjectCB cb;
 	cb.model = _cmd.world;
 	cb.normalMatrix = glm::transpose(glm::inverse(cb.model));
-	
+
+	if (!_cmd.finalBoneMatrices.empty())
+	{
+		memcpy(cb.finalBonesMatrices, _cmd.finalBoneMatrices.data(), sizeof(glm::mat4x4) * MAX_BONES);
+	}
+
 	m_ctx.constantBufferHeap.Write<PerObjectCB>(m_perObjectCB, cb);
 	
 	ShaderResources res;
@@ -481,7 +486,7 @@ void Device::RasterStep(ShaderStages _s)
 						continue;
 					
 					glm::vec4 src = _s.ps->Execute(px);
-					if (src.a <= 0.1f)
+					if (src.a <= 1e-8f)
 						continue;
 					
 					glm::vec4 dest = fb->Load(x, y);

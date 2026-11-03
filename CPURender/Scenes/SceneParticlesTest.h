@@ -25,8 +25,10 @@ private:
     LightData m_lightData;
     Material m_unlit;
 
-    Object* obj = nullptr;
-    ParticleEmitter fire;
-    ParticleEmitter rain;
+    Material model_mat;
+    Material hand_mat;
+
+    SkinnedObject* obj = nullptr;
+    ParticleEmitter* fire = nullptr;
 };
 

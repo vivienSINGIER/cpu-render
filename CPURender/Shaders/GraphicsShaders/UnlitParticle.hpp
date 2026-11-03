@@ -79,12 +79,13 @@ class UnlitParticle_PS : public PixelShader
 {
 
 public:
-    struct ParticleColor
+    struct ParticleCB
     {
-        glm::vec4 color;
+        glm::vec4 diffuseAlbedo;
     };
 
-    SHADER_CB(ParticleColor, pcolor, CB_CUSTOM)
+    SHADER_CB(ParticleCB, pcolor, CB_CUSTOM)
+    SHADER_TEX_OPT(diffuse, 0)
 
     UnlitParticle_PS(GraphicsContext* _ctx) : PixelShader(_ctx) {}
 
@@ -93,7 +94,13 @@ public:
         if (_in.color.a < 0.f)
             return {};
 
-        return pcolor().color * _in.color;
+        glm::vec4 albedo;
+        if (Has_diffuse())
+            albedo = Sample_Grad_diffuse(_in.uv, _in.uvDdx, _in.uvDdy) * pcolor().diffuseAlbedo;
+        else
+            albedo = _in.color * pcolor().diffuseAlbedo;
+
+        return albedo;
     }
 };
 

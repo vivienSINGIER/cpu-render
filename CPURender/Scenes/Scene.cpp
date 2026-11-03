@@ -25,11 +25,11 @@ Scene::Scene() : m_octTree(1'000.f, 3, 8)
 
 Scene::~Scene()
 {
-	for (Object* o : m_dynamic_objects)
+	for (IObject* o : m_dynamic_objects)
 	{
 		delete o;
 	}
-	for (Object* o : m_static_objects)
+	for (IObject* o : m_static_objects)
 	{
 		delete o;
 	}
@@ -52,13 +52,22 @@ void Scene::Draw(Device* _pDevice)
 
 void Scene::DrawObjects(Device* _device, Frustum const& _frustum, uint8_t _drawMask)
 {
-	std::vector<Object*> to_draw = {};
+	std::vector<IObject*> to_draw = {};
 
 	to_draw = m_octTree.GetDatasInFrustum(_frustum);
 
-	for (Object* o : to_draw)
+	for (IObject* o : to_draw)
 	{
-		if(_drawMask & o->drawMask) _device->RegisterCommand(o->mesh, o->transform.GetMatrix(), o->mat);
+		if (_drawMask & o->drawMask)
+		{
+			if (o->obj_type == ObjectType::SKINNED)
+			{
+				SkinnedObject* skin = (SkinnedObject*)o;
+				_device->RegisterCommand(skin->mesh, skin->transform.GetMatrix(), skin->mat, skin->animator.GetFinalBoneMatrices());
+			}
+			else
+				_device->RegisterCommand(o->mesh, o->transform.GetMatrix(), o->mat);
+		}
 	}
 }
 
@@ -79,7 +88,7 @@ void Scene::Update(float dt)
 	if (dirty_static)
 	{
 		dirty_static = false;                                                                                                                                                                                                                             
-		for (Object* o : m_static_objects)                                                                                                                                                                                                                
+		for (IObject* o : m_static_objects)                                                                                                                                                                                                                
 		{                                                                                                                                                                                                                                                 
 			o->transform.UpdateMatrix();                                                                                                                                                                                                              
 			o->mesh.world_box = o->mesh.local_box.Transformed(o->transform.GetMatrix());                                                                                                                                                              
@@ -88,11 +97,17 @@ void Scene::Update(float dt)
 	}
 
 	bool dirty = false;
-	for (Object* o : m_dynamic_objects)
+	for (IObject* o : m_dynamic_objects)
 	{
+		if (o->obj_type == ObjectType::SKINNED)
+		{
+			SkinnedObject* skin = (SkinnedObject*)o;
+			skin->animator.UpdateAnimation(dt);
+		}
+
 		if (o->transform.IsWorldDirty() == false)
 			continue;
-
+	
 		dirty = true;
 		o->transform.UpdateMatrix();
 		o->mesh.world_box = o->mesh.local_box.Transformed(o->transform.GetMatrix());
@@ -105,21 +120,7 @@ void Scene::Update(float dt)
 	}
 }
 
-std::vector<Object*>* Scene::GetObjects(ObjectType type)
-{
-	switch (type)
-	{
-	case STATIC:
-		return &m_static_objects;
-
-	case DYNAMIC:
-		return &m_dynamic_objects;
-	}
-
-	return nullptr;
-}
-
-Object* Scene::CreateObject(ObjectType type)
+Object* Scene::CreateObject(UpdateObjectType type)
 {
 	Object* o = new Object();
 
@@ -127,7 +128,7 @@ Object* Scene::CreateObject(ObjectType type)
 	{
 	case STATIC:
 		o->id = m_static_objects.size();
-		o->type = STATIC;
+		o->update_type = STATIC;
 		m_static_objects.push_back(o);
 
 		dirty_static = true;
@@ -136,10 +137,18 @@ Object* Scene::CreateObject(ObjectType type)
 
 	case DYNAMIC:
 		o->id = m_dynamic_objects.size();
-		o->type = DYNAMIC;
+		o->update_type = DYNAMIC;
 		m_dynamic_objects.push_back(o);
 		break;
 	}
+
+	return o;
+}
+
+SkinnedObject* Scene::CreateSkinnedObject(const std::string& path)
+{
+	SkinnedObject* o = new SkinnedObject(path);
+	m_dynamic_objects.push_back(o);
 
 	return o;
 }
@@ -149,23 +158,23 @@ void Scene::RemoveObject(Object* o)
 	if (o == nullptr)
 		return;
 
-	if (o->type == STATIC)
+	if (o->update_type == STATIC)
 	{
-		Object* o2 = m_static_objects.back();
-		o2->id = o->id;
+		IObject* o = m_static_objects.back();
+		o->id = o->id;
 
-		m_static_objects[o->id] = o2;
+		m_static_objects[o->id] = o;
 		m_static_objects.pop_back();
 
 		dirty_static = true;
 		obj_id--;
 	}
-	else if (o->type == DYNAMIC)
+	else if (o->update_type == DYNAMIC)
 	{
-		Object* o2 = m_dynamic_objects.back();
-		o2->id = o->id;
+		IObject* o = m_dynamic_objects.back();
+		o->id = o->id;
 
-		m_dynamic_objects[o->id] = o2;
+		m_dynamic_objects[o->id] = o;
 		m_dynamic_objects.pop_back();
 		obj_id--;
 	}

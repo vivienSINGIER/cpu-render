@@ -19,7 +19,7 @@ public:
     Handle GetTextureHandle(std::string const& _name);
     Texture* GetTexture(std::string const& _name);
     Texture* GetTexture(Handle _h);
-    
+
     bool HasTexture(std::string const& _name);
     
 private:
@@ -27,7 +27,7 @@ private:
     GraphicsContext* m_ctx;
     
     std::unordered_map<std::string, Handle> m_library;
-    
+
     TextureFactory(GraphicsContext* _pContext);
     static void Init(GraphicsContext* _pContext);
     

@@ -14,6 +14,8 @@
 
 #include "../Core/Device.h"
 
+#include "../Factories/TextureFactory.h"
+
 ParticleManager* ParticleManager::m_pInstance = nullptr;
 
 ParticleManager* ParticleManager::Instance()
@@ -27,13 +29,101 @@ ParticleManager* ParticleManager::Instance()
 	return m_pInstance;
 }
 
-void ParticleManager::Spawn(glm::vec3 _center, ParticleDesc _desc)
+std::string ParticleManager::BindSlot(std::string _texture_name, std::string const& _path, bool _isSrgb, bool _genMips)
 {
-	if (m_uav_buffer.IsValid() == false)
+	Handle h = TextureFactory::Instance()->CreateTexture(_texture_name, _path, _isSrgb, _genMips);
+	BindSlot(_texture_name, h);
+
+	return _texture_name;
+}
+
+void ParticleManager::BindSlot(std::string texture_name, Handle tex)
+{
+	auto id = texture_name;
+	m_textures[id] = tex;
+
+	if (m_uav_buffers.contains(id))
+		assert(false && "This ParticleManager slot has already been binded");
+
+	m_uav_buffers[id] = BufferFactory::Instance()->CreateUAVBuffer<UavParticle>(MAX_PARTICLES);
+	m_max_particles[id] = MAX_PARTICLES;
+
+	m_particleMats[id] = ShaderFactory::Instance()->CreateComputeMaterial("Particle");
+	m_particleMats[id]->SetUAVBuffer(ParticleCS::UAV_SLOT_data, m_uav_buffers[id]);
+
+	m_unlitParticles[id] = ShaderFactory::Instance()->CreateMaterial("UnlitParticle");
+	m_unlitParticles[id]->SetUAVBuffer(ParticleCS::UAV_SLOT_data, m_uav_buffers[id]);
+
+	UnlitParticle_PS::ParticleCB color = { glm::vec4(1, 1, 1, 1) };
+	m_unlitParticles[id]->SetParams<UnlitParticle_PS::ParticleCB>(UnlitParticle_PS::CB_SLOT_pcolor, color);
+
+	if (tex.IsValid())
 	{
-		std::cout << "Set UAV Buffer to use ParticleManager\n";
-		return;
+		m_unlitParticles[id]->SetTexture(UnlitParticle_PS::TEX_SLOT_diffuse, tex);
 	}
+	
+	BufferFactory::Instance()->Fill(m_uav_buffers[id], UavParticle());
+
+	std::vector<Vertex> vertices;
+	std::vector<uint32_t> indices;
+
+	for (int k = 0; k < MAX_PARTICLES; k++)
+	{
+		for (int v = 0; v < 6; v++)
+		{
+			Vertex vert = Vertex();
+			vert.id = (size_t)(k * 6 + v);
+
+			switch (v)
+			{
+			case 0:
+				vert.uv = { 0.f, 1.f };
+				break;
+			case 3:
+				vert.uv = { 1.f, 0.f };
+				break;
+			case 1:
+			case 5:
+				vert.uv = { 1.f, 1.f };
+				break;
+			case 2:
+			case 4:
+				vert.uv = { 0.f, 0.f };
+				break;
+			}
+
+			vertices.push_back(vert);
+		}
+
+		indices.push_back(k * 6);
+		indices.push_back(k * 6 + 2);
+		indices.push_back(k * 6 + 1);
+
+		indices.push_back(k * 6 + 3);
+		indices.push_back(k * 6 + 1);
+		indices.push_back(k * 6 + 2);
+	}
+
+	m_meshes[id] = GeometryFactory::Instance()->CreateMesh(vertices, indices);
+}
+
+ParticleEmitter* ParticleManager::CreateEmitter(glm::vec3 _center, ParticleDesc& _desc, float _spawnDelay, std::string _texture_name)
+{
+	auto id = _texture_name;
+
+	m_emitters[id].push_back(ParticleEmitter());
+	ParticleEmitter* current = &m_emitters[id].back();
+
+	current->center = _center;
+	current->desc = _desc;
+	current->spawnDelay = _spawnDelay;
+
+	return current;
+}
+
+void ParticleManager::Spawn(glm::vec3 _center, ParticleDesc& _desc, std::string _texture_name)
+{
+	auto id = _texture_name;
 
 	//return a random val between 0 and 1
 	auto rand_ratio = [&](int i) -> float
@@ -57,7 +147,7 @@ void ParticleManager::Spawn(glm::vec3 _center, ParticleDesc _desc)
 	#pragma omp for
 	for (int i = 0; i < _desc.amount; i++)
 	{
-		int current_index = (m_freeOffset + i) % MAX_PARTICLES;
+		int current_index = (m_freeOffsets[id] + i) % MAX_PARTICLES;
 
 		UavParticle p;
 		p.pos = glm::vec3(_center.x + rand_range(i, -spawnRadius, spawnRadius), _center.y + rand_range(i, -spawnRadius, spawnRadius), _center.z + rand_range(i, -spawnRadius, spawnRadius));
@@ -76,74 +166,44 @@ void ParticleManager::Spawn(glm::vec3 _center, ParticleDesc _desc)
 		p.rotationRad = 0.f;
 		p.rotSpeed = _desc.rotationSpeed;
 
-		BufferFactory::Instance()->Write(m_uav_buffer, current_index, p);
+		BufferFactory::Instance()->Write(m_uav_buffers[id], current_index, p);
 	}
 
-	m_freeOffset = (m_freeOffset + _desc.amount) % MAX_PARTICLES;
+	m_freeOffsets[id] = (m_freeOffsets[id] + _desc.amount) % MAX_PARTICLES;
 }
 
-ParticleEmitter ParticleManager::CreateEmitter(glm::vec3 _center, ParticleDesc _desc, float _spawnDelay)
+void ParticleManager::Update(float dt)
 {
-	return ParticleEmitter(_center, _desc, _spawnDelay);
-}
-
-void ParticleManager::UpdateEmitter(ParticleEmitter& pe, float dt)
-{
-	if (pe.spawnProgress < pe.spawnDelay)
+	for (auto& [key, emitters] : m_emitters)
 	{
-		pe.spawnProgress += dt;
-		return;
-	}
+		for (auto& e : emitters)
+		{
+			if (e.spawnProgress < e.spawnDelay)
+			{
+				e.spawnProgress += dt;
+				continue;
+			}
 
-	Spawn(pe.center, pe.desc);
-	pe.spawnProgress = 0.f;
+			Spawn(e.center, e.desc, key);
+			e.spawnProgress = 0.f;
+		}
+	}
 }
 
 void ParticleManager::Draw(Device* _pDevice)
 {
-	size_t count = MAX_PARTICLES;
-	_pDevice->Dispatch(m_particleMat.get(), count / ParticleCS::GROUP_SIZE + 1, 1, 1);
-	_pDevice->RegisterCommand(m_mesh, identity.GetMatrix(), m_unlitParticle.get());
+	for (auto& [id, tex] : m_textures)
+	{
+		_pDevice->Dispatch(m_particleMats[id].get(), m_max_particles[id] / ParticleCS::GROUP_SIZE + 1, 1, 1);
+		_pDevice->RegisterCommand(m_meshes[id], identity.GetMatrix(), m_unlitParticles[id].get());
+	}
 }
 
 void ParticleManager::Init()
 {
-	UnlitParticle_PS::ParticleColor color = { glm::vec4(1, 1, 1, 1) };
-	m_uav_buffer = BufferFactory::Instance()->CreateUAVBuffer<UavParticle>(MAX_PARTICLES);
 	m_CS_handle = ShaderFactory::Instance()->CreateComputeShader<ParticleCS>();
-
-	m_particleMat = ShaderFactory::Instance()->CreateComputeMaterial("Particle");
-	m_particleMat->SetUAVBuffer(0, m_uav_buffer);
-
 	ShaderFactory::Instance()->RegisterGroup<UnlitParticle_VS, UnlitParticle_PS>("UnlitParticle");
-	m_unlitParticle = ShaderFactory::Instance()->CreateMaterial("UnlitParticle");
-	m_unlitParticle->SetUAVBuffer(0, m_uav_buffer);
-	m_unlitParticle->SetParams<UnlitParticle_PS::ParticleColor>(UnlitParticle_PS::CB_SLOT_pcolor, color);
 
-	BufferFactory::Instance()->Fill(m_uav_buffer, UavParticle());
-
-	std::vector<Vertex> vertices;
-	std::vector<uint32_t> indices;
-
-	for (int k = 0; k < MAX_PARTICLES; k++)
-	{
-		for (int v = 0; v < 6; v++)
-		{
-			Vertex vert = Vertex();
-			vert.id = (size_t)(k * 6 + v);
-
-			vertices.push_back(vert);
-		}
-
-		indices.push_back(k * 6);
-		indices.push_back(k * 6 + 2);
-		indices.push_back(k * 6 + 1);
-
-		indices.push_back(k * 6 + 3);
-		indices.push_back(k * 6 + 1);
-		indices.push_back(k * 6 + 2);
-	}
-
-	m_mesh = GeometryFactory::Instance()->CreateMesh(vertices, indices);
+	BindSlot(std::string(notex), Handle());
 }
 
