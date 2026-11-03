@@ -88,7 +88,7 @@ void Scene::Update(float dt)
 	if (dirty_static)
 	{
 		dirty_static = false;                                                                                                                                                                                                                             
-		for (Object* o : m_static_objects)                                                                                                                                                                                                                
+		for (IObject* o : m_static_objects)                                                                                                                                                                                                                
 		{                                                                                                                                                                                                                                                 
 			o->transform.UpdateMatrix();                                                                                                                                                                                                              
 			o->mesh.world_box = o->mesh.local_box.Transformed(o->transform.GetMatrix());                                                                                                                                                              
