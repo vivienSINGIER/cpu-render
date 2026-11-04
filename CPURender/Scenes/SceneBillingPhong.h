@@ -8,6 +8,10 @@
 
 #include "../Datas/Particle.h"
 
+// Blinn-Phong demo
+//  INS / DEL   : next / previous material
+//  HOME / END  : next / previous mesh
+//  Arrows      : rotate the directional light (left/right = yaw, up/down = elevation)
 class SceneBillingPhong : public Scene
 {
 protected:
@@ -17,18 +21,23 @@ protected:
     void OnDraw(Device* _pDevice) override;
 
 private:
-    std::unordered_map<std::string, Material> materials;
+    void SelectMaterial(int _index);
+    void SelectMesh(int _index);
+    MaterialData* GetOrCreateMaterial(int _index);
+
+    void UpdateLightDirection();
 
     PassDesc m_mainPass;
-
     LightData m_lightData;
-    Material m_unlit;
 
-    Material model_mat;
-    Material hand_mat;
+    std::vector<Material> m_materials;
+    std::vector<Object*>  m_meshObjects;
 
-    SkinnedObject* obj = nullptr;
+    int m_materialIndex = 0;
+    int m_meshIndex = 0;
+    
+    float m_lightYaw = 0.0f;
+    float m_lightPitch = 0.0f;
 
     bool lights_dirty = false;
 };
-

@@ -45,13 +45,11 @@ public:
 
     SHADER_CB(MaterialCB, mat, CB_CUSTOM)
         SHADER_TEX_OPT(diffuse, 0)
-        SHADER_TEX_OPT(roughness, 1)
+        SHADER_TEX_OPT(arm, 1)          // r = ambient occlusion, g = roughness, b = metalness
         SHADER_TEX_OPT(displacement, 2)
         SHADER_TEX_OPT(normal, 3)
-        SHADER_TEX_OPT(ambient, 4)
-        SHADER_TEX_OPT(metal, 5)
-        SHADER_TEX_OPT(shadow, 6)
-        SHADER_TEX_OPT(cubemap, 7)
+        SHADER_TEX_OPT(shadow, 4)
+        SHADER_TEX_OPT(cubemap, 5)
 
         LitT_BP_Cube_PS(GraphicsContext* _ctx) : PixelShader(_ctx) {}
 
@@ -104,17 +102,16 @@ public:
         else
             normalW = glm::normalize(_in.normal);
 
-        float roughnessFactor;
-        if (Has_roughness())
-            roughnessFactor = Sample_Grad_roughness(uv, _in.uvDdx, _in.uvDdy).x;
-        else
-            roughnessFactor = mat().roughness;
-
-        float metalnessFactor;
-        if (Has_metal())
-            metalnessFactor = Sample_Grad_metal(uv, _in.uvDdx, _in.uvDdy).b;
-        else
-            metalnessFactor = mat().metalness;
+        float aoFactor = 1.0f;
+        float roughnessFactor = mat().roughness;
+        float metalnessFactor = mat().metalness;
+        if (Has_arm())
+        {
+            glm::vec4 armSample = Sample_Grad_arm(uv, _in.uvDdx, _in.uvDdy);
+            aoFactor        = armSample.r;
+            roughnessFactor = armSample.g;
+            metalnessFactor = armSample.b;
+        }
 
         glm::vec4 diffuse = albedo * (1.0f - metalnessFactor);
         glm::vec3 F0 = glm::mix(mat().fresnelR0, glm::vec3(albedo), metalnessFactor);
@@ -125,9 +122,7 @@ public:
         if (Has_cubemap())
             ambientSpecular *= glm::vec3(Sample_Cube_cubemap(glm::reflect(-toEye, normalW)));
 
-        glm::vec3 ambientFactor = ambientDiffuse + ambientSpecular;
-        if (Has_ambient())
-            ambientFactor *= glm::vec3(Sample_Grad_ambient(uv, _in.uvDdx, _in.uvDdy));
+        glm::vec3 ambientFactor = (ambientDiffuse + ambientSpecular) * aoFactor;
 
         BlinnPhongData d = { diffuse, F0, shininess };
         float shadowFactor = 0.0f;
