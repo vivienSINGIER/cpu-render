@@ -33,6 +33,19 @@ public:
 			return;
 		}
 
+		if (p.destroyIfExitSpawnRadius)
+		{
+			glm::vec3 du = p.spawn_point - p.pos;
+			float sqrDistExit = glm::dot(du, du);
+
+			if (sqrDistExit > p.spawnRadius * p.spawnRadius)
+			{
+				p.lifeTime = 0.f;
+				Store_data(_id.x, p);
+				return;
+			}
+		}
+
 		if(p.speed > 0)
 			p.speed += p.acceleration * dt;
 

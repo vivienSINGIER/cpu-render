@@ -21,7 +21,9 @@ struct alignas(128) UavParticle
 	glm::vec3 dir = {0, 0, 0};
 	float speed = 0;
 
+	glm::vec3 spawn_point = { 0, 0, 0 };
 	float acceleration = 0;
+
 	float gravity = 0;
 
 	float rotSpeed = 0;
@@ -33,6 +35,8 @@ struct alignas(128) UavParticle
 	float endSize = 0;
 
 	float fadeDistance = -1.f;
+	bool destroyIfExitSpawnRadius = false;
+	float spawnRadius = 0.f;
 };
  
 struct alignas(16) ParticleDesc
@@ -61,6 +65,7 @@ struct alignas(16) ParticleDesc
 
 	//set the distance where you can no longer see the particle by fading the alpha, -1 = NO
 	float fadeDistance = -1.f;
+	bool destroyIfExitSpawnRadius = false;
 };
 
 struct ParticleEmitter
@@ -105,6 +110,8 @@ public:
 	void Draw(Device* _pDevice);
 
 private:
+	static constexpr float PI = pi<float>();
+
 	static constexpr int MAX_PARTICLES_NOTEX = 32'000;
 
 	static ParticleManager* m_pInstance;

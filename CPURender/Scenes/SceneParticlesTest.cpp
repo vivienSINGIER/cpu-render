@@ -82,22 +82,23 @@ void SceneParticlesTest::OnInit(Device* _pDevice)
 
     ParticleDesc snow;
     {
-        snow.amount = 100.f;
-        snow.spawnRadius = 15.f;
-        snow.particleBeginSize = 0.2f;
+        snow.amount = 10.f;
+        snow.spawnRadius = 2.f;
+        snow.particleBeginSize = 0.1f;
         snow.particleEndSize = 0.02f;
 
         snow.rotationSpeed = 1.f;
         snow.floorDir = glm::vec3(-0.2f, -1.f, -0.2f);
         snow.ceilDir = glm::vec3(0.2f, -1.f, 0.2f);
-        snow.minSpeed = 2.f;
-        snow.maxSpeed = 15.f;
+        snow.minSpeed = 0.5f;
+        snow.maxSpeed = 5.f;
         snow.beginColor = glm::vec4(1, 1, 1, 1.f);
         snow.endColor = glm::vec4(1, 1, 1, 1.f);
         snow.minLifeTime = 2.f;
         snow.maxLifeTime = 3.f;
 
         snow.fadeDistance = 20.f;
+        snow.destroyIfExitSpawnRadius = true;
     }
 
     ParticleEmitter* d = ParticleManager::Instance()->CreateEmitter({ 0.f, 20.f, 0 }, snow, 0.f);

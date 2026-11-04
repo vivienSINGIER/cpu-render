@@ -147,8 +147,16 @@ void ParticleManager::Spawn(glm::vec3 _center, ParticleDesc& _desc, std::string 
 	{
 		int current_index = (m_freeOffsets[id] + i) % m_max_particles[id];
 
+		//Randoms
+		float theta = rand_range(i, 0, PI);
+		float phi = rand_range(i, 0, 2.f*PI);
+
+		float r = rand_ratio(i) * _desc.spawnRadius;
+
 		UavParticle p;
-		p.pos = glm::vec3(_center.x + rand_range(i, -spawnRadius, spawnRadius), _center.y + rand_range(i, -spawnRadius, spawnRadius), _center.z + rand_range(i, -spawnRadius, spawnRadius));
+		p.pos = glm::vec3(_center.x + r*sinf(theta)*cosf(phi), _center.y + r*sinf(theta)*sinf(phi), _center.z + r*cos(theta));
+		p.spawn_point = _center;
+		p.spawnRadius = _desc.spawnRadius;
 		p.beginSize = _desc.particleBeginSize;
 		p.endSize = _desc.particleEndSize;
 
@@ -162,6 +170,7 @@ void ParticleManager::Spawn(glm::vec3 _center, ParticleDesc& _desc, std::string 
 		p.lifeTime = rand_range(i, _desc.minLifeTime, _desc.maxLifeTime);
 		p.maxLifeTime = p.lifeTime;
 		p.fadeDistance = _desc.fadeDistance;
+		p.destroyIfExitSpawnRadius = _desc.destroyIfExitSpawnRadius;
 
 		//TODO EDIT
 		p.dir = glm::normalize(glm::vec3(rand_range(i, _desc.floorDir.x, _desc.ceilDir.x), rand_range(i, _desc.floorDir.y, _desc.ceilDir.y), rand_range(i, _desc.floorDir.z, _desc.ceilDir.z)));
