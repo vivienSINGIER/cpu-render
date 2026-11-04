@@ -44,7 +44,9 @@ public:
 	
 	void SetRenderTarget(Texture* _tex);
 	void SetLightData(LightData const& _ld);
-	
+	void SetExposure(float _exposure) { m_exposure = _exposure; }
+	void SetAutoExposure(bool _enabled) { m_autoExposure = _enabled; }
+
 	FrameBuffer CreateFrameBuffer(uint32_t _w, uint32_t _h, uint32_t _colorBuffCount, bool _useDepth, glm::vec4 _clearColor = vec4(0.1f, 0.1f, 0.1f, 1.0f));
 	FrameBuffer const& GetDefaultFrameBuffer();
 
@@ -67,6 +69,7 @@ private:
 	
 	float m_adaptedLum = 0.18f;
 	float m_exposure = 1.0f;
+	bool m_autoExposure = true;
 	
 	std::vector<Vertex_OUT> m_transformed;
 	std::vector<uint8> m_visible;

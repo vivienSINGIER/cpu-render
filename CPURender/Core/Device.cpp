@@ -133,7 +133,9 @@ void Device::Present(Handle _texH)
 	
 	double logSum = 0.0;
 	int32_t count = 0;
-	float exposure = m_exposure * 0.18f / m_adaptedLum;
+	// Auto: key value 0.18 over adapted log-average luminance, gain limited so small dark objects aren't pushed to mid-grey
+	float exposure = m_autoExposure ? glm::clamp(m_exposure * 0.18f / m_adaptedLum, 0.25f, 2.0f)
+	                                : m_exposure;
 	
 #pragma omp parallel
 #pragma omp for reduction(+:logSum, count)
@@ -179,7 +181,7 @@ void Device::Present(Handle _texH)
 	{
 		float avgLum = glm::exp((float)(logSum / count));
 		m_adaptedLum += (avgLum - m_adaptedLum) * (1 - exp(-m_pendingPasses[m_activePass].desc.passData.deltaTime)); // TODO use dt
-		m_adaptedLum = glm::clamp(m_adaptedLum, 0.01f, 100.0f); // avoid extreme exposure 
+		m_adaptedLum = glm::clamp(m_adaptedLum, 0.1f, 100.0f); // avoid extreme exposure (max gain 1.8x)
 	}
 	m_pendingPasses.clear();
 }

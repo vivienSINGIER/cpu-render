@@ -15,13 +15,15 @@
 
 void SceneBillingPhong::OnInit(Device* _pDevice)
 {
-    m_lightData.lights[0] = MakeDirectionalLight({ 1.0f, -1.0f, 1.0f }, 3.f, Color::WHITE);
-    m_lightData.ambient = 0.1f;
+    m_lightData.lights[0] = MakeDirectionalLight(normalize(vec3( 1.0f, -1.0f, 1.0f )), 1.6f, Color::WHITE);
+    m_lightData.ambient = 0.4f;
 
     m_mainPass.fb = _pDevice->GetDefaultFrameBuffer();
     m_presentTarget = m_mainPass.fb.gBuffer[0];
 
     _pDevice->SetLightData(m_lightData);
+    _pDevice->SetAutoExposure(false);
+    _pDevice->SetExposure(1.0f);
 
     m_camTransform.SetPosition(glm::vec3(0.0f, 0.0f, -10.f));
 
@@ -50,7 +52,7 @@ void SceneBillingPhong::OnInit(Device* _pDevice)
 
     materials["Rock"] = std::move(rock);
     
-    Mesh m = GeometryFactory::Instance()->BuildCube();
+    Mesh m = GeometryFactory::Instance()->BuildDonut(1.5f, 0.5f, 30, 20);
     Object* floor = CreateObject(DYNAMIC);
     floor->mesh = m;
     floor->mat = materials["Rock"].get();
