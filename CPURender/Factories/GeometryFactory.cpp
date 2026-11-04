@@ -592,8 +592,10 @@ Mesh GeometryFactory::LoadMesh(std::string const& _path)
 		return Mesh{};
 	}
 
+	int lineId = 0;
 	while (1)
 	{
+		lineId++;
 		char lineHeader[128];
 		int res = fscanf_s(file, "%s", lineHeader, (unsigned)_countof(lineHeader));
 		if (res == EOF)
@@ -624,6 +626,7 @@ Mesh GeometryFactory::LoadMesh(std::string const& _path)
 			if (matches != 9)
 			{
 				printf("File can't be read by our simple parser\n");
+				printf("Line: " + lineId);
 				fclose(file);
 				return Mesh{};
 			}

@@ -121,6 +121,7 @@
     <ClCompile Include="Terrain\PerlinNoise.cpp" />
     <ClCompile Include="Terrain\TerrainGenerator.cpp" />
     <ClCompile Include="Scenes\ErosionTimelapseScene.cpp" />
+    <ClCompile Include="Scenes\SnowglobeScene.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -169,9 +170,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Factories\ShaderFactory.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Maths\PerlinNoise.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Shaders\ShaderBase\Material.cpp">
@@ -332,9 +330,6 @@
     <ClInclude Include="Maths\Frustum.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Maths\PerlinNoise.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Maths\Plane.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -479,5 +474,6 @@
     <ClInclude Include="Terrain\PerlinNoise.h" />
     <ClInclude Include="Terrain\TerrainGenerator.h" />
     <ClInclude Include="Scenes\ErosionTimelapseScene.h" />
+    <ClInclude Include="Scenes\SnowglobeScene.h" />
   </ItemGroup>
 </Project>

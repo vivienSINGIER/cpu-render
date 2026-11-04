@@ -15,6 +15,7 @@
 #include "Scenes/Transparency_Scene.h"
 #include "Scenes/Terrain_Scene.h"
 #include "Scenes/ErosionTimelapseScene.h"
+#include "Scenes/SnowglobeScene.h"
 //Students cannot change anything in this file
 
 
@@ -82,7 +83,7 @@ int main(void) {
 
     Engine engine;
     Texture frameBuffer(WIDTH, HEIGHT,  Texture::RGBA32, Texture::LINEAR);
-    engine.Init<ErosionTimelapseScene>(&frameBuffer);
+    engine.Init<SnowglobeScene>(&frameBuffer);
     
     bool isRunning = true;
     uint32_t frame = 1;
