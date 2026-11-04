@@ -97,6 +97,7 @@ void SceneParticlesTest::OnInit(Device* _pDevice)
         rain.maxLifeTime = 2.f;
 
         rain.fadeDistance = 10.f;
+        rain.fadeMinimum = 0.5f;
     }
 
     ParticleEmitter* d = ParticleManager::Instance()->CreateEmitter({ 0.f, 20.f, 0 }, rain, 0.f);
@@ -172,6 +173,10 @@ void SceneParticlesTest::OnDraw(Device* _pDevice)
     m_camera.FillData(&m_mainPass.passData);
     m_mainPass.passData.deltaTime = m_deltaTime;
     m_mainPass.passData.totalTime = m_totalTime;
+
+    m_camera.FillData(&m_particlesPass.passData);
+    m_particlesPass.passData.deltaTime = m_deltaTime;
+    m_particlesPass.passData.totalTime = m_totalTime;
    
     _pDevice->BeginPass(m_mainPass);
     DrawObjects(_pDevice, m_camera.GetFrustum());

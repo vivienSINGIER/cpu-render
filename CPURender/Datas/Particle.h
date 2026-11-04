@@ -34,6 +34,7 @@ struct alignas(16) UavParticle
 	float endSize = 0;
 	float fadeDistance = -1.f;
 
+	float fadeMinimum = 0.05f;
 	float spawnRadius = 0.f;
 
 	bool destroyIfExitSpawnRadius = false;
@@ -65,6 +66,7 @@ struct alignas(16) ParticleDesc
 
 	//set the distance where you can no longer see the particle by fading the alpha, -1 = NO
 	float fadeDistance = -1.f;
+	float fadeMinimum = 0.05f;
 	bool destroyIfExitSpawnRadius = false;
 };
 

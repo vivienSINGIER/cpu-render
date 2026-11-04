@@ -68,7 +68,8 @@ public:
 			glm::vec3 vDist = Pass().eyePos - p.pos;
 
 			float sqrDist = glm::dot(vDist, vDist);
-			alphaRatio = clamp(1.f - sqrDist / (p.fadeDistance * p.fadeDistance), 0.05f, 1.f);
+			float t = clamp(1.f - sqrDist / (p.fadeDistance * p.fadeDistance), 0.0f, 1.0f);
+			alphaRatio = p.fadeMinimum + t * (1 - p.fadeMinimum);
 			p.color.a = alphaRatio;
 			p.color.w = alphaRatio;
 		}

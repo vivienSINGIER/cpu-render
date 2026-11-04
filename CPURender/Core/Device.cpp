@@ -106,10 +106,13 @@ void Device::EndFrame()
 			m_viewport = { 0.0f, 0.0f, m_boundFB.width, m_boundFB.height };
 			Binning::InitTiles(m_tiles, m_boundFB.width, m_boundFB.height);
 			pass.desc.passData.renderTargetSize = { m_boundFB.width, m_boundFB.height };
-		
-			m_ctx.constantBufferHeap.Write<PerPassCB>(m_perPassCB, pass.desc.passData);
 			
+			m_ctx.constantBufferHeap.Write<PerPassCB>(m_perPassCB, pass.desc.passData);
 			Clear(m_boundFB, pass.desc.clearFlags);
+		}
+		else
+		{
+			m_ctx.constantBufferHeap.Write<PerPassCB>(m_perPassCB, pass.desc.passData);
 		}
 		
 		for (Command const& d : pass.cmds)

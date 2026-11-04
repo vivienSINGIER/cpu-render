@@ -170,6 +170,7 @@ void ParticleManager::Spawn(glm::vec3 _center, ParticleDesc& _desc, std::string 
 		p.lifeTime = rand_range(i, _desc.minLifeTime, _desc.maxLifeTime);
 		p.maxLifeTime = p.lifeTime;
 		p.fadeDistance = _desc.fadeDistance;
+		p.fadeMinimum = _desc.fadeMinimum;
 		p.destroyIfExitSpawnRadius = _desc.destroyIfExitSpawnRadius;
 
 		//TODO EDIT

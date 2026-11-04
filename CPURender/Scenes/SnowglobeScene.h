@@ -8,6 +8,7 @@
 #include "../Core/FrameBuffer.hpp"
 #include "../Shaders/ShaderBase/Material.h"
 #include "../Cubemap.h"
+#include "../Shaders/Shaders.h"
 
 class SnowglobeScene : public Scene
 {
@@ -23,6 +24,7 @@ private:
     void InitMaterials();
     void InitObjects();
     void CycleBlendMode(int _step);
+    void IncreaseRefraction(float _value);
 
     Cubemap m_cubemap;
 
@@ -45,6 +47,8 @@ private:
     PassDesc m_depthCopyPass;
     PassDesc m_refractionPass;
     PassDesc m_postProcPass;
+
+    LitC_BP_Transparent_PS::MaterialCB m_transparentCB;
 
     LightData m_lightData;
 };

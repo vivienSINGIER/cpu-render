@@ -4,7 +4,6 @@
 
 #include "../Factories/ShaderFactory.h"
 #include "../Factories/GeometryFactory.h"
-#include "../Shaders/Shaders.h"
 #include "../Datas/Lights/LightHelpers.hpp"
 
 enum DrawMask {
@@ -50,7 +49,7 @@ void SnowglobeScene::InitMaterials()
 {
     LitC_BP_Cube_PS::MaterialCB floorCB = { {0.5f, 0.5f, 0.1f, 1.0f}, Lighting::g_fresnelR0Templates[PLASTIC], 0.8f, 0.0f, 0.0f, 1.7f, false };
     LitC_BP_Cube_PS::MaterialCB opaqueCB = { {0.7f, 0.7f, 0.7f, 1.0f}, Lighting::g_fresnelR0Templates[PLASTIC], 0.5f, 0.0f, 0.0f, 1.7f, false };
-    LitC_BP_Transparent_PS::MaterialCB transparentCB = { {1.0f, 1.0f, 1.0f, 1.0f}, Lighting::g_fresnelR0Templates[CRYSTAL], 0.2f, 0.5f, 0.9f, 1.05f, true, {WIDTH, HEIGHT} };
+    m_transparentCB = { {1.0f, 1.0f, 1.0f, 1.0f}, Lighting::g_fresnelR0Templates[CRYSTAL], 0.2f, 0.5f, 0.9f, 1.05f, true, {WIDTH, HEIGHT} };
 
     m_postProcMat = ShaderFactory::Instance()->CreateComputeMaterial("FBFusion");
     m_postProcMat->SetRWTexture(FB_Fusion_CS::UAV_SLOT_target1, m_mainPass.fb.gBuffer[0]);
@@ -71,27 +70,28 @@ void SnowglobeScene::InitMaterials()
     m_floorMat->SetTexture(LitC_BP_Cube_PS::TEX_SLOT_cubemap, m_cubemap.GetTexture());
 
     m_transparentMat = ShaderFactory::Instance()->CreateMaterial("LitC_BP_Transparent");
-    m_transparentMat->SetParams<LitC_BP_Transparent_PS::MaterialCB>(LitC_BP_Transparent_PS::CB_SLOT_mat, transparentCB);
+    m_transparentMat->SetParams<LitC_BP_Transparent_PS::MaterialCB>(LitC_BP_Transparent_PS::CB_SLOT_mat, m_transparentCB);
     m_transparentMat->SetTexture(LitC_BP_Transparent_PS::TEX_SLOT_cubemap, m_cubemap.GetTexture());
     m_transparentMat->SetTexture(LitC_BP_Transparent_PS::TEX_SLOT_framebufferTex, m_mainPass.fb.gBuffer[0]);
     m_transparentMat->SetTexture(LitC_BP_Transparent_PS::TEX_SLOT_framebufferDepth, m_mainPass.fb.depthBuffer);
 
     ParticleDesc snow;
     {
-        snow.amount = 50.f;
-        snow.spawnRadius = 15.f;
+        snow.amount = 100.f;
+        snow.spawnRadius = 20.f;
         snow.particleBeginSize = 0.1f;
-        snow.particleEndSize = 0.05f;
+        snow.particleEndSize = 0.1f;
 
         snow.floorDir = glm::vec3(-0.1f, -1.f, -0.1f);
         snow.ceilDir = glm::vec3(0.1f, -1.f, 0.1f);
-        snow.minSpeed = 20.f;
-        snow.maxSpeed = 25.f;
+        snow.minSpeed = 4.f;
+        snow.maxSpeed = 6.f;
         snow.beginColor = glm::vec4(1, 1, 1, 1.f);
         snow.endColor = glm::vec4(1, 1, 1, 1.f);
         snow.minLifeTime = 4.f;
         snow.maxLifeTime = 4.f;
 
+        snow.fadeMinimum = 0.5f;
         snow.fadeDistance = 10.f;
         snow.destroyIfExitSpawnRadius = true;
     }
@@ -170,11 +170,21 @@ void SnowglobeScene::CycleBlendMode(int _step)
     m_mainPass.state.blendMode = (Blending::BlendMode)m_blendIndex;
 }
 
+void SnowglobeScene::IncreaseRefraction(float _value)
+{
+    m_transparentCB.refractionFactor += _value;
+    m_transparentMat->SetParams<LitC_BP_Transparent_PS::MaterialCB>(LitC_BP_Transparent_PS::CB_SLOT_mat, m_transparentCB);
+}
+
 void SnowglobeScene::OnHandleEvent(const SDL_Event& event)
 {
     if (event.type != SDL_EVENT_KEY_DOWN)
         return;
-
+    switch (event.key.scancode)
+    {
+    case SDL_SCANCODE_B: IncreaseRefraction(+0.01f); return;
+    case SDL_SCANCODE_N: IncreaseRefraction(-0.01f); return;
+    }
 }
 
 void SnowglobeScene::OnUpdate(float dt)
@@ -191,6 +201,14 @@ void SnowglobeScene::OnDraw(Device* _pDevice)
     m_camera.FillData(&m_refractionPass.passData);
     m_postProcPass.passData.deltaTime = m_deltaTime;
     m_postProcPass.passData.totalTime = m_totalTime;
+
+    //m_skyboxPass.passData.deltaTime = m_deltaTime;
+    //m_skyboxPass.passData.totalTime = m_totalTime;
+
+    m_camera.FillData(&m_particlesPass.passData);
+    m_particlesPass.passData.deltaTime = m_deltaTime;
+    m_particlesPass.passData.totalTime = m_totalTime;
+
     m_refractionPass.passData.deltaTime = m_deltaTime;
     m_refractionPass.passData.totalTime = m_totalTime;
 
