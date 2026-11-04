@@ -122,6 +122,8 @@
     <ClCompile Include="Terrain\TerrainGenerator.cpp" />
     <ClCompile Include="Scenes\ErosionTimelapseScene.cpp" />
     <ClCompile Include="Scenes\SnowglobeScene.cpp" />
+    <ClCompile Include="Scenes\SceneBillingPhong.cpp" />
+    <ClCompile Include="Scenes\SceneBlinnPhongCubeMap.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -475,5 +477,7 @@
     <ClInclude Include="Terrain\TerrainGenerator.h" />
     <ClInclude Include="Scenes\ErosionTimelapseScene.h" />
     <ClInclude Include="Scenes\SnowglobeScene.h" />
+    <ClInclude Include="Scenes\SceneBillingPhong.h" />
+    <ClInclude Include="Scenes\SceneBlinnPhongCubeMap.h" />
   </ItemGroup>
 </Project>

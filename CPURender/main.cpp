@@ -7,15 +7,17 @@
 #include <ostream>
 
 #include "engine.hpp"
+#include "Core/Device.h"
+
 #include "Scenes/TexturedBP_Scene.h"
 #include "Scenes/SceneParticlesTest.h"
-
-#include "Core/Device.h"
 #include "Scenes/PBR_Scene.h"
 #include "Scenes/Transparency_Scene.h"
 #include "Scenes/Terrain_Scene.h"
 #include "Scenes/ErosionTimelapseScene.h"
 #include "Scenes/SnowglobeScene.h"
+#include "Scenes/SceneBillingPhong.h"
+#include "Scenes/SceneBlinnPhongCubeMap.h"
 //Students cannot change anything in this file
 
 

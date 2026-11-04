@@ -29,15 +29,15 @@ ParticleManager* ParticleManager::Instance()
 	return m_pInstance;
 }
 
-std::string ParticleManager::BindSlot(std::string _texture_name, std::string const& _path, bool _isSrgb, bool _genMips)
+std::string ParticleManager::BindSlot(std::string _texture_name, std::string const& _path, int max_particles, bool _isSrgb, bool _genMips)
 {
 	Handle h = TextureFactory::Instance()->CreateTexture(_texture_name, _path, _isSrgb, _genMips);
-	BindSlot(_texture_name, h);
+	BindSlot(_texture_name, h, max_particles);
 
 	return _texture_name;
 }
 
-void ParticleManager::BindSlot(std::string texture_name, Handle tex)
+void ParticleManager::BindSlot(std::string texture_name, Handle tex, int max_particles)
 {
 	auto id = texture_name;
 	m_textures[id] = tex;
@@ -45,17 +45,15 @@ void ParticleManager::BindSlot(std::string texture_name, Handle tex)
 	if (m_uav_buffers.contains(id))
 		assert(false && "This ParticleManager slot has already been binded");
 
-	m_uav_buffers[id] = BufferFactory::Instance()->CreateUAVBuffer<UavParticle>(MAX_PARTICLES);
-	m_max_particles[id] = MAX_PARTICLES;
+	m_uav_buffers[id] = BufferFactory::Instance()->CreateUAVBuffer<UavParticle>(max_particles);
+	m_max_particles[id] = max_particles;
 
 	m_particleMats[id] = ShaderFactory::Instance()->CreateComputeMaterial("Particle");
 	m_particleMats[id]->SetUAVBuffer(ParticleCS::UAV_SLOT_data, m_uav_buffers[id]);
+	m_particleMats[id]->SetParams(ParticleCS::CB_SLOT_cb_particles, ParticleCS::ParticleCS_CB{max_particles});
 
 	m_unlitParticles[id] = ShaderFactory::Instance()->CreateMaterial("UnlitParticle");
 	m_unlitParticles[id]->SetUAVBuffer(ParticleCS::UAV_SLOT_data, m_uav_buffers[id]);
-
-	UnlitParticle_PS::ParticleCB color = { glm::vec4(1, 1, 1, 1) };
-	m_unlitParticles[id]->SetParams<UnlitParticle_PS::ParticleCB>(UnlitParticle_PS::CB_SLOT_pcolor, color);
 
 	if (tex.IsValid())
 	{
@@ -67,7 +65,7 @@ void ParticleManager::BindSlot(std::string texture_name, Handle tex)
 	std::vector<Vertex> vertices;
 	std::vector<uint32_t> indices;
 
-	for (int k = 0; k < MAX_PARTICLES; k++)
+	for (int k = 0; k < max_particles; k++)
 	{
 		for (int v = 0; v < 6; v++)
 		{
@@ -147,19 +145,32 @@ void ParticleManager::Spawn(glm::vec3 _center, ParticleDesc& _desc, std::string 
 	#pragma omp for
 	for (int i = 0; i < _desc.amount; i++)
 	{
-		int current_index = (m_freeOffsets[id] + i) % MAX_PARTICLES;
+		int current_index = (m_freeOffsets[id] + i) % m_max_particles[id];
+
+		//Randoms
+		float theta = rand_range(i, 0, PI);
+		float phi = rand_range(i, 0, 2.f*PI);
+
+		float r = rand_ratio(i) * _desc.spawnRadius;
 
 		UavParticle p;
-		p.pos = glm::vec3(_center.x + rand_range(i, -spawnRadius, spawnRadius), _center.y + rand_range(i, -spawnRadius, spawnRadius), _center.z + rand_range(i, -spawnRadius, spawnRadius));
+		p.pos = glm::vec3(_center.x + r*sinf(theta)*cosf(phi), _center.y + r*sinf(theta)*sinf(phi), _center.z + r*cos(theta));
+		p.spawn_point = _center;
+		p.spawnRadius = _desc.spawnRadius;
 		p.beginSize = _desc.particleBeginSize;
 		p.endSize = _desc.particleEndSize;
 
 		p.speed = rand_range(i, _desc.minSpeed, _desc.maxSpeed);
+		p.acceleration = _desc.acceleration;
+		p.gravity = _desc.gravity;
+
 		p.beginColor = _desc.beginColor;
 		p.endColor = _desc.endColor;
 
 		p.lifeTime = rand_range(i, _desc.minLifeTime, _desc.maxLifeTime);
 		p.maxLifeTime = p.lifeTime;
+		p.fadeDistance = _desc.fadeDistance;
+		p.destroyIfExitSpawnRadius = _desc.destroyIfExitSpawnRadius;
 
 		//TODO EDIT
 		p.dir = glm::normalize(glm::vec3(rand_range(i, _desc.floorDir.x, _desc.ceilDir.x), rand_range(i, _desc.floorDir.y, _desc.ceilDir.y), rand_range(i, _desc.floorDir.z, _desc.ceilDir.z)));
@@ -169,7 +180,7 @@ void ParticleManager::Spawn(glm::vec3 _center, ParticleDesc& _desc, std::string 
 		BufferFactory::Instance()->Write(m_uav_buffers[id], current_index, p);
 	}
 
-	m_freeOffsets[id] = (m_freeOffsets[id] + _desc.amount) % MAX_PARTICLES;
+	m_freeOffsets[id] = (m_freeOffsets[id] + _desc.amount) % m_max_particles[id];
 }
 
 void ParticleManager::Update(float dt)
@@ -204,6 +215,6 @@ void ParticleManager::Init()
 	m_CS_handle = ShaderFactory::Instance()->CreateComputeShader<ParticleCS>();
 	ShaderFactory::Instance()->RegisterGroup<UnlitParticle_VS, UnlitParticle_PS>("UnlitParticle");
 
-	BindSlot(std::string(notex), Handle());
+	BindSlot(std::string(notex), Handle(), MAX_PARTICLES_NOTEX);
 }
 

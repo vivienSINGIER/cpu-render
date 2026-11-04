@@ -149,12 +149,18 @@ glm::vec4 Texture::SampleGrad(glm::vec2 _uv, glm::vec2 _ddx, glm::vec2 _ddy) con
 {
     // footprint of the pixel in level 0 texels, each axis scaled by its own size
     vec2 size = vec2(m_width, m_height);
-    vec2 dx = _ddx * size;
-    vec2 dy = _ddy * size;
+    float lx = glm::length(_ddx * size), ly = glm::length(_ddy * size);
+    float pMax = glm::max(lx, ly), pMin = glm::max(glm::min(lx, ly), 1e-6f);
 
-    // log2(sqrt(x)) = 0.5 * log2(x), avoids the two square roots
-    float rho2 = glm::max(glm::dot(dx, dx), glm::dot(dy, dy));
-    return SampleLod(_uv, 0.5f * glm::log2(glm::max(rho2, 1e-12f)));
+    float n   = glm::min(glm::ceil(pMax / pMin), 8.0f);         // max 8x aniso
+    float lod = glm::log2(glm::max(pMax / n, 1e-6f));
+    if (n <= 1.0f) return SampleLod(_uv, lod);
+
+    vec2 axis = lx > ly ? _ddx : _ddy;
+    vec4 sum(0.0f);
+    for (int i = 0; i < (int)n; ++i)
+        sum += SampleLod(_uv + axis * ((i + 0.5f) / n - 0.5f), lod);
+    return sum / n;
 }
 
 glm::vec4 Texture::SampleNPCube(glm::vec3 _dir) const

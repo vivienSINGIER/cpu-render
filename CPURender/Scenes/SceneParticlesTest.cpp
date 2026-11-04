@@ -8,7 +8,6 @@
 #include "../Shaders/Shaders.h"
 #include "../Datas/Lights/LightHelpers.hpp"
 
-#include "../Shaders/ComputeShaders/ParticleCS.hpp"
 #include "../Factories/BufferFactory.h"
 
 #include "../Datas/SkinnedObject.h"
@@ -42,11 +41,6 @@ void SceneParticlesTest::OnInit(Device* _pDevice)
                 0.5f, 0.02f, 0.8f
     };
 
-    UnlitC_PS::UnlitColor unlit_color = { glm::vec4(0, 1, 1, 1) };
-
-    m_unlit = ShaderFactory::Instance()->CreateMaterial("UnlitC");
-    m_unlit->SetParams<UnlitC_PS::UnlitColor>(UnlitC_PS::CB_SLOT_mat, unlit_color);
-
     m_mat = ShaderFactory::Instance()->CreateMaterial("LitT_BP");
     m_mat->SetParams<LitT_BP_PS::MaterialCB>(LitT_BP_PS::CB_SLOT_mat, cb);
     m_mat->SetTexture(LitT_BP_PS::TEX_SLOT_diffuse, diff);
@@ -65,67 +59,70 @@ void SceneParticlesTest::OnInit(Device* _pDevice)
 
     ParticleDesc heartDesc;
     {
-    heartDesc.amount = 1;
-    heartDesc.spawnRadius = 0.75f;
-    heartDesc.particleBeginSize = 0.02f;
+    heartDesc.amount = 2;
+    heartDesc.spawnRadius = 0.f;
+    heartDesc.particleBeginSize = 0.03f;
     heartDesc.particleEndSize = 0.5f;
 
     heartDesc.rotationSpeed = 0.f;
-    heartDesc.floorDir = glm::vec3(-0.5f, 1.f, -0.5f);
-    heartDesc.ceilDir = glm::vec3(0.5f, 1, 0.5f);
-    heartDesc.minSpeed = 1.f;
-    heartDesc.maxSpeed = 3.f;
+    heartDesc.floorDir = glm::vec3(-0.2f, 1.f, -0.2f);
+    heartDesc.ceilDir = glm::vec3(0.2f, 1, 0.2f);
+    heartDesc.minSpeed = 15.f;
+    heartDesc.maxSpeed = 25.f;
     heartDesc.beginColor = glm::vec4(1, 0, 0, 1);
     heartDesc.endColor = glm::vec4(1, 1, 0, 1);
-    heartDesc.minLifeTime = 2.f;
-    heartDesc.maxLifeTime = 3.f;
+    heartDesc.minLifeTime = 1.f;
+    heartDesc.maxLifeTime = 2.f;
+
+    heartDesc.acceleration = -2.5f;
+    heartDesc.gravity = 9.81f;
     }
-    std::string heart = ParticleManager::Instance()->BindSlot("heartUwU", "Assets/Textures/Particles/heart.png");
+    std::string heart = ParticleManager::Instance()->BindSlot("heartUwU", "Assets/Textures/Particles/heart.png", 100);
     fire = ParticleManager::Instance()->CreateEmitter({ 0, 2.5f, 0 }, heartDesc, 0.0f, heart);
 
+    ParticleDesc rain;
+    {
+        rain.amount = 50.f;
+        rain.spawnRadius = 15.f;
+        rain.particleBeginSize = 0.1f;
+        rain.particleEndSize = 0.05f;
+
+        rain.floorDir = glm::vec3(-0.1f, -1.f, -0.1f);
+        rain.ceilDir = glm::vec3(0.1f, -1.f, 0.1f);
+        rain.minSpeed = 20.f;
+        rain.maxSpeed = 25.f;
+        rain.beginColor = glm::vec4(0, 0, 1, 1.f);
+        rain.endColor = glm::vec4(0, 0, 1, 0.f);
+        rain.minLifeTime = 1.f;
+        rain.maxLifeTime = 2.f;
+
+        rain.fadeDistance = 10.f;
+    }
+
+    ParticleEmitter* d = ParticleManager::Instance()->CreateEmitter({ 0.f, 20.f, 0 }, rain, 0.f);
+
     ///
 
-    ParticleDesc test;
-    {
-        test.amount = 5;
-        test.spawnRadius = 0.75f;
-        test.particleBeginSize = 0.1f;
-        test.particleEndSize = 0.1f;
+    //ParticleDesc r;
+    //{
+    //    r.amount = 50;
+    //    r.spawnRadius = 20.f;
+    //    r.particleBeginSize = 0.2f;
+    //    r.particleEndSize = 0.01f;
 
-        test.rotationSpeed = 10.f;
-        test.floorDir = glm::vec3(-1, -1, -1);
-        test.ceilDir = glm::vec3(1, 1, 1);
-        test.minSpeed = 0.3f;
-        test.maxSpeed = 3.f;
-        test.beginColor = glm::vec4(1, 0, 1, 1);
-        test.endColor = glm::vec4(0, 0, 1, 1);
-        test.minLifeTime = 1.f;
-        test.maxLifeTime = 2.f;
-    }
-    ParticleEmitter* d = ParticleManager::Instance()->CreateEmitter({ 0.f, 0.f, 0 }, test, 0.0f);
+    //    r.rotationSpeed = 10.f;
+    //    r.floorDir = glm::vec3(-0.25f, -1, -0.25f);
+    //    r.ceilDir = glm::vec3(0.25f, -1, 0.25f);
+    //    r.minSpeed = 15.f;
+    //    r.maxSpeed = 20.f;
+    //    r.beginColor = glm::vec4(1, 1, 1, 1);
+    //    r.endColor = glm::vec4(1, 1, 1, 1);
+    //    r.minLifeTime = 1.f;
+    //    r.maxLifeTime = 2.f;
 
-    ///
-
-    ParticleDesc r;
-    {
-        r.amount = 50;
-        r.spawnRadius = 20.f;
-        r.particleBeginSize = 0.2f;
-        r.particleEndSize = 0.01f;
-
-        r.rotationSpeed = 10.f;
-        r.floorDir = glm::vec3(-0.25f, -1, -0.25f);
-        r.ceilDir = glm::vec3(0.25f, -1, 0.25f);
-        r.minSpeed = 15.f;
-        r.maxSpeed = 20.f;
-        r.beginColor = glm::vec4(1, 1, 1, 1);
-        r.endColor = glm::vec4(1, 1, 1, 1);
-        r.minLifeTime = 1.f;
-        r.maxLifeTime = 2.f;
-
-    }
-    std::string rainbow = ParticleManager::Instance()->BindSlot("rainbow", "Assets/Textures/Particles/rainbow.png");
-    ParticleEmitter* e = ParticleManager::Instance()->CreateEmitter({ 0.f, 15.f, 0 }, r, 0.0f, rainbow);
+    //}
+    //std::string rainbow = ParticleManager::Instance()->BindSlot("rainbow", "Assets/Textures/Particles/rainbow.png");
+    //ParticleEmitter* e = ParticleManager::Instance()->CreateEmitter({ 0.f, 15.f, 0 }, r, 0.0f, rainbow);
 
 #pragma endregion PARTICLE_INIT
 
@@ -159,9 +156,6 @@ void SceneParticlesTest::OnInit(Device* _pDevice)
 
 void SceneParticlesTest::OnHandleEvent(const SDL_Event& event)
 {
-    if (event.type == SDL_EVENT_KEY_DOWN && (event.key.key == SDLK_A))
-    {
-    }
 }
 
 void SceneParticlesTest::OnUpdate(float dt)

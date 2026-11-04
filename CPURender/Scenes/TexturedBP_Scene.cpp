@@ -37,11 +37,9 @@ void TexturedBP_Scene::OnInit(Device* _pDevice)
     m_camTransform.SetPosition(glm::vec3(0.0f, 0.0f, -10.f));
 
     Handle diff = TextureFactory::Instance()->CreateTexture("dark_rock_diffuse", "Assets/Textures/DarkRock/diffuse.png", true);
-    Handle ambient = TextureFactory::Instance()->CreateTexture("dark_rock_ambient", "Assets/Textures/DarkRock/ambient.png");
     Handle normal = TextureFactory::Instance()->CreateTexture("dark_rock_normal", "Assets/Textures/DarkRock/normal.png");
-    Handle roughness = TextureFactory::Instance()->CreateTexture("dark_rock_roughness", "Assets/Textures/DarkRock/roughness.png");
     Handle displacement = TextureFactory::Instance()->CreateTexture("dark_rock_displacement", "Assets/Textures/DarkRock/displacement.png");
-    Handle metalness = TextureFactory::Instance()->CreateTexture("dark_rock_metalness", "Assets/Textures/DarkRock/arm.png");
+    Handle arm = TextureFactory::Instance()->CreateTexture("dark_rock_arm", "Assets/Textures/DarkRock/arm.png");
 
     //Handle diff = TextureFactory::Instance()->CreateTexture("dark_rock_diffuse", "Assets/Textures/Gold/diffuse.png", true);
     //Handle ambient = TextureFactory::Instance()->CreateTexture("dark_rock_ambient", "Assets/Textures/Gold/ambient.png");
@@ -71,12 +69,9 @@ void TexturedBP_Scene::OnInit(Device* _pDevice)
     m_mat = ShaderFactory::Instance()->CreateMaterial("LitT_BP_Cube");
     m_mat->SetParams<LitT_BP_Cube_PS::MaterialCB>(LitT_BP_Cube_PS::CB_SLOT_mat, cb);
     m_mat->SetTexture(LitT_BP_Cube_PS::TEX_SLOT_diffuse, diff);
-    m_mat->SetTexture(LitT_BP_Cube_PS::TEX_SLOT_ambient, ambient);
     m_mat->SetTexture(LitT_BP_Cube_PS::TEX_SLOT_normal, normal);
-    
-    m_mat->SetTexture(LitT_BP_Cube_PS::TEX_SLOT_roughness, roughness);
     m_mat->SetTexture(LitT_BP_Cube_PS::TEX_SLOT_displacement, displacement);
-    m_mat->SetTexture(LitT_BP_Cube_PS::TEX_SLOT_metal, metalness);
+    m_mat->SetTexture(LitT_BP_Cube_PS::TEX_SLOT_arm, arm);
     m_mat->SetTexture(LitT_BP_Cube_PS::TEX_SLOT_shadow, m_shadowPass.fb.depthBuffer);
     m_mat->SetTexture(LitT_BP_Cube_PS::TEX_SLOT_cubemap, cubemap.GetTexture());
 	

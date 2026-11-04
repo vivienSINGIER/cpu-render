@@ -8,9 +8,7 @@
 #include "../Core/FrameBuffer.hpp"
 #include "../Maths/Transform.h"
 
-#define MAX_PARTICLES 16'000
-
-struct alignas(128) UavParticle
+struct alignas(16) UavParticle
 {
 	glm::vec3 pos = {0, 0, 0};
 	float rotationRad = 0;
@@ -23,13 +21,22 @@ struct alignas(128) UavParticle
 	glm::vec3 dir = {0, 0, 0};
 	float speed = 0;
 
+	glm::vec3 spawn_point = { 0, 0, 0 };
+	float acceleration = 0;
+
+	float gravity = 0;
 	float rotSpeed = 0;
 	float maxLifeTime = 0.001f;
 	float lifeTime = 0;
-	float size = 0;
 
+	float size = 0;
 	float beginSize = 0;
 	float endSize = 0;
+	float fadeDistance = -1.f;
+
+	float spawnRadius = 0.f;
+
+	bool destroyIfExitSpawnRadius = false;
 };
  
 struct alignas(16) ParticleDesc
@@ -51,6 +58,14 @@ struct alignas(16) ParticleDesc
 	float rotationSpeed = 0.f;
 	float minSpeed = 0.25f;
 	float maxSpeed = 1.f;
+
+	//speed that will be added each Update
+	float acceleration = 0.f;
+	float gravity = 0;
+
+	//set the distance where you can no longer see the particle by fading the alpha, -1 = NO
+	float fadeDistance = -1.f;
+	bool destroyIfExitSpawnRadius = false;
 };
 
 struct ParticleEmitter
@@ -85,7 +100,7 @@ public:
 	//floorDir et Ceildir are the limits of the random from each member of the vec3, example : if (-1, -1, -1) and (1, 1, 1) each value will be betweeen -1 and 1
 	void Spawn(glm::vec3 _center, ParticleDesc& _desc, std::string texture_name = notex);
 
-	std::string BindSlot(std::string _texture_name, std::string const& _path, bool _isSrgb = false, bool _genMips = true);
+	std::string BindSlot(std::string _texture_name, std::string const& _path, int max_particles, bool _isSrgb = false, bool _genMips = true);
 
 	ParticleEmitter* CreateEmitter(glm::vec3 _center, ParticleDesc& _desc, float _spawnDelay, std::string texture_name = notex);
 
@@ -93,7 +108,12 @@ public:
 
 	//Recommended to create a Particle Pass before with isCompute = true
 	void Draw(Device* _pDevice);
+
 private:
+	static constexpr float PI = pi<float>();
+
+	static constexpr int MAX_PARTICLES_NOTEX = 32'000;
+
 	static ParticleManager* m_pInstance;
 
 	std::unordered_map<std::string, Handle> m_textures;
@@ -117,5 +137,5 @@ private:
 
 	void Init();
 
-	void BindSlot(std::string texture_name, Handle tex);
+	void BindSlot(std::string texture_name, Handle tex, int max_particles);
 };
