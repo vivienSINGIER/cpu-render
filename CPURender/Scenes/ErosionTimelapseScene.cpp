@@ -8,8 +8,8 @@
 
 void ErosionTimelapseScene::InitLightScene()
 {
-    m_lightData.lights[0] = MakeDirectionalLight({ 1.0f, -1.0f, 1.0f }, 10.0f, Color::WHITE);
-    m_lightData.ambient = 0.0f;
+    m_lightData.lights[0] = MakeDirectionalLight({ 1.0f, -1.0f, 1.0f }, 2.0f, Color::WHITE);
+    m_lightData.ambient = 0.2f;
 }
 
 void ErosionTimelapseScene::OnInit(Device* _pDevice)
