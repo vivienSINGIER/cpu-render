@@ -9,6 +9,8 @@
 #include "../Terrain/TerrainGenerator.h"
 #include "../Terrain/Erosion.h"
 
+#include "../Cubemap.h"
+
 class Terrain_Scene : public Scene
 {
 protected:
@@ -17,6 +19,8 @@ protected:
     void OnUpdate(float dt) override;
     void OnDraw(Device* _pDevice) override;
 
+    void SetSkybox(Cubemap _cubemap);
+    
 private:
     void InitLightScene();
     void RegenerateTerrain();
@@ -33,12 +37,15 @@ private:
     bool m_terrainDirty = false;
     Object* m_terrain = nullptr;
     
+    Object* skyboxObject = nullptr;
+    Material m_skyboxMat;
+    
     Object* m_water = nullptr;
     Material m_waterMaterial;
 
     Material m_mat;
 
-    PassDesc m_shadowPass;
+    PassDesc m_skyboxPass;
     PassDesc m_mainPass;
     PassDesc m_waterPass;
 

@@ -5,57 +5,30 @@
 #include "../ShaderBase/Shader.h"
 
 #include "../../main.h"
+#include "../../Maths/WaveSim.hpp"
+
+// CPU friendly SEASCAPE shader implementation
 
 class Water_VS : public VertexShader
 {
 public:
     Water_VS(GraphicsContext* _ctx) : VertexShader(_ctx) {}  
     
-    struct WaveCB
-    {
-        vec4 waves[4];  // xy -> direction | z -> steepness | w = wavelength
-        uint32 waveCount = 0;
-    };
-    
-    SHADER_CB(WaveCB, waves, CB_CUSTOM + 1)
+    SHADER_CB(WaveSim::SeaParams, waves, CB_CUSTOM + 1)
+    SHADER_TEX(seaBase, 2)
     
     Vertex_OUT Execute(Vertex const& _in) const override
     {
-        // Gerstner waves
+        Vertex_OUT v;
         
         vec3 p = vec3(Object().model * vec4(_in.position, 1.0f));
-        vec3 grid = p;
-        vec3 tangent = vec3(1, 0, 0);
-        vec3 binormal = vec3(0, 0, 1);
-        float t = Pass().totalTime;
-        
-        for (uint32 i = 0; i < waves().waveCount; i++)
-        {
-            vec4 w = waves().waves[i];
-            vec2 d = normalize(vec2(w.x, w.y));
-            float s = w.z;
-            float k = 2.0f * glm::pi<float>() / w.w; // wave number
-            float c = glm::sqrt(9.8f / k); // phase speed
-            float f = k * (glm::dot(d, vec2(grid.x, grid.z)) - c * t);
-            float a = s / k;
-            
-            float sf = glm::sin(f);
-            float cf = glm::cos(f);
-            p.x += d.x * a * cf;
-            p.y += a * sf;
-            p.z += d.y * a * cf;
-            
-            tangent  += vec3(-d.x * d.x * s * sf, d.x * s * cf, -d.x * d.y * s * sf);
-            binormal += vec3(-d.x * d.y * s * sf, d.y * s * cf, -d.y * d.y * s * sf);
-        }
-        
-        Vertex_OUT v;
+        vec3 hs = WaveSim::SeaHeight(*this, 2, { p.x, p.z }, Pass().totalTime, 3, 0.0f, waves());
+        p.y += hs.y;
         v.posModel = vec4(p, 1.0f);
+        v.normal = glm::normalize(vec3(-hs.y, 1.0f, -hs.z));
         v.posH = v.posModel * Pass().viewProj;
-        v.normal = glm::normalize(glm::cross(binormal, tangent));
-        v.tangent = glm::normalize(tangent);
+        v.posLightSpace = v.posModel * Pass().lightSpace;
         v.uv = _in.uv;
-        v.color = _in.color;
         return v;
     }
     
@@ -80,9 +53,13 @@ public:
     };
     
     SHADER_CB(WaterMat, mat, CB_CUSTOM)
+    SHADER_CB(WaveSim::SeaParams, waves, CB_CUSTOM + 1)
     
     SHADER_TEX(depth, 0)
     SHADER_TEX(screen, 1)
+    SHADER_TEX(seaBase, 2)
+    
+    SHADER_TEX(envCubeMap, 3)
     
     vec4 Execute(Vertex_OUT const& _in) const override
     {
@@ -101,17 +78,40 @@ public:
         float fog = 1.0f - glm::exp(-mat().fogDensity * viewDist);
         col = mix(col, mat().waterFogColor, fog);
         
-        vec3 N = glm::normalize(_in.normal);
-        vec3 toEye = glm::normalize(Pass().eyePos - surfacePos);
+        vec3 toEye = Pass().eyePos - surfacePos;
+        float dist  = glm::length(toEye);
+        vec3  V     = toEye / dist;
         
-        Lighting::BlinnPhongData bp = {                                                                                                                                                                                              
-            vec4(0.0f),                                                                                                                                               
-            Lighting::g_fresnelR0Templates[Lighting::WATER],                                                                                                                                                          
-            0.95f                                                                                                                                            
-        };  
+        float pixelAngle = 2.0f * glm::tan(0.25 * glm::pi<float>() / 2.0f) / HEIGHT;
+        float eps = glm::max(dist * pixelAngle * 2.0f, 0.05f);   // ~2 pixels in world units
         
-        vec3 spec = vec3(ComputeLighting(Light(), bp, surfacePos, N, toEye, 0.0f));
-        col += spec;
+        float h0 = SeaHeight(*this, 2, vec2(surfacePos.x,       surfacePos.z      ), Pass().totalTime, 5, _in.uvDdx, _in.uvDdy, waves()).x;
+        float hx = SeaHeight(*this, 2, vec2(surfacePos.x + eps, surfacePos.z      ), Pass().totalTime, 5, _in.uvDdx, _in.uvDdy, waves()).x;
+        float hz = SeaHeight(*this, 2, vec2(surfacePos.x,       surfacePos.z + eps), Pass().totalTime, 5, _in.uvDdx, _in.uvDdy, waves()).x;
+
+        vec3 N = glm::normalize(vec3(-(hx - h0) / eps, 1.0f, -(hz - h0) / eps));
+        float slope    = glm::length(vec3(-(hx - h0) / eps, 1.0f, -(hz - h0) / eps));
+        
+        vec3 R = glm::reflect(-V, N);
+        R.y = glm::abs(R.y);
+        R = glm::normalize(R);
+        
+        float rough    = glm::clamp(dist / 400.0f + slope * 0.5f, 0.0f, 1.0f);
+        float cubeLod  = 5.0f * rough;
+        vec3 refl = Sample_Cube_Lod_envCubeMap(R, cubeLod);
+        
+        float NdotV = max(dot(N, V), 1e-3f);
+        vec3 F0 = Lighting::g_fresnelR0Templates[Lighting::WATER];
+        vec3 F = Lighting::fresnelSchlick(NdotV, F0);
+        
+        Lighting::BlinnPhongData bp = {
+            vec4(0.0f),
+            F0,
+            0.95f
+        };
+        
+        vec3 spec = vec3(ComputeLighting(Light(), bp, surfacePos, N, V, 0.0f));
+        col = mix(col, refl, F) + spec;
         
         return vec4(col, 1.0f);
     }

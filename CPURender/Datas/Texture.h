@@ -38,8 +38,8 @@ public:
     glm::vec4 SampleLod(glm::vec2 uv, float _lod) const;
     glm::vec4 SampleGrad(glm::vec2 _uv, glm::vec2 _ddx, glm::vec2 _ddy) const; // lod from screen space uv derivatives
     
-    glm::vec4 SampleNPCube(glm::vec3 _dir) const; 
-    glm::vec4 SampleNPCubeLod(glm::vec3 _dir, float _lod) const;
+    glm::vec4 SampleCube(glm::vec3 _dir) const; 
+    glm::vec4 SampleCubeLod(glm::vec3 _dir, float _lod) const;
     
     // vec4 is always (r, g, b, a)
     glm::vec4   Load(uvec2 _c) const;
