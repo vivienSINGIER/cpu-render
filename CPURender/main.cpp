@@ -16,6 +16,7 @@
 #include "Scenes/Terrain_Scene.h"
 
 #include "Scenes/SceneBillingPhong.h"
+#include "Scenes/SceneBlinnPhongCubeMap.h"
 //Students cannot change anything in this file
 
 
@@ -83,7 +84,7 @@ int main(void) {
 
     Engine engine;
     Texture frameBuffer(WIDTH, HEIGHT,  Texture::RGBA32, Texture::LINEAR);
-    engine.Init<SceneParticlesTest>(&frameBuffer);
+    engine.Init<SceneBlinnPhongCubeMap>(&frameBuffer);
     
     bool isRunning = true;
     uint32_t frame = 1;

@@ -53,7 +53,7 @@ namespace
     }
 }
 
-void SceneBillingPhong::OnInit(Device* _pDevice)
+void SceneBlinnPhong::OnInit(Device* _pDevice)
 {
     m_lightYaw = glm::atan(-1.0f, -1.0f);
     m_lightPitch = glm::asin(1.0f / glm::sqrt(3.0f));
@@ -95,7 +95,7 @@ void SceneBillingPhong::OnInit(Device* _pDevice)
     SelectMesh(0);
 }
 
-MaterialData* SceneBillingPhong::GetOrCreateMaterial(int _index)
+MaterialData* SceneBlinnPhong::GetOrCreateMaterial(int _index)
 {
     if (m_materials[_index])
         return m_materials[_index].get();
@@ -120,7 +120,7 @@ MaterialData* SceneBillingPhong::GetOrCreateMaterial(int _index)
     return m_materials[_index].get();
 }
 
-void SceneBillingPhong::SelectMaterial(int _index)
+void SceneBlinnPhong::SelectMaterial(int _index)
 {
     m_materialIndex = Wrap(_index, MATERIAL_COUNT);
     MaterialData* mat = GetOrCreateMaterial(m_materialIndex);
@@ -131,7 +131,7 @@ void SceneBillingPhong::SelectMaterial(int _index)
     std::cout << "Material : " << g_materials[m_materialIndex].folder << "\n";
 }
 
-void SceneBillingPhong::SelectMesh(int _index)
+void SceneBlinnPhong::SelectMesh(int _index)
 {
     m_meshIndex = Wrap(_index, (int)m_meshObjects.size());
 
@@ -139,7 +139,7 @@ void SceneBillingPhong::SelectMesh(int _index)
         m_meshObjects[i]->drawMask = (i == (size_t)m_meshIndex) ? 0b1111'1111 : 0;
 }
 
-void SceneBillingPhong::UpdateLightDirection()
+void SceneBlinnPhong::UpdateLightDirection()
 {
     glm::vec3 toLight = {
         glm::cos(m_lightPitch) * glm::sin(m_lightYaw),
@@ -150,7 +150,7 @@ void SceneBillingPhong::UpdateLightDirection()
     lights_dirty = true;
 }
 
-void SceneBillingPhong::OnHandleEvent(const SDL_Event& event)
+void SceneBlinnPhong::OnHandleEvent(const SDL_Event& event)
 {
     if (event.type != SDL_EVENT_KEY_DOWN || event.key.repeat)
         return;
@@ -165,7 +165,7 @@ void SceneBillingPhong::OnHandleEvent(const SDL_Event& event)
     }
 }
 
-void SceneBillingPhong::OnUpdate(float dt)
+void SceneBlinnPhong::OnUpdate(float dt)
 {
     bool const* keys = SDL_GetKeyboardState(nullptr);
 
@@ -180,7 +180,7 @@ void SceneBillingPhong::OnUpdate(float dt)
     UpdateLightDirection();
 }
 
-void SceneBillingPhong::OnDraw(Device* _pDevice)
+void SceneBlinnPhong::OnDraw(Device* _pDevice)
 {
     if (lights_dirty)
     {

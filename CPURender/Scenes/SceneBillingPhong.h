@@ -12,7 +12,7 @@
 //  INS / DEL   : next / previous material
 //  HOME / END  : next / previous mesh
 //  Arrows      : rotate the directional light (left/right = yaw, up/down = elevation)
-class SceneBillingPhong : public Scene
+class SceneBlinnPhong : public Scene
 {
 protected:
     void OnInit(Device* _pDevice) override;
