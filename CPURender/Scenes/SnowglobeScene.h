@@ -41,6 +41,7 @@ private:
     int m_blendIndex = Blending::ALPHA;
     PassDesc m_skyboxPass;
     PassDesc m_mainPass;
+    PassDesc m_particlesPass;
     PassDesc m_depthCopyPass;
     PassDesc m_refractionPass;
     PassDesc m_postProcPass;

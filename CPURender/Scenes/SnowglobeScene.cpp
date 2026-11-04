@@ -33,6 +33,10 @@ void SnowglobeScene::InitPassDesc(Device* _pDevice)
     m_mainPass.state.blendMode = Blending::BlendMode::OPAQUE;
     m_mainPass.state.cullMode = CullMode::BACK;
 
+    m_particlesPass.fb = _pDevice->GetDefaultFrameBuffer();
+    m_particlesPass.isCompute = true;
+    m_particlesPass.state.blendMode = Blending::ALPHA;
+
     m_refractionPass.fb = refractedFB;
     m_refractionPass.state.blendMode = Blending::BlendMode::OPAQUE;
     m_refractionPass.state.cullMode = CullMode::BACK;
@@ -71,6 +75,27 @@ void SnowglobeScene::InitMaterials()
     m_transparentMat->SetTexture(LitC_BP_Transparent_PS::TEX_SLOT_cubemap, m_cubemap.GetTexture());
     m_transparentMat->SetTexture(LitC_BP_Transparent_PS::TEX_SLOT_framebufferTex, m_mainPass.fb.gBuffer[0]);
     m_transparentMat->SetTexture(LitC_BP_Transparent_PS::TEX_SLOT_framebufferDepth, m_mainPass.fb.depthBuffer);
+
+    ParticleDesc snow;
+    {
+        snow.amount = 50.f;
+        snow.spawnRadius = 15.f;
+        snow.particleBeginSize = 0.1f;
+        snow.particleEndSize = 0.05f;
+
+        snow.floorDir = glm::vec3(-0.1f, -1.f, -0.1f);
+        snow.ceilDir = glm::vec3(0.1f, -1.f, 0.1f);
+        snow.minSpeed = 20.f;
+        snow.maxSpeed = 25.f;
+        snow.beginColor = glm::vec4(1, 1, 1, 1.f);
+        snow.endColor = glm::vec4(1, 1, 1, 1.f);
+        snow.minLifeTime = 4.f;
+        snow.maxLifeTime = 4.f;
+
+        snow.fadeDistance = 10.f;
+        snow.destroyIfExitSpawnRadius = true;
+    }
+    ParticleEmitter* emitter = ParticleManager::Instance()->CreateEmitter({ 0.f, 0.f, 0 }, snow, 0.0f);
 }
 
 void SnowglobeScene::InitObjects()
@@ -154,6 +179,7 @@ void SnowglobeScene::OnHandleEvent(const SDL_Event& event)
 
 void SnowglobeScene::OnUpdate(float dt)
 {
+    ParticleManager::Instance()->Update(dt);
 }
 
 void SnowglobeScene::OnDraw(Device* _pDevice)
@@ -179,6 +205,10 @@ void SnowglobeScene::OnDraw(Device* _pDevice)
         _pDevice->RegisterCommand(skyboxObject->mesh, skyboxObject->transform.GetMatrix(), skyboxObject->mat);
         _pDevice->EndPass();
     }
+
+    _pDevice->BeginPass(m_particlesPass);
+    ParticleManager::Instance()->Draw(_pDevice);
+    _pDevice->EndPass();
 
     _pDevice->BeginPass(m_depthCopyPass);
     _pDevice->Dispatch(m_depthCopyMat.get(), (uint32_t)ceil(WIDTH / 32.0f), (uint32_t)ceil(HEIGHT / 32.0f), 1);
