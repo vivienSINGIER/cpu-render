@@ -97,7 +97,7 @@ void SceneParticlesTest::OnInit(Device* _pDevice)
         snow.floorDir = glm::vec3(-0.2f, -1.f, -0.2f);
         snow.ceilDir = glm::vec3(0.2f, -1.f, 0.2f);
         snow.minSpeed = 2.f;
-        snow.maxSpeed = 30.f;
+        snow.maxSpeed = 15.f;
         snow.beginColor = glm::vec4(1, 1, 1, 1.f);
         snow.endColor = glm::vec4(1, 1, 1, 1.f);
         snow.minLifeTime = 2.f;
