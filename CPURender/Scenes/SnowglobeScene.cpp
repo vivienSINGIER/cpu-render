@@ -188,6 +188,12 @@ void SnowglobeScene::OnDraw(Device* _pDevice)
     m_mainPass.passData.deltaTime = m_deltaTime;
     m_mainPass.passData.totalTime = m_totalTime;
 
+    m_skyboxPass.passData.deltaTime = m_deltaTime;
+    m_skyboxPass.passData.totalTime = m_totalTime;
+
+    m_particlesPass.passData.deltaTime = m_deltaTime;
+    m_particlesPass.passData.totalTime = m_totalTime;
+
     m_camera.FillData(&m_refractionPass.passData);
     m_postProcPass.passData.deltaTime = m_deltaTime;
     m_postProcPass.passData.totalTime = m_totalTime;
