@@ -9,7 +9,7 @@
 void ErosionTimelapseScene::InitLightScene()
 {
     m_lightData.lights[0] = MakeDirectionalLight({ 1.0f, -1.0f, 1.0f }, 10.0f, Color::WHITE);
-    m_lightData.ambient = 0.3f;
+    m_lightData.ambient = 0.0f;
 }
 
 void ErosionTimelapseScene::OnInit(Device* _pDevice)
@@ -31,7 +31,7 @@ void ErosionTimelapseScene::OnInit(Device* _pDevice)
 
     m_terrainGenerator.m_grid_size = TERRAIN_GRID_SIZE;
     m_terrainGenerator.m_cellSize = TERRAIN_CELL_SIZE;
-    m_terrainDesc.frequency = 0.008f;
+    m_terrainDesc.frequency = 0.05f;
     m_terrainDesc.octaveCount = 6;
     m_terrainDesc.heightScale = 7.0f;
     m_terrainDesc.heightRedistribution = 1.7f;
@@ -53,7 +53,7 @@ void ErosionTimelapseScene::OnInit(Device* _pDevice)
     m_terrainCb = {
         {1.0f, 1.0f, 1.0f, 1.0f},
             Lighting::g_fresnelR0Templates[PLASTIC],
-                0.9f, 0.0f, 0.0f, {terrainSide, terrainSide}, false, 0.01f
+                0.9f, 0.0f, 0.0f, {terrainSide, terrainSide}, false, 0.05f
     };
 
     Handle Atlas = TextureFactory::Instance()->CreateTexture("TerrainTextureAtlas", "Atlas.hdr");
@@ -93,6 +93,9 @@ void ErosionTimelapseScene::OnHandleEvent(const SDL_Event& event)
     case SDL_SCANCODE_T: ToggleTextures(); return;
     case SDL_SCANCODE_B: IncreaseBlending(+0.001f); return;
     case SDL_SCANCODE_N: IncreaseBlending(-0.001f); return;
+    case SDL_SCANCODE_G: IncreaseTimeScale(+0.25f); return;
+    case SDL_SCANCODE_H: IncreaseTimeScale(-0.25f); return;
+    case SDL_SCANCODE_R: ToggleRotation(); return;
 
         // --- Arrows : noise offset | Shift : mountain center ---
     case SDL_SCANCODE_LEFT:  if (shift) add(d.mountainCenter.x, -centerStep, 0.0f, 1.0f); else d.noiseOffset.x -= offsetStep; break;
@@ -140,14 +143,15 @@ void ErosionTimelapseScene::OnHandleEvent(const SDL_Event& event)
 
 void ErosionTimelapseScene::OnUpdate(float dt)
 {
+    dt = dt * timeScale;
     tickChrono -= dt;
     while (tickChrono <= 0.0f)
     {
         tickChrono += tickTime;
-        m_eroder.Erode(m_terrain->mesh, m_terrainDesc, TERRAIN_GRID_SIZE, 15000);
+        m_eroder.Erode(m_terrain->mesh, m_terrainDesc, TERRAIN_GRID_SIZE, 250);
     }
 
-    m_terrain->transform.AddYPR(glm::vec3(0, dt * 3.1415f / 32.0f, 0));
+    if(isRotating) m_terrain->transform.AddYPR(glm::vec3(0, dt * 3.1415f / 32.0f, 0));
 
     // Regenerate at most once per frame, even if several keys were pressed
     if (m_terrainDirty)
@@ -196,7 +200,9 @@ void ErosionTimelapseScene::PrintControls() const
         << "  PgUp / PgDn       : mountain radius + / -   Shift + PgUp / PgDn : min height + / -\n"
         << "  Ins / Del         : mountain noise + / -    Shift + Ins / Del   : edge warp + / -\n"
         << "=== Render controls ===\n"
-        << "  T                 : toggle textures         B / N               : terrain blending + / -\n";
+        << "  T                 : toggle textures         B / N               : terrain blending + / -\n"
+        << "=== Simulation controls ===\n"
+        << "  G / H             : simulation speed + / -  R                   : toggle rotation\n";
 }
 
 void ErosionTimelapseScene::ToggleTextures()
@@ -205,11 +211,21 @@ void ErosionTimelapseScene::ToggleTextures()
     m_mat->SetParams<LitTerrain_BP_PS::MaterialCB>(LitTerrain_BP_PS::CB_SLOT_mat, m_terrainCb);
 }
 
+void ErosionTimelapseScene::ToggleRotation()
+{
+    isRotating = !isRotating;
+}
+
 void ErosionTimelapseScene::IncreaseBlending(float _value)
 {
     m_terrainCb.blendDistance += _value;
     m_terrainCb.blendDistance = clamp(m_terrainCb.blendDistance, 0.0f, 0.5f);
     m_mat->SetParams<LitTerrain_BP_PS::MaterialCB>(LitTerrain_BP_PS::CB_SLOT_mat, m_terrainCb);
+}
+
+void ErosionTimelapseScene::IncreaseTimeScale(float _value)
+{
+    timeScale += _value;
 }
 
 void ErosionTimelapseScene::OnDraw(Device* _pDevice)

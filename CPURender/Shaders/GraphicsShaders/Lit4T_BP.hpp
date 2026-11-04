@@ -133,10 +133,11 @@ public:
 
 
         glm::vec4 albedo = glm::vec4(0, 0, 0, 0);
-        glm::vec3 normalW = { 0, 0, 0 };
+        glm::vec3 normalW;
         float roughnessFactor = 0;
         if (Has_textureAtlas() && mat().useTextures)
         {
+            normalW = N;
             const int textureCountPerMat = 4;
             const float tillingScale = 1 / 16.0f;
             const float atlasSideFactor = 1.0f / 5.0f;
@@ -170,7 +171,8 @@ public:
 
                     glm::vec3 sampledN = glm::vec3(SampleNorm(i, atlasSideFactor, worldUv, lod)) * materialFactors[i];
                     sampledN = sampledN * 2.0f - 1.0f;
-                    normalW += sampledN;
+                    //normalW += glm::normalize(TBN * sampledN);
+                    
 
                     roughnessFactor += SampleRough(i, atlasSideFactor, worldUv, lod).x * materialFactors[i];
                 }
@@ -178,6 +180,8 @@ public:
         }
         else
         {
+            roughnessFactor = 1;
+            normalW = N;
             if (rock > 0.0f)
                 albedo += glm::vec4(0.3f, 0.3f, 0.3f, 1) * rock;
             if (snow > 0.0f)
@@ -193,7 +197,7 @@ public:
         }
 
         albedo *= mat().diffuseAlbedo;
-        normalW = glm::normalize(TBN * normalW);
+        normalW = glm::normalize(normalW);
 
         float metalnessFactor = mat().metalness;
 
@@ -214,7 +218,7 @@ public:
         glm::vec4 litColor = glm::vec4(ambientFactor, 1.0f) + directLight;
         litColor.a = mat().diffuseAlbedo.a;
 
-        return albedo;
+        return litColor;
     }
 };
 

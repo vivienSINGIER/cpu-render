@@ -115,7 +115,7 @@ void Terrain_Scene::OnInit(Device* _pDevice)
     m_terrainCb = {
         {1.0f, 1.0f, 1.0f, 1.0f},
             Lighting::g_fresnelR0Templates[PLASTIC],
-                0.9f, 0.0f, 0.0f, {terrainSide, terrainSide}, true, 0.05f
+                1.0f, 0.0f, 0.0f, {terrainSide, terrainSide}, true, 0.05f
     };
 
     Handle Atlas = TextureFactory::Instance()->CreateTexture("TerrainTextureAtlas", "Atlas.hdr");

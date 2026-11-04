@@ -24,10 +24,12 @@ private:
     void PrintTerrainDesc() const;
     void PrintControls() const;
     void ToggleTextures();
+    void ToggleRotation();
     void IncreaseBlending(float _value);
+    void IncreaseTimeScale(float _value);
 
-    static constexpr uint32_t TERRAIN_GRID_SIZE = 512;
-    static constexpr float TERRAIN_CELL_SIZE = 0.25f;
+    static constexpr uint32_t TERRAIN_GRID_SIZE = 256;
+    static constexpr float TERRAIN_CELL_SIZE = 1.f;
 
     Erosion m_eroder;
     TerrainGenerator m_terrainGenerator;
@@ -39,11 +41,13 @@ private:
     Material m_mat;
     LitTerrain_BP_PS::MaterialCB m_terrainCb;
 
-    PassDesc m_shadowPass;
     PassDesc m_mainPass;
 
+    // Simulation settings
+    float timeScale = 0.0f;
     const float tickTime = 0.1f;
     float tickChrono;
+    bool isRotating = true;
 
     LightData m_lightData;
 };
