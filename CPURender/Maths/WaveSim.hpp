@@ -64,7 +64,7 @@ namespace WaveSim
             {
                 auto at = [&](uint32 i, uint32 j) { return b[((j + S) % S) * S + (i + S) % S]; };
                 float dx = (at(x + 1, y) - at(x - 1, y)) / (2.0f * texel);
-                float dy = (at(x, y + 1) - at(x, y - 1)) / 2.0f;
+                float dy = (at(x, y + 1) - at(x, y - 1)) / (2.0f * texel);
                 _out->Store(x, y, vec4(b[y * S + x], dx, dy, 0.0f));
             }
         }
