@@ -59,7 +59,7 @@ void SceneParticlesTest::OnInit(Device* _pDevice)
 
     ParticleDesc heartDesc;
     {
-    heartDesc.amount = 1;
+    heartDesc.amount = 2;
     heartDesc.spawnRadius = 0.f;
     heartDesc.particleBeginSize = 0.03f;
     heartDesc.particleEndSize = 0.5f;
@@ -80,28 +80,26 @@ void SceneParticlesTest::OnInit(Device* _pDevice)
     std::string heart = ParticleManager::Instance()->BindSlot("heartUwU", "Assets/Textures/Particles/heart.png", 100);
     fire = ParticleManager::Instance()->CreateEmitter({ 0, 2.5f, 0 }, heartDesc, 0.0f, heart);
 
-    ParticleDesc snow;
+    ParticleDesc rain;
     {
-        snow.amount = 10.f;
-        snow.spawnRadius = 2.f;
-        snow.particleBeginSize = 0.1f;
-        snow.particleEndSize = 0.02f;
+        rain.amount = 50.f;
+        rain.spawnRadius = 15.f;
+        rain.particleBeginSize = 0.1f;
+        rain.particleEndSize = 0.05f;
 
-        snow.rotationSpeed = 1.f;
-        snow.floorDir = glm::vec3(-0.2f, -1.f, -0.2f);
-        snow.ceilDir = glm::vec3(0.2f, -1.f, 0.2f);
-        snow.minSpeed = 0.5f;
-        snow.maxSpeed = 5.f;
-        snow.beginColor = glm::vec4(1, 1, 1, 1.f);
-        snow.endColor = glm::vec4(1, 1, 1, 1.f);
-        snow.minLifeTime = 2.f;
-        snow.maxLifeTime = 3.f;
+        rain.floorDir = glm::vec3(-0.1f, -1.f, -0.1f);
+        rain.ceilDir = glm::vec3(0.1f, -1.f, 0.1f);
+        rain.minSpeed = 20.f;
+        rain.maxSpeed = 25.f;
+        rain.beginColor = glm::vec4(0, 0, 1, 1.f);
+        rain.endColor = glm::vec4(0, 0, 1, 0.f);
+        rain.minLifeTime = 1.f;
+        rain.maxLifeTime = 2.f;
 
-        snow.fadeDistance = 20.f;
-        snow.destroyIfExitSpawnRadius = true;
+        rain.fadeDistance = 10.f;
     }
 
-    ParticleEmitter* d = ParticleManager::Instance()->CreateEmitter({ 0.f, 20.f, 0 }, snow, 0.f);
+    ParticleEmitter* d = ParticleManager::Instance()->CreateEmitter({ 0.f, 20.f, 0 }, rain, 0.f);
 
     ///
 

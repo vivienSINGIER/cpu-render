@@ -8,7 +8,7 @@
 #include "../Core/FrameBuffer.hpp"
 #include "../Maths/Transform.h"
 
-struct alignas(128) UavParticle
+struct alignas(16) UavParticle
 {
 	glm::vec3 pos = {0, 0, 0};
 	float rotationRad = 0;
@@ -25,18 +25,18 @@ struct alignas(128) UavParticle
 	float acceleration = 0;
 
 	float gravity = 0;
-
 	float rotSpeed = 0;
 	float maxLifeTime = 0.001f;
 	float lifeTime = 0;
-	float size = 0;
 
+	float size = 0;
 	float beginSize = 0;
 	float endSize = 0;
-
 	float fadeDistance = -1.f;
-	bool destroyIfExitSpawnRadius = false;
+
 	float spawnRadius = 0.f;
+
+	bool destroyIfExitSpawnRadius = false;
 };
  
 struct alignas(16) ParticleDesc
