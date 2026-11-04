@@ -19,16 +19,18 @@ public:
     Vertex_OUT Execute(Vertex const& _in) const override
     {
         size_t quad = (int)_in.id / 6;
-        size_t corner = (int)_in.id % 6; //0, 2, 1,    3, 1, 2 indices
 
         const UavParticle& p = Load_data(quad);
 
         if (p.lifeTime <= 0.f)
         {
             Vertex_OUT error;
-            error.color = { -1, -1, -1, -1 };
+            error.color.a = -1;
+
             return error;
         }
+
+        size_t corner = (int)_in.id % 6; //0, 2, 1,    3, 1, 2 indices
 
         glm::vec3 offset = {};
 
@@ -53,7 +55,7 @@ public:
         offset *= p.size;
 
         Vertex_OUT v;
-        v.color = p.endColor + (p.lifeTime / p.maxLifeTime) * (p.beginColor - p.endColor);
+        v.color = p.color;
 
         glm::vec4 viewCenter = Pass().view * glm::vec4(p.pos, 1);
 
@@ -79,12 +81,6 @@ class UnlitParticle_PS : public PixelShader
 {
 
 public:
-    struct ParticleCB
-    {
-        glm::vec4 diffuseAlbedo;
-    };
-
-    SHADER_CB(ParticleCB, pcolor, CB_CUSTOM)
     SHADER_TEX_OPT(diffuse, 0)
 
     UnlitParticle_PS(GraphicsContext* _ctx) : PixelShader(_ctx) {}
@@ -96,9 +92,9 @@ public:
 
         glm::vec4 albedo;
         if (Has_diffuse())
-            albedo = Sample_Grad_diffuse(_in.uv, _in.uvDdx, _in.uvDdy) * pcolor().diffuseAlbedo;
+            albedo = Sample_Grad_diffuse(_in.uv, _in.uvDdx, _in.uvDdy);
         else
-            albedo = _in.color * pcolor().diffuseAlbedo;
+            albedo = _in.color;
 
         return albedo;
     }

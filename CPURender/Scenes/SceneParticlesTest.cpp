@@ -66,66 +66,70 @@ void SceneParticlesTest::OnInit(Device* _pDevice)
     ParticleDesc heartDesc;
     {
     heartDesc.amount = 1;
-    heartDesc.spawnRadius = 0.75f;
-    heartDesc.particleBeginSize = 0.02f;
+    heartDesc.spawnRadius = 0.f;
+    heartDesc.particleBeginSize = 0.03f;
     heartDesc.particleEndSize = 0.5f;
 
     heartDesc.rotationSpeed = 0.f;
-    heartDesc.floorDir = glm::vec3(-0.5f, 1.f, -0.5f);
-    heartDesc.ceilDir = glm::vec3(0.5f, 1, 0.5f);
-    heartDesc.minSpeed = 1.f;
-    heartDesc.maxSpeed = 3.f;
+    heartDesc.floorDir = glm::vec3(-0.2f, 1.f, -0.2f);
+    heartDesc.ceilDir = glm::vec3(0.2f, 1, 0.2f);
+    heartDesc.minSpeed = 15.f;
+    heartDesc.maxSpeed = 25.f;
     heartDesc.beginColor = glm::vec4(1, 0, 0, 1);
     heartDesc.endColor = glm::vec4(1, 1, 0, 1);
-    heartDesc.minLifeTime = 2.f;
-    heartDesc.maxLifeTime = 3.f;
+    heartDesc.minLifeTime = 1.f;
+    heartDesc.maxLifeTime = 2.f;
+
+    heartDesc.acceleration = -2.5f;
+    heartDesc.gravity = 9.81f;
     }
-    std::string heart = ParticleManager::Instance()->BindSlot("heartUwU", "Assets/Textures/Particles/heart.png");
+    std::string heart = ParticleManager::Instance()->BindSlot("heartUwU", "Assets/Textures/Particles/heart.png", 100);
     fire = ParticleManager::Instance()->CreateEmitter({ 0, 2.5f, 0 }, heartDesc, 0.0f, heart);
 
+    ParticleDesc snow;
+    {
+        snow.amount = 100.f;
+        snow.spawnRadius = 15.f;
+        snow.particleBeginSize = 0.2f;
+        snow.particleEndSize = 0.02f;
+
+        snow.rotationSpeed = 1.f;
+        snow.floorDir = glm::vec3(-0.2f, -1.f, -0.2f);
+        snow.ceilDir = glm::vec3(0.2f, -1.f, 0.2f);
+        snow.minSpeed = 2.f;
+        snow.maxSpeed = 30.f;
+        snow.beginColor = glm::vec4(1, 1, 1, 1.f);
+        snow.endColor = glm::vec4(1, 1, 1, 1.f);
+        snow.minLifeTime = 2.f;
+        snow.maxLifeTime = 3.f;
+
+        snow.fadeDistance = 20.f;
+    }
+
+    ParticleEmitter* d = ParticleManager::Instance()->CreateEmitter({ 0.f, 20.f, 0 }, snow, 0.f);
+
     ///
 
-    ParticleDesc test;
-    {
-        test.amount = 5;
-        test.spawnRadius = 0.75f;
-        test.particleBeginSize = 0.1f;
-        test.particleEndSize = 0.1f;
+    //ParticleDesc r;
+    //{
+    //    r.amount = 50;
+    //    r.spawnRadius = 20.f;
+    //    r.particleBeginSize = 0.2f;
+    //    r.particleEndSize = 0.01f;
 
-        test.rotationSpeed = 10.f;
-        test.floorDir = glm::vec3(-1, -1, -1);
-        test.ceilDir = glm::vec3(1, 1, 1);
-        test.minSpeed = 0.3f;
-        test.maxSpeed = 3.f;
-        test.beginColor = glm::vec4(1, 0, 1, 1);
-        test.endColor = glm::vec4(0, 0, 1, 1);
-        test.minLifeTime = 1.f;
-        test.maxLifeTime = 2.f;
-    }
-    ParticleEmitter* d = ParticleManager::Instance()->CreateEmitter({ 0.f, 0.f, 0 }, test, 0.0f);
+    //    r.rotationSpeed = 10.f;
+    //    r.floorDir = glm::vec3(-0.25f, -1, -0.25f);
+    //    r.ceilDir = glm::vec3(0.25f, -1, 0.25f);
+    //    r.minSpeed = 15.f;
+    //    r.maxSpeed = 20.f;
+    //    r.beginColor = glm::vec4(1, 1, 1, 1);
+    //    r.endColor = glm::vec4(1, 1, 1, 1);
+    //    r.minLifeTime = 1.f;
+    //    r.maxLifeTime = 2.f;
 
-    ///
-
-    ParticleDesc r;
-    {
-        r.amount = 50;
-        r.spawnRadius = 20.f;
-        r.particleBeginSize = 0.2f;
-        r.particleEndSize = 0.01f;
-
-        r.rotationSpeed = 10.f;
-        r.floorDir = glm::vec3(-0.25f, -1, -0.25f);
-        r.ceilDir = glm::vec3(0.25f, -1, 0.25f);
-        r.minSpeed = 15.f;
-        r.maxSpeed = 20.f;
-        r.beginColor = glm::vec4(1, 1, 1, 1);
-        r.endColor = glm::vec4(1, 1, 1, 1);
-        r.minLifeTime = 1.f;
-        r.maxLifeTime = 2.f;
-
-    }
-    std::string rainbow = ParticleManager::Instance()->BindSlot("rainbow", "Assets/Textures/Particles/rainbow.png");
-    ParticleEmitter* e = ParticleManager::Instance()->CreateEmitter({ 0.f, 15.f, 0 }, r, 0.0f, rainbow);
+    //}
+    //std::string rainbow = ParticleManager::Instance()->BindSlot("rainbow", "Assets/Textures/Particles/rainbow.png");
+    //ParticleEmitter* e = ParticleManager::Instance()->CreateEmitter({ 0.f, 15.f, 0 }, r, 0.0f, rainbow);
 
 #pragma endregion PARTICLE_INIT
 

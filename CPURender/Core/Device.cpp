@@ -486,9 +486,6 @@ void Device::RasterStep(ShaderStages _s)
 						continue;
 					
 					glm::vec4 src = _s.ps->Execute(px);
-					if (src.a <= 1e-8f)
-						continue;
-					
 					glm::vec4 dest = fb->Load(x, y);
 					
 					fb->Store(x, y, Blending::Blend(src, dest, state.blendMode)); 
