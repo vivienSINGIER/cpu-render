@@ -172,6 +172,7 @@
     <ClCompile Include="Octree.cpp" />
     <ClCompile Include="Scenes\PBR_Scene.cpp" />
     <ClCompile Include="Scenes\Scene.cpp" />
+    <ClCompile Include="Scenes\SceneBillingPhong.cpp" />
     <ClCompile Include="Scenes\SceneParticlesTest.cpp" />
     <ClCompile Include="Scenes\TexturedBP_Scene.cpp" />
     <ClCompile Include="Scenes\Transparency_Scene.cpp" />
@@ -241,6 +242,7 @@
     <ClInclude Include="Octree.h" />
     <ClInclude Include="Scenes\PBR_Scene.h" />
     <ClInclude Include="Scenes\Scene.h" />
+    <ClInclude Include="Scenes\SceneBillingPhong.h" />
     <ClInclude Include="Scenes\SceneParticlesTest.h" />
     <ClInclude Include="Scenes\TexturedBP_Scene.h" />
     <ClInclude Include="Scenes\Transparency_Scene.h" />

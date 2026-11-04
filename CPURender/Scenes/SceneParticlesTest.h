@@ -23,7 +23,6 @@ private:
     PassDesc m_particlesPass;
 
     LightData m_lightData;
-    Material m_unlit;
 
     Material model_mat;
     Material hand_mat;

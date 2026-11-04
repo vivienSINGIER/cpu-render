@@ -8,7 +8,6 @@
 #include "../Shaders/Shaders.h"
 #include "../Datas/Lights/LightHelpers.hpp"
 
-#include "../Shaders/ComputeShaders/ParticleCS.hpp"
 #include "../Factories/BufferFactory.h"
 
 #include "../Datas/SkinnedObject.h"
@@ -41,11 +40,6 @@ void SceneParticlesTest::OnInit(Device* _pDevice)
             Lighting::g_fresnelR0Templates[PLASTIC],
                 0.5f, 0.02f, 0.8f
     };
-
-    UnlitC_PS::UnlitColor unlit_color = { glm::vec4(0, 1, 1, 1) };
-
-    m_unlit = ShaderFactory::Instance()->CreateMaterial("UnlitC");
-    m_unlit->SetParams<UnlitC_PS::UnlitColor>(UnlitC_PS::CB_SLOT_mat, unlit_color);
 
     m_mat = ShaderFactory::Instance()->CreateMaterial("LitT_BP");
     m_mat->SetParams<LitT_BP_PS::MaterialCB>(LitT_BP_PS::CB_SLOT_mat, cb);
@@ -163,9 +157,6 @@ void SceneParticlesTest::OnInit(Device* _pDevice)
 
 void SceneParticlesTest::OnHandleEvent(const SDL_Event& event)
 {
-    if (event.type == SDL_EVENT_KEY_DOWN && (event.key.key == SDLK_A))
-    {
-    }
 }
 
 void SceneParticlesTest::OnUpdate(float dt)

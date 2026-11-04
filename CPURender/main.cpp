@@ -14,6 +14,8 @@
 #include "Scenes/PBR_Scene.h"
 #include "Scenes/Transparency_Scene.h"
 #include "Scenes/Terrain_Scene.h"
+
+#include "Scenes/SceneBillingPhong.h"
 //Students cannot change anything in this file
 
 
@@ -81,7 +83,7 @@ int main(void) {
 
     Engine engine;
     Texture frameBuffer(WIDTH, HEIGHT,  Texture::RGBA32, Texture::LINEAR);
-    engine.Init<SceneParticlesTest>(&frameBuffer);
+    engine.Init<SceneBillingPhong>(&frameBuffer);
     
     bool isRunning = true;
     uint32_t frame = 1;
