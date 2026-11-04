@@ -46,7 +46,7 @@ glm::vec4 TerrainGenerator::SampleTex(TerrainDesc const& _d, float _x, float _y,
 	glm::vec2 uv = glm::vec2(_x, _y) / (float)(sideVertexCount - 1);
 
 	float rockyness = (_height - _d.minHeight) / (_d.maxHeight - _d.minHeight);
-	float humidity = (PerlinNoise::FractalBrownianMotion(_x * 0.8f + 2.1f, _y * 0.6f + 16.7f, 0.002f, 4)+1) / 2.0f;
+	float humidity = (PerlinNoise::FractalBrownianMotion(_x * 0.8f + 2.1f, _y * 0.6f + 16.7f, 0.005f, 4)+1) / 2.0f;
 	glm::vec4 weights = glm::vec4(rockyness, humidity, 0.0f, 0.0f);
 
 	return weights;

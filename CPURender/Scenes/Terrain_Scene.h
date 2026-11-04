@@ -1,5 +1,5 @@
-#ifndef SCENES_TERRAIN_SCENE_HPP
-#define SCENES_TERRAIN_SCENE_HPP
+#ifndef SCENES_TERRAIN_SCENE_H
+#define SCENES_TERRAIN_SCENE_H
 
 #include "Scene.h"
 

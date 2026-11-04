@@ -20,7 +20,6 @@
     <ClCompile Include="Heaps\RawBufferHeap.cpp" />
     <ClCompile Include="Heaps\UAVHeap.cpp" />
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="Maths\PerlinNoise.cpp" />
     <ClCompile Include="Octree.cpp" />
     <ClCompile Include="Scenes\PBR_Scene.cpp" />
     <ClCompile Include="Scenes\Scene.cpp" />
@@ -80,7 +79,6 @@
     <ClInclude Include="main.h" />
     <ClInclude Include="Maths\AABB.h" />
     <ClInclude Include="Maths\Frustum.h" />
-    <ClInclude Include="Maths\PerlinNoise.h" />
     <ClInclude Include="Maths\Plane.h" />
     <ClInclude Include="Maths\Ray.h" />
     <ClInclude Include="Maths\Transform.h" />
@@ -118,8 +116,13 @@
     <ClInclude Include="Animation\AnimationData.h" />
     <ClInclude Include="Animation\AssimpGLMHelpers.h" />
     <ClInclude Include="Datas\SkinnedObject.h" />
-   </ItemGroup>
-   <ItemGroup>
+    <ClCompile Include="Scenes\Terrain_Scene.cpp" />
+    <ClCompile Include="Terrain\Erosion.cpp" />
+    <ClCompile Include="Terrain\PerlinNoise.cpp" />
+    <ClCompile Include="Terrain\TerrainGenerator.cpp" />
+    <ClCompile Include="Scenes\ErosionTimelapseScene.cpp" />
+  </ItemGroup>
+  <ItemGroup>
     <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -195,9 +198,6 @@
     <ClCompile Include="Maths\Transform.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="TerrainGenerator.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Octree.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -223,9 +223,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Scenes\Transparency_Scene.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Scenes\Terrain_Scene.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -449,9 +446,6 @@
     <ClInclude Include="Scenes\Transparency_Scene.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Scenes\Terrain_Scene.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Shaders\GraphicsShaders\PBR.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -479,17 +473,11 @@
     <ClInclude Include="Factories\TextureFactory.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Shaders\Shaders\LitC_BP.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Shaders\Shaders\LitT_BP.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Shaders\Shaders\UnlitT.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="TerrainGenerator.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
+    <ClInclude Include="Scenes\Terrain_Scene.h" />
+    <ClInclude Include="Shaders\GraphicsShaders\Lit4T_BP.hpp" />
+    <ClInclude Include="Terrain\Erosion.h" />
+    <ClInclude Include="Terrain\PerlinNoise.h" />
+    <ClInclude Include="Terrain\TerrainGenerator.h" />
+    <ClInclude Include="Scenes\ErosionTimelapseScene.h" />
   </ItemGroup>
 </Project>

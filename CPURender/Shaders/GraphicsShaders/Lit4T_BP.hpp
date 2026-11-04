@@ -183,9 +183,9 @@ public:
             if (snow > 0.0f)
                 albedo += glm::vec4(0.95f, 0.95f, 0.95f, 1) * snow;
             if (drySand > 0.0f)
-                albedo += glm::vec4(0.5f, 0.5f, 0.1f, 1) * drySand;
+                albedo += glm::vec4(0.5f, 0.4f, 0.1f, 1) * drySand;
             if (sand > 0.0f)
-                albedo += glm::vec4(0.75f, 0.75f, 0.2f, 1) * sand;
+                albedo += glm::vec4(0.75f, 0.6f, 0.2f, 1) * sand;
             if (dirt > 0.0f)
                 albedo += glm::vec4(0.2f, 0.2f, 0.05f, 1) * dirt;
             if (grass > 0.0f)

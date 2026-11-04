@@ -170,6 +170,7 @@
     <ClCompile Include="Heaps\UAVHeap.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Octree.cpp" />
+    <ClCompile Include="Scenes\ErosionTimelapseScene.cpp" />
     <ClCompile Include="Scenes\PBR_Scene.cpp" />
     <ClCompile Include="Scenes\Scene.cpp" />
     <ClCompile Include="Scenes\SceneParticlesTest.cpp" />
@@ -239,6 +240,7 @@
     <ClInclude Include="Maths\Ray.h" />
     <ClInclude Include="Maths\Transform.h" />
     <ClInclude Include="Octree.h" />
+    <ClInclude Include="Scenes\ErosionTimelapseScene.h" />
     <ClInclude Include="Scenes\PBR_Scene.h" />
     <ClInclude Include="Scenes\Scene.h" />
     <ClInclude Include="Scenes\SceneParticlesTest.h" />
