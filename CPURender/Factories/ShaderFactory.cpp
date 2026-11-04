@@ -109,7 +109,7 @@ void ShaderFactory::RegisterPrebuilts()
     RegisterGroup<LitC_BP_VS, LitC_BP_PS>("LitC_BP");
     RegisterGroup<LitT_BP_VS, LitT_BP_PS>("LitT_BP");
     RegisterGroup<LitC_BP_Cube_VS, LitC_BP_Cube_PS>("LitC_BP_Cube");
-    RegisterGroup<Lit4T_BP_VS, Lit4T_BP_PS>("Lit4T_BP");
+    RegisterGroup<LitTerrain_BP_VS, LitTerrain_BP_PS>("Lit4T_BP");
 
     RegisterGroup<LitC_BP_Transparent_VS, LitC_BP_Transparent_PS>("LitC_BP_Transparent");
     

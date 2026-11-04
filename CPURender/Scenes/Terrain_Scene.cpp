@@ -4,12 +4,71 @@
 
 #include "../Factories/ShaderFactory.h"
 #include "../Factories/TextureFactory.h"
-#include "../Shaders/Shaders.h"
 #include "../Datas/Lights/LightHelpers.hpp"
+
+void GenerateTerrainAtlas()
+{    
+   Handle RockDiff = TextureFactory::Instance()->CreateTexture("RockDiff", "Assets/Textures/Rock/diffuse.jpg");
+   Handle RockNorm = TextureFactory::Instance()->CreateTexture("RockNorm", "Assets/Textures/Rock/normal.png");
+   Handle RockDisp = TextureFactory::Instance()->CreateTexture("RockDisp", "Assets/Textures/Rock/displacement.png");
+   Handle RockRoug = TextureFactory::Instance()->CreateTexture("RockRoug", "Assets/Textures/Rock/roughness.jpg");
+   Handle SnowDiff = TextureFactory::Instance()->CreateTexture("SnowDiff", "Assets/Textures/Snow/diffuse.jpg");
+   Handle SnowNorm = TextureFactory::Instance()->CreateTexture("SnowNorm", "Assets/Textures/Snow/normal.png");
+   Handle SnowDisp = TextureFactory::Instance()->CreateTexture("SnowDisp", "Assets/Textures/Snow/displacement.png");
+   Handle SnowRoug = TextureFactory::Instance()->CreateTexture("SnowRoug", "Assets/Textures/Snow/roughness.jpg");
+
+   Handle SandDiff = TextureFactory::Instance()->CreateTexture("SandDiff", "Assets/Textures/Sand/diffuse.jpg");
+   Handle SandNorm = TextureFactory::Instance()->CreateTexture("SandNorm", "Assets/Textures/Sand/normal.png");
+   Handle SandDisp = TextureFactory::Instance()->CreateTexture("SandDisp", "Assets/Textures/Sand/displacement.png");
+   Handle SandRoug = TextureFactory::Instance()->CreateTexture("SandRoug", "Assets/Textures/Sand/roughness.png");
+   Handle DrySandDiff = TextureFactory::Instance()->CreateTexture("DrySandDiff", "Assets/Textures/DrySand/diffuse.jpg");;
+   Handle DrySandNorm = TextureFactory::Instance()->CreateTexture("DrySandNorm", "Assets/Textures/DrySand/normal.png"); ;
+   Handle DrySandDisp = TextureFactory::Instance()->CreateTexture("DrySandDisp", "Assets/Textures/DrySand/displacement.png"); ;
+   Handle DrySandRoug = TextureFactory::Instance()->CreateTexture("DrySandRoug", "Assets/Textures/DrySand/roughness.png"); ;
+
+   Handle DirtDiff = TextureFactory::Instance()->CreateTexture("DirtDiff", "Assets/Textures/Dirt/diffuse.jpg");
+   Handle DirtNorm = TextureFactory::Instance()->CreateTexture("DirtNorm", "Assets/Textures/Dirt/normal.png");
+   Handle DirtDisp = TextureFactory::Instance()->CreateTexture("DirtDisp", "Assets/Textures/Dirt/displacement.png");
+   Handle DirtRoug = TextureFactory::Instance()->CreateTexture("DirtRoug", "Assets/Textures/Dirt/roughness.png");
+   Handle GrassDiff = TextureFactory::Instance()->CreateTexture("GrassDiff", "Assets/Textures/Grass/diffuse.jpg");
+   Handle GrassNorm = TextureFactory::Instance()->CreateTexture("GrassNorm", "Assets/Textures/Grass/normal.png");
+   Handle GrassDisp = TextureFactory::Instance()->CreateTexture("GrassDisp", "Assets/Textures/Grass/displacement.png");
+   Handle GrassRoug = TextureFactory::Instance()->CreateTexture("GrassRoug", "Assets/Textures/Grass/roughness.png");
+
+   std::vector<Texture*> tex;
+   tex.push_back(TextureFactory::Instance()->GetTexture(RockDiff));
+   tex.push_back(TextureFactory::Instance()->GetTexture(RockNorm));
+   tex.push_back(TextureFactory::Instance()->GetTexture(RockDisp));
+   tex.push_back(TextureFactory::Instance()->GetTexture(RockRoug));
+   tex.push_back(TextureFactory::Instance()->GetTexture(SnowDiff));
+   tex.push_back(TextureFactory::Instance()->GetTexture(SnowNorm));
+   tex.push_back(TextureFactory::Instance()->GetTexture(SnowDisp));
+   tex.push_back(TextureFactory::Instance()->GetTexture(SnowRoug));
+
+   tex.push_back(TextureFactory::Instance()->GetTexture(SandDiff));
+   tex.push_back(TextureFactory::Instance()->GetTexture(SandNorm));
+   tex.push_back(TextureFactory::Instance()->GetTexture(SandDisp));
+   tex.push_back(TextureFactory::Instance()->GetTexture(SandRoug));
+   tex.push_back(TextureFactory::Instance()->GetTexture(DrySandDiff));
+   tex.push_back(TextureFactory::Instance()->GetTexture(DrySandNorm));
+   tex.push_back(TextureFactory::Instance()->GetTexture(DrySandDisp));
+   tex.push_back(TextureFactory::Instance()->GetTexture(DrySandRoug));
+
+   tex.push_back(TextureFactory::Instance()->GetTexture(DirtDiff));
+   tex.push_back(TextureFactory::Instance()->GetTexture(DirtNorm));
+   tex.push_back(TextureFactory::Instance()->GetTexture(DirtDisp));
+   tex.push_back(TextureFactory::Instance()->GetTexture(DirtRoug));
+   tex.push_back(TextureFactory::Instance()->GetTexture(GrassDiff));
+   tex.push_back(TextureFactory::Instance()->GetTexture(GrassNorm));
+   tex.push_back(TextureFactory::Instance()->GetTexture(GrassDisp));
+   tex.push_back(TextureFactory::Instance()->GetTexture(GrassRoug));
+
+   Texture::StoreAtlasHDR(tex);
+}
 
 void Terrain_Scene::InitLightScene()
 {
-    m_lightData.lights[0] = MakeDirectionalLight({1.0f, -1.0f, 1.0f}, 1.0f, Color::WHITE);
+    m_lightData.lights[0] = MakeDirectionalLight({1.0f, -1.0f, 1.0f}, 10.0f, Color::WHITE);
     m_lightData.ambient = 0.3f;
 }
 
@@ -53,31 +112,18 @@ void Terrain_Scene::OnInit(Device* _pDevice)
     
     float terrainSide = (m_terrainGenerator.m_grid_size-1) * TERRAIN_CELL_SIZE;
 
-    Lit4T_BP_PS::MaterialCB cb = {
+    m_terrainCb = {
         {1.0f, 1.0f, 1.0f, 1.0f},
             Lighting::g_fresnelR0Templates[PLASTIC],
-                0.9f, 0.0f, 0.0f, {terrainSide, terrainSide}
+                0.9f, 0.0f, 0.0f, {terrainSide, terrainSide}, true, 0.05f
     };
-
-    Handle Rock = TextureFactory::Instance()->CreateTexture("Rock", "Assets/Textures/Rock/diffuse.jpg");
-    Handle Sand = TextureFactory::Instance()->CreateTexture("Sand", "Assets/Textures/Sand/diffuse.jpg");
-    Handle Dirt = TextureFactory::Instance()->CreateTexture("Dirt", "Assets/Textures/Dirt/diffuse.jpg");
-    Handle Grass = TextureFactory::Instance()->CreateTexture("Grass", "Assets/Textures/Grass/diffuse.jpg");
-
-    std::vector<Texture*> tex;
-    tex.push_back(TextureFactory::Instance()->GetTexture(Dirt));
-    tex.push_back(TextureFactory::Instance()->GetTexture(Sand));
-    tex.push_back(TextureFactory::Instance()->GetTexture(Grass));
-    tex.push_back(TextureFactory::Instance()->GetTexture(Rock));
-
-    Texture::StoreAtlasHDR(tex);
 
     Handle Atlas = TextureFactory::Instance()->CreateTexture("TerrainTextureAtlas", "Atlas.hdr");
 
     m_mat = ShaderFactory::Instance()->CreateMaterial("Lit4T_BP");
-    m_mat->SetParams<Lit4T_BP_PS::MaterialCB>(Lit4T_BP_PS::CB_SLOT_mat, cb);
-    m_mat->SetTexture(Lit4T_BP_VS::TEX_SLOT_texWeight, m_terrainGenerator.textureWeights);
-    m_mat->SetTexture(Lit4T_BP_PS::TEX_SLOT_diffuseAtlas, Atlas);
+    m_mat->SetParams<LitTerrain_BP_PS::MaterialCB>(LitTerrain_BP_PS::CB_SLOT_mat, m_terrainCb);
+    m_mat->SetTexture(LitTerrain_BP_VS::TEX_SLOT_texWeight, m_terrainGenerator.m_textureWeights);
+    m_mat->SetTexture(LitTerrain_BP_PS::TEX_SLOT_textureAtlas, Atlas);
 
     m_terrain = CreateObject(STATIC);
     m_terrain->mesh = m_terrainGenerator.GetTerrainMesh();
@@ -105,6 +151,10 @@ void Terrain_Scene::OnHandleEvent(const SDL_Event& event)
     switch (event.key.scancode)
     {
     case SDL_SCANCODE_RETURN: m_eroder.Erode(m_terrain->mesh, d, TERRAIN_GRID_SIZE, 50'000); return;
+
+    case SDL_SCANCODE_T: ToggleTextures(); return;
+    case SDL_SCANCODE_B: IncreaseBlending(+0.001f); return;
+    case SDL_SCANCODE_N: IncreaseBlending(-0.001f); return;
         
     // --- Arrows : noise offset | Shift : mountain center ---
     case SDL_SCANCODE_LEFT:  if (shift) add(d.mountainCenter.x, -centerStep, 0.0f, 1.0f); else d.noiseOffset.x -= offsetStep; break;
@@ -197,7 +247,22 @@ void Terrain_Scene::PrintControls() const
               << "  Num Enter         : mountain on/off         Num 5               : reset all\n"
               << "  Home / End        : mountain height + / -   Shift + Home / End  : max height + / -\n"
               << "  PgUp / PgDn       : mountain radius + / -   Shift + PgUp / PgDn : min height + / -\n"
-              << "  Ins / Del         : mountain noise + / -    Shift + Ins / Del   : edge warp + / -\n";
+              << "  Ins / Del         : mountain noise + / -    Shift + Ins / Del   : edge warp + / -\n"
+              << "=== Render controls ===\n"
+              << "  T                 : toggle textures         B / N               : terrain blending + / -\n";
+}
+
+void Terrain_Scene::ToggleTextures()
+{
+    m_terrainCb.useTextures = !m_terrainCb.useTextures;
+    m_mat->SetParams<LitTerrain_BP_PS::MaterialCB>(LitTerrain_BP_PS::CB_SLOT_mat, m_terrainCb);
+}
+
+void Terrain_Scene::IncreaseBlending(float _value)
+{
+    m_terrainCb.blendDistance += _value;
+    m_terrainCb.blendDistance = clamp(m_terrainCb.blendDistance, 0.0f, 0.5f);
+    m_mat->SetParams<LitTerrain_BP_PS::MaterialCB>(LitTerrain_BP_PS::CB_SLOT_mat, m_terrainCb);
 }
 
 void Terrain_Scene::OnDraw(Device* _pDevice)

@@ -8,6 +8,7 @@
 #include "../Shaders/ShaderBase/Material.h"
 #include "../Terrain/TerrainGenerator.h"
 #include "../Terrain/Erosion.h"
+#include "../Shaders/Shaders.h"
 
 class Terrain_Scene : public Scene
 {
@@ -22,6 +23,8 @@ private:
     void RegenerateTerrain();
     void PrintTerrainDesc() const;
     void PrintControls() const;
+    void ToggleTextures();
+    void IncreaseBlending( float _value);
 
     static constexpr uint32_t TERRAIN_GRID_SIZE = 512;
     static constexpr float TERRAIN_CELL_SIZE = 0.25f;
@@ -34,6 +37,7 @@ private:
     Object* m_terrain = nullptr;
 
     Material m_mat;
+    LitTerrain_BP_PS::MaterialCB m_terrainCb;
 
     PassDesc m_shadowPass;
     PassDesc m_mainPass;

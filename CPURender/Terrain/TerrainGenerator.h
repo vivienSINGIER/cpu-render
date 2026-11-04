@@ -50,14 +50,14 @@ class TerrainGenerator
 	Mesh m_terrain;
 
 	float SampleHeight(TerrainDesc const& _d, float _x, float _y, glm::vec2 _uv);
-	glm::vec4 SampleTex(TerrainDesc const& _d, float _x, float _y);
+	glm::vec4 SampleTex(TerrainDesc const& _d, float _x, float _y, float _height);
 	
 public:
 	// Square grid
 	float m_cellSize; // Length of a side
 	uint32_t m_grid_size; // m_grid_size * m_grid_size => vertexCount
 
-	Handle textureWeights;
+	Handle m_textureWeights;
 
 	Mesh GetTerrainMesh();
 	void GenerateMesh(TerrainDesc const& _terrainDesc);
