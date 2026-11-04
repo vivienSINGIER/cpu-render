@@ -148,13 +148,16 @@ void ParticleManager::Spawn(glm::vec3 _center, ParticleDesc& _desc, std::string 
 		int current_index = (m_freeOffsets[id] + i) % m_max_particles[id];
 
 		//Randoms
-		float theta = rand_range(i, 0, PI);
+		float costheta = rand_range(i, -1, 1);
 		float phi = rand_range(i, 0, 2.f*PI);
+		float sintheta = sqrtf(1.f - costheta * costheta);
+		float r = cbrt(rand_ratio(i)) * _desc.spawnRadius;
 
-		float r = rand_ratio(i) * _desc.spawnRadius;
+		glm::vec3 dir(sintheta * cosf(phi), sintheta * sinf(phi), costheta);
 
 		UavParticle p;
-		p.pos = glm::vec3(_center.x + r*sinf(theta)*cosf(phi), _center.y + r*sinf(theta)*sinf(phi), _center.z + r*cos(theta));
+		p.pos = _center + dir * r;
+
 		p.spawn_point = _center;
 		p.spawnRadius = _desc.spawnRadius;
 		p.beginSize = _desc.particleBeginSize;
