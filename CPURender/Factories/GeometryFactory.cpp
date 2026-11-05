@@ -25,6 +25,32 @@ GeometryFactory* GeometryFactory::Instance()
 	return g_instance;
 }
 
+Mesh GeometryFactory::BuildPlane(bool _randomColors, int _subdivisions)
+{
+	std::vector<Vertex> vertices;
+	std::vector<uint32_t> indices;
+	
+	vertices = {
+		Vertex{glm::vec3(-0.5f, 0.0f, -0.5f), glm::vec2(0.0f, 0.0f)}, // 0
+		Vertex{glm::vec3(-0.5f, 0.0f,  0.5f), glm::vec2(0.0f, 1.0f)}, // 1
+		Vertex{glm::vec3( 0.5f, 0.0f, -0.5f), glm::vec2(1.0f, 0.0f)}, // 2
+		Vertex{glm::vec3( 0.5f, 0.0f,  0.5f), glm::vec2(1.0f, 1.0f)}, // 3
+	 };
+
+	indices = {
+		0, 1, 2,   3, 2, 1,
+	 };
+
+	for (int i = 0; i < _subdivisions; i++)
+		Subdivide(indices, vertices);
+
+	vertices = CalculateNormalsAndTangents(vertices, indices);
+	if (_randomColors)
+		ApplyPaletteColors(vertices);
+
+	return CreateMesh(vertices, indices);
+}
+
 GeometryFactory::GeometryFactory(GraphicsContext* _pContext) : m_ctx(_pContext)
 {
 }
@@ -109,7 +135,7 @@ Mesh GeometryFactory::BuildPyramid(bool _randomColors)
 //// CUBE
 ////////////////////////////////////////////
 
-Mesh GeometryFactory::BuildCube(bool _randomColors)
+Mesh GeometryFactory::BuildCube(bool _randomColors, int _subdivisions)
 {
 	std::vector<Vertex> vertices;
 	std::vector<uint32_t> indices;
@@ -162,6 +188,12 @@ Mesh GeometryFactory::BuildCube(bool _randomColors)
 	   20, 21, 22,  21, 23, 22,
    };
 
+	if (_subdivisions > 0)
+	{
+		for (int i = 0; i < _subdivisions; i++)
+			Subdivide(indices, vertices);
+	}
+	
 	vertices = CalculateNormalsAndTangents(vertices, indices);
 	if (_randomColors)
 		ApplyPaletteColors(vertices);
@@ -229,7 +261,7 @@ Mesh GeometryFactory::BuildSkybox()
 		// BACK
 		20, 22, 21,  21, 22, 23,
 	};
-
+	
 	vertices = CalculateNormalsAndTangents(vertices, indices);
 	return CreateMesh(vertices, indices);
 }
@@ -580,6 +612,7 @@ Mesh GeometryFactory::LoadMesh(std::string const& _path)
 {
 	std::vector<glm::vec3> rawPositions;
 	std::vector<glm::vec2> rawUVs;
+	std::vector<glm::vec3> rawNormals;
 
 	std::vector<Vertex>   vertices;
 	std::vector<uint32_t>   indices;
@@ -615,6 +648,12 @@ Mesh GeometryFactory::LoadMesh(std::string const& _path)
 			uv.y = 1.0f - uv.y;
 			rawUVs.push_back(uv);
 		}
+		else if (strcmp(lineHeader, "vn") == 0)
+		{
+			glm::vec3 n;
+			fscanf_s(file, "%f %f %f\n", &n.x, &n.y, &n.z);
+			rawNormals.push_back(n);
+		}
 		else if (strcmp(lineHeader, "f") == 0)
 		{
 			unsigned int posIdx[3], uvIdx[3], normalIdx[3];
@@ -636,7 +675,8 @@ Mesh GeometryFactory::LoadMesh(std::string const& _path)
 				Vertex v;
 				v.position = rawPositions[posIdx[k] - 1];
 				v.uv       = rawUVs.empty() ? glm::vec2() : rawUVs[uvIdx[k] - 1];
-				v.normal   = glm::vec3();
+				// Use the file's normal when present; zero means "recompute" in CalculateNormalsAndTangents
+				v.normal   = (normalIdx[k] >= 1 && normalIdx[k] <= rawNormals.size()) ? rawNormals[normalIdx[k] - 1] : glm::vec3(0.0f);
 				indices.push_back((uint32_t)vertices.size());
 				vertices.push_back(v);
 			}
@@ -645,7 +685,7 @@ Mesh GeometryFactory::LoadMesh(std::string const& _path)
 
 	fclose(file);
 
-	vertices = CalculateNormalsAndTangents(vertices, indices);
+	vertices = CalculateNormalsAndTangents(vertices, indices, !rawNormals.empty());
 
 	for (Vertex& v : vertices)
 	{
@@ -808,28 +848,49 @@ std::vector<Vertex> GeometryFactory::CalculateNormalsAndTangentsSeamless(std::ve
 }
 
 std::vector<Vertex> GeometryFactory::CalculateNormalsAndTangents(std::vector<Vertex>& _vertices,
-	const std::vector<uint32_t>& _indices)
+	const std::vector<uint32_t>& _indices, bool _keepNormals)
 {
+	auto IsFinite = [](glm::vec3 const& _v) { return std::isfinite(_v.x) && std::isfinite(_v.y) && std::isfinite(_v.z); };
+
+	// Relative epsilon: thresholds are compared against the size of the inputs, so they work whatever the mesh scale
+	constexpr float REL_EPS = 1e-12f;
+
 	// 1. Utiliser un vecteur simple au lieu d'une map (beaucoup plus rapide)
-	struct Accum { glm::vec3 n = {0.0f, 0.0f, 0.0f}; glm::vec3 t = {0.0f, 0.0f, 0.0f}; };
+	struct Accum
+	{
+		glm::vec3 n = {0.0f, 0.0f, 0.0f};         // area weighted sum of valid face normals
+		glm::vec3 t = {0.0f, 0.0f, 0.0f};         // sum of valid face tangents
+		glm::vec3 fallbackN = {0.0f, 0.0f, 0.0f}; // normal of a near-degenerate face, used if no valid face touches the vertex
+	};
 	std::vector<Accum> accum(_vertices.size());
-	
+
 	// 2. Premier passage : Accumulation par face
-	for (size_t i = 0; i < _indices.size(); i += 3)
+	for (size_t i = 0; i + 2 < _indices.size(); i += 3)
 	{
 		if (_indices[i] >= _vertices.size() || _indices[i + 1] >= _vertices.size() || _indices[i + 2] >= _vertices.size())
 			continue;
 
 		uint32_t i0 = _indices[i], i1 = _indices[i+1], i2 = _indices[i+2];
 		Vertex& v0 = _vertices[i0]; Vertex& v1 = _vertices[i1]; Vertex& v2 = _vertices[i2];
-	
+
 		glm::vec3 p0 = v0.position, p1 = v1.position, p2 = v2.position;
 		glm::vec3 e1 = p1 - p0, e2 = p2 - p0;
-	
+
 		// Normale de la face (non normalisée pour pondérer par l'aire de la face)
 		glm::vec3 faceNormal = glm::cross(e1, e2);
-		if (glm::dot(faceNormal, faceNormal) < 1e-8f)
-			continue; // Triangle 3D plat (dégénéré)
+		float faceLenSq = glm::dot(faceNormal, faceNormal);
+		if (IsFinite(faceNormal) == false || faceLenSq <= 0.0f)
+			continue; // fully collapsed triangle: no usable direction at all
+
+		// Near-degenerate (sliver / collinear) relative to its own edge lengths: its direction is unreliable,
+		// keep it only as a fallback for vertices that would otherwise get no normal
+		if (faceLenSq < REL_EPS * glm::dot(e1, e1) * glm::dot(e2, e2))
+		{
+			for (uint32_t idx : {i0, i1, i2})
+				if (accum[idx].fallbackN == glm::vec3(0.0f))
+					accum[idx].fallbackN = faceNormal;
+			continue;
+		}
 
 		// Tangente
 		float du1 = v1.uv.x - v0.uv.x, dv1 = v1.uv.y - v0.uv.y;
@@ -837,40 +898,45 @@ std::vector<Vertex> GeometryFactory::CalculateNormalsAndTangents(std::vector<Ver
 
 		float det = (du1 * dv2 - du2 * dv1);
 
-		if (det > 1e-8f)
+		// abs: mirrored UVs have a negative det but a perfectly valid tangent (f keeps the sign, so T still points along +u)
+		if (glm::abs(det) > REL_EPS * (du1 * du1 + dv1 * dv1) * (du2 * du2 + dv2 * dv2) && det != 0.0f)
 		{
 			float f = 1.0f / det;
 
 			glm::vec3 faceTangent = f * (dv2 * e1 - dv1 * e2);
 
-			if (std::isfinite(faceTangent.x) && std::isfinite(faceTangent.y) && std::isfinite(faceTangent.z))
+			if (IsFinite(faceTangent))
 			{
 				for (uint32_t idx : {i0, i1, i2}) {
 					accum[idx].t += faceTangent;
 				}
 			}
 		}
-		
+
 		for (uint32_t idx : {i0, i1, i2}) {
 			accum[idx].n += faceNormal;
 		}
 	}
-	
+
 	// 3. Second passage : Orthogonalisation et stockage
 	for (size_t i = 0; i < _vertices.size(); i++)
 	{
-		glm::vec3 N(0.0f, 0.0f, 1.0f);
-		if (std::isfinite(accum[i].n.x) && std::isfinite(accum[i].n.y) && std::isfinite(accum[i].n.z))
-		{
-			float lenSq = glm::dot(accum[i].n, accum[i].n);
-			if (lenSq > 1e-8f)
-			{
-				N = glm::normalize(accum[i].n);
-			}
-		}
+		glm::vec3 N(0.0f, 0.0f, 0.0f);
 
-		glm::vec3 T(1.0f, 0.0f, 0.0f); 
-		if (std::isfinite(accum[i].t.x) && std::isfinite(accum[i].t.y) && std::isfinite(accum[i].t.z))
+		// Normal priority: provided normal (if kept) > accumulated faces > near-degenerate face > +Z
+		glm::vec3 const& given = _vertices[i].normal;
+		if (_keepNormals && IsFinite(given) && glm::dot(given, given) > 0.0f)
+			N = glm::normalize(given);
+		else if (IsFinite(accum[i].n) && glm::dot(accum[i].n, accum[i].n) > 0.0f)
+			N = glm::normalize(accum[i].n);
+		else if (IsFinite(accum[i].fallbackN) && glm::dot(accum[i].fallbackN, accum[i].fallbackN) > 0.0f)
+			N = glm::normalize(accum[i].fallbackN);
+
+		if (IsFinite(N) == false || N == glm::vec3(0.0f))
+			N = glm::vec3(0.0f, 0.0f, 1.0f);
+
+		glm::vec3 T(0.0f, 0.0f, 0.0f);
+		if (IsFinite(accum[i].t))
 		{
 			glm::vec3 tanAcc = accum[i].t;
 
@@ -878,10 +944,15 @@ std::vector<Vertex> GeometryFactory::CalculateNormalsAndTangents(std::vector<Ver
 			glm::vec3 result = tanAcc - glm::dot(tanAcc, N) * N;
 
 			float resLenSq = glm::dot(result, result);
-			if (resLenSq > 1e-8f && std::isfinite(resLenSq))
-			{
+			if (std::isfinite(resLenSq) && resLenSq > REL_EPS * glm::dot(tanAcc, tanAcc) && resLenSq > 0.0f)
 				T = glm::normalize(result);
-			}
+		}
+
+		// Fallback tangent: any unit vector perpendicular to N (never parallel, so the shader's TBN stays valid)
+		if (T == glm::vec3(0.0f) || IsFinite(T) == false)
+		{
+			glm::vec3 axis = glm::abs(N.x) < 0.9f ? glm::vec3(1.0f, 0.0f, 0.0f) : glm::vec3(0.0f, 1.0f, 0.0f);
+			T = glm::normalize(axis - glm::dot(axis, N) * N);
 		}
 
 		_vertices[i].normal = N;

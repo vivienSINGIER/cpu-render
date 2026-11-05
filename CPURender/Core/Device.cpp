@@ -486,6 +486,7 @@ void Device::RasterStep(ShaderStages _s)
 					glm::vec3 baryPY = BarycentricWeightPerspective(tBary + baryOffsetY, wPreDiv[v], wPreDiv[v + 1], wPreDiv[v + 2]);
 					px.uvDdx = InterpolateUV(tri, baryPX) - px.uv;
 					px.uvDdy = InterpolateUV(tri, baryPY) - px.uv;
+					px.screenUV = vec2( ((float)x + 0.5f) / (float)m_boundFB.width, ((float)y + 0.5f) / (float)m_boundFB.height);
 					
 					glm::vec4 src = _s.ps->Execute(px);
 					

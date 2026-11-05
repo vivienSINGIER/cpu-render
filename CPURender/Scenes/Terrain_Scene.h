@@ -10,6 +10,8 @@
 #include "../Terrain/Erosion.h"
 #include "../Shaders/Shaders.h"
 
+#include "../Cubemap.h"
+
 class Terrain_Scene : public Scene
 {
 protected:
@@ -18,6 +20,8 @@ protected:
     void OnUpdate(float dt) override;
     void OnDraw(Device* _pDevice) override;
 
+    void SetSkybox(Cubemap _cubemap);
+    
 private:
     void InitLightScene();
     void RegenerateTerrain();
@@ -25,9 +29,12 @@ private:
     void PrintControls() const;
     void ToggleTextures();
     void IncreaseBlending( float _value);
+    void IncreaseWaveHeight(float _value);
+    void IncreaseWaterLevel(float _value);
+    void ToggleWater();
 
-    static constexpr uint32_t TERRAIN_GRID_SIZE = 512;
-    static constexpr float TERRAIN_CELL_SIZE = 0.25f;
+    static constexpr uint32_t TERRAIN_GRID_SIZE = 256;
+    static constexpr float TERRAIN_CELL_SIZE = 0.5f;
 
     Erosion m_eroder; 
     TerrainGenerator m_terrainGenerator;
@@ -35,12 +42,25 @@ private:
     TerrainDesc m_defaultTerrainDesc; // restored with numpad 5
     bool m_terrainDirty = false;
     Object* m_terrain = nullptr;
+    
+    Object* skyboxObject = nullptr;
+    Material m_skyboxMat;
+    
+    Object* m_water = nullptr;
+    Material m_waterMaterial;
+
+    bool m_waterToggle = false;
+    Water_PS::WaterMat m_waterCb = {};
+    WaveSim::SeaParams m_waveCb = { 0.5f, 0.2f, 3.0f, 0.5f };
+    float m_targetWaveHeight = 0.2f;
+    float m_targetWaterLevel = 0.0f;
 
     Material m_mat;
     LitTerrain_BP_PS::MaterialCB m_terrainCb;
 
-    PassDesc m_shadowPass;
+    PassDesc m_skyboxPass;
     PassDesc m_mainPass;
+    PassDesc m_waterPass;
 
     LightData m_lightData;
 };

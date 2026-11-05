@@ -28,6 +28,17 @@ public:
 
     virtual ~Shader() = default;
 
+    bool HasTexture(uint32_t _slot) const;
+    glm::vec4 Sample(int _slot, glm::vec2 _uv) const;
+    glm::vec4 SampleLod(int _slot, glm::vec2 _uv, float _lod) const;
+    glm::vec4 SampleGrad(int _slot, glm::vec2 _uv, glm::vec2 _ddx, glm::vec2 _ddy) const;
+    glm::vec4 SampleCube(int _slot, glm::vec3 _dir) const;
+    glm::vec4 SampleCubeLod(int _slot, glm::vec3 _dir, float _lod) const;
+    glm::vec4 Load(uint32_t _slot, int _x, int _y) const;
+    
+    glm::vec4 LoadRW(uint32_t _slot, int _x, int _y) const;
+    void StoreRW(uint32_t _slot, int _x, int _y, glm::vec4 _color) const;
+    
 protected:
     Shader(GraphicsContext* _ctx, uint16_t _cb2Size);
 
@@ -42,17 +53,6 @@ protected:
     PerPassCB const& Pass() const;
     LightPassCB const& Light() const;
     PerObjectCB const& Object() const;
-
-    bool HasTexture(uint32_t _slot) const;
-    glm::vec4 Sample(int _slot, glm::vec2 _uv) const;
-    glm::vec4 SampleLod(int _slot, glm::vec2 _uv, float _lod) const;
-    glm::vec4 SampleGrad(int _slot, glm::vec2 _uv, glm::vec2 _ddx, glm::vec2 _ddy) const;
-    glm::vec4 SampleCube(int _slot, glm::vec3 _dir) const;
-    glm::vec4 SampleCubeLod(int _slot, glm::vec3 _dir, float _lod) const;
-    glm::vec4 Load(uint32_t _slot, int _x, int _y) const;
-    
-    glm::vec4 LoadRW(uint32_t _slot, int _x, int _y) const;
-    void StoreRW(uint32_t _slot, int _x, int _y, glm::vec4 _color) const;
 
 private:
     std::array<CBRegister, MAX_CB> m_cb;

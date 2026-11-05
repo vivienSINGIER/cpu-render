@@ -146,7 +146,7 @@ void Camera::FillData(PerPassCB* _passData)
     _passData->view = m_view;
     _passData->proj = m_proj;
 
-    _passData->invViewProj = glm::inverse(m_viewProj);
+    _passData->invViewProj = glm::inverse(glm::transpose(m_viewProj));
 
     _passData->eyePos = m_pos;
 

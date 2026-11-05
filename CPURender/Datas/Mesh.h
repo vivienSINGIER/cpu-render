@@ -35,6 +35,7 @@ struct Vertex_OUT
 	glm::vec4 posLightSpace { 0.0f, 0.0f, 0.0f, 0.0f };
 
 	// uv change for one pixel step on screen, set per pixel by the rasterizer for mip selection
+	glm::vec2 screenUV { 0.0f, 0.0f };
 	glm::vec2 uvDdx { 0.0f, 0.0f };
 	glm::vec2 uvDdy { 0.0f, 0.0f };
 };

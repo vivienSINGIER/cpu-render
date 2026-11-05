@@ -119,17 +119,20 @@ public:
         //if (Has_displacement())
         //    uv = _in.uv - glm::vec2(viewT) / glm::max(viewT.z, 0.3f) * (Depth(_in.uv, _in.uvDdx, _in.uvDdy) * mat().heightScale);
 
-        float rockyness = smoothstep(0.5f - mat().blendDistance, 0.5f + mat().blendDistance, _in.color.x);
+        float dirtHeight = smoothstep(0.35f - mat().blendDistance, 0.35f + mat().blendDistance, _in.color.x);
+        float stoneHeight = smoothstep(0.55f - mat().blendDistance, 0.55f + mat().blendDistance, _in.color.x);
+
+        //float texHeight = smoothstep(0.6f - mat().blendDistance, 0.6f + mat().blendDistance, _in.color.x);
         float humidity = smoothstep(0.5f - mat().blendDistance, 0.5f + mat().blendDistance, _in.color.y);
         float upWeight = smoothstep(0.6f - mat().blendDistance, 0.6f + mat().blendDistance, glm::dot(glm::vec3(0, 1, 0), _in.normal));
 
         float materialFactors[6];
-        float rock = rockyness * (1.0f - upWeight);                                 materialFactors[0] = rock; // +rock side
-        float snow = rockyness * upWeight;                                          materialFactors[1] = snow; // +rock up
-        float sand = (1.0f - rockyness) * (1.0f - humidity) * upWeight;             materialFactors[2] = sand; // -rock -humid up
-        float drySand = (1.0f - rockyness) * (1.0f - humidity) * (1.0f - upWeight); materialFactors[3] = drySand; // -rock -humid side
-        float dirt = (1.0f - rockyness) * humidity * (1.0f - upWeight);             materialFactors[4] = dirt; // -rock +humid side
-        float grass = (1.0f - rockyness) * humidity * upWeight;                     materialFactors[5] = grass; // -rock +humid up
+        float rock = stoneHeight * (1.0f - upWeight);                                 materialFactors[0] = rock; // +rock side
+        float snow = stoneHeight * upWeight;                                          materialFactors[1] = snow; // +rock up
+        float sand = ( 1 - dirtHeight - stoneHeight) * upWeight;             materialFactors[2] = sand; // -rock -humid up
+        float drySand = ( 1 - dirtHeight - stoneHeight) * (1.0f - upWeight); materialFactors[3] = drySand; // -rock -humid side
+        float dirt = (dirtHeight - stoneHeight) * (1.0f - upWeight);             materialFactors[4] = dirt; // -rock +humid side
+        float grass = (dirtHeight - stoneHeight) * upWeight;                     materialFactors[5] = grass; // -rock +humid up
 
 
         glm::vec4 albedo = glm::vec4(0, 0, 0, 0);

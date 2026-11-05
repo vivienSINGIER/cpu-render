@@ -78,9 +78,9 @@ Vertex_OUT InterpolateVertex(const Vertex_OUT& _v1, const Vertex_OUT& _v2, float
     vert.posModel = _v1.posModel + (_v2.posModel - _v1.posModel) * _t;
     vert.posLightSpace = _v1.posLightSpace + (_v2.posLightSpace - _v1.posLightSpace) * _t;
      
-    vert.color.r = _v1.color.r + (int)((_v2.color.r - _v1.color.r) * _t);
-    vert.color.g = _v1.color.g + (int)((_v2.color.g - _v1.color.g) * _t);
-    vert.color.b = _v1.color.b + (int)((_v2.color.b - _v1.color.b) * _t);
+    vert.color.r = _v1.color.r + ((_v2.color.r - _v1.color.r) * _t);
+    vert.color.g = _v1.color.g + ((_v2.color.g - _v1.color.g) * _t);
+    vert.color.b = _v1.color.b + ((_v2.color.b - _v1.color.b) * _t);
    
     vert.uv = _v1.uv + (_v2.uv - _v1.uv) * _t;
     vert.normal = _v1.normal + (_v2.normal - _v1.normal) * _t;

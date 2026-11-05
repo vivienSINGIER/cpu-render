@@ -4,6 +4,7 @@
 
 #include "../Factories/ShaderFactory.h"
 #include "../Factories/GeometryFactory.h"
+#include "../Factories/TextureFactory.h"
 #include "../Datas/Lights/LightHelpers.hpp"
 
 enum DrawMask {
@@ -27,6 +28,9 @@ void SnowglobeScene::InitPassDesc(Device* _pDevice)
     m_skyboxPass.clearFlags.clearGBuffer[0] = false;
     m_skyboxPass.clearFlags.clearDepth = false;
 
+    m_shadowPass.fb = _pDevice->CreateFrameBuffer(1024, 1024, 0, true);
+    m_shadowPass.state.cullMode = CullMode::FRONT;
+
     m_mainPass.fb = _pDevice->GetDefaultFrameBuffer();
     m_mainPass.fb.depthBuffer = _pDevice->GetDefaultFrameBuffer().depthBuffer;
     m_mainPass.state.blendMode = Blending::BlendMode::OPAQUE;
@@ -48,7 +52,6 @@ void SnowglobeScene::InitPassDesc(Device* _pDevice)
 void SnowglobeScene::InitMaterials()
 {
     LitC_BP_Cube_PS::MaterialCB floorCB = { {0.5f, 0.5f, 0.1f, 1.0f}, Lighting::g_fresnelR0Templates[PLASTIC], 0.8f, 0.0f, 0.0f, 1.7f, false };
-    LitC_BP_Cube_PS::MaterialCB opaqueCB = { {0.7f, 0.7f, 0.7f, 1.0f}, Lighting::g_fresnelR0Templates[PLASTIC], 0.5f, 0.0f, 0.0f, 1.7f, false };
     m_transparentCB = { {1.0f, 1.0f, 1.0f, 1.0f}, Lighting::g_fresnelR0Templates[CRYSTAL], 0.2f, 0.5f, 0.9f, 1.05f, true, {WIDTH, HEIGHT} };
 
     m_postProcMat = ShaderFactory::Instance()->CreateComputeMaterial("FBFusion");
@@ -61,9 +64,19 @@ void SnowglobeScene::InitMaterials()
     m_depthCopyMat->SetRWTexture(TexCopy_CS::UAV_SLOT_source, m_mainPass.fb.depthBuffer);
     m_depthCopyMat->SetRWTexture(TexCopy_CS::UAV_SLOT_target, m_refractionPass.fb.depthBuffer);
 
-    m_snowMat = ShaderFactory::Instance()->CreateMaterial("LitC_BP_Cube");
-    m_snowMat->SetParams<LitC_BP_Cube_PS::MaterialCB>(LitC_BP_Cube_PS::CB_SLOT_mat, opaqueCB);
-    m_snowMat->SetTexture(LitC_BP_Cube_PS::TEX_SLOT_cubemap, m_cubemap.GetTexture());
+    LitT_BP_Cube_PS::MaterialCB snowCB = { {0.7f, 0.7f, 0.7f, 1.0f}, Lighting::g_fresnelR0Templates[PLASTIC], 0.5f, 0.0f, 0.0f };
+    m_snowMat = ShaderFactory::Instance()->CreateMaterial("LitT_BP_Cube");
+    m_snowMat->SetParams<LitT_BP_Cube_PS::MaterialCB>(LitT_BP_Cube_PS::CB_SLOT_mat, snowCB);
+    m_snowMat->SetTexture(LitT_BP_Cube_PS::TEX_SLOT_cubemap, m_cubemap.GetTexture());
+    m_snowMat->SetTexture(LitT_BP_Cube_PS::TEX_SLOT_shadow, m_shadowPass.fb.depthBuffer);
+
+    Handle chaletDiff = TextureFactory::Instance()->CreateTexture("chalet_diffuse", "Assets/Obj/chalet/chalet_diff.png", true);
+    LitT_BP_Cube_PS::MaterialCB chaletCB = { {1.0f, 1.0f, 1.0f, 1.0f}, Lighting::g_fresnelR0Templates[PLASTIC], 0.8f, 0.0f, 0.0f };
+    m_chaletMat = ShaderFactory::Instance()->CreateMaterial("LitT_BP_Cube");
+    m_chaletMat->SetParams<LitT_BP_Cube_PS::MaterialCB>(LitT_BP_Cube_PS::CB_SLOT_mat, chaletCB);
+    m_chaletMat->SetTexture(LitT_BP_Cube_PS::TEX_SLOT_diffuse, chaletDiff);
+    m_chaletMat->SetTexture(LitT_BP_Cube_PS::TEX_SLOT_cubemap, m_cubemap.GetTexture());
+    m_chaletMat->SetTexture(LitT_BP_Cube_PS::TEX_SLOT_shadow, m_shadowPass.fb.depthBuffer);
 
     m_floorMat = ShaderFactory::Instance()->CreateMaterial("LitC_BP_Cube");
     m_floorMat->SetParams<LitC_BP_Cube_PS::MaterialCB>(LitC_BP_Cube_PS::CB_SLOT_mat, floorCB);
@@ -127,6 +140,14 @@ void SnowglobeScene::InitObjects()
     SnowmanObject->transform.SetScale(glm::vec3(2.0f, 2.0f, 2.0f));
     SnowmanObject->drawMask = OPAQUE;
 
+    Object* ChaletObject = CreateObject(DYNAMIC);
+    ChaletObject->mesh = GeometryFactory::Instance()->LoadMesh("Assets/Obj/chalet/chalet.obj");
+    ChaletObject->mat = m_chaletMat.get();
+    ChaletObject->transform.SetPosition(glm::vec3(-6.0f, -5.0f, 2.0f));
+    ChaletObject->transform.SetYPR(glm::vec3(0.0f, 3.0f * 3.1415/4.0f, 0.0f));
+    ChaletObject->transform.SetScale(glm::vec3(18.0f, 18.0f, 18.0f));
+    ChaletObject->drawMask = OPAQUE;
+
     Object* Ground = CreateObject(DYNAMIC);
     Ground->mesh = cylinder;
     Ground->mat = m_snowMat.get();
@@ -146,12 +167,14 @@ void SnowglobeScene::OnInit(Device* _pDevice)
 {
     m_presentTarget = _pDevice->GetDefaultFrameBuffer().gBuffer[0];
 
+    m_camera.SetShadowDistance(75.0f);
+    
     InitLightScene();
 
     m_cubemap.SetTexture("Skybox",
         "Assets/Textures/Cubemap/StylizedSky/pz.png", "Assets/Textures/Cubemap/StylizedSky/nz.png",
         "Assets/Textures/Cubemap/StylizedSky/nx.png", "Assets/Textures/Cubemap/StylizedSky/px.png",
-        "Assets/Textures/Cubemap/StylizedSky/py.png", "Assets/Textures/Cubemap/StylizedSky/ny.png");
+        "Assets/Textures/Cubemap/StylizedSky/py.png", "Assets/Textures/Cubemap/StylizedSky/ny.png", false, true);
 
     InitPassDesc(_pDevice);
     InitMaterials();
@@ -194,9 +217,18 @@ void SnowglobeScene::OnUpdate(float dt)
 
 void SnowglobeScene::OnDraw(Device* _pDevice)
 {
+    m_camera.FillData(&m_shadowPass.passData);
+
+    Frustum shadowFrustum;
+    glm::mat4x4 lightSpace = Lighting::ComputeDirLightViewProj(m_shadowPass.passData.view, m_camera.GetShadowProj(),
+                                        m_lightData.lights[0].light.direction, m_shadowPass.fb.width, shadowFrustum, 0.0f);
+
+    m_shadowPass.passData.viewProj = lightSpace;
+
     m_camera.FillData(&m_mainPass.passData);
     m_mainPass.passData.deltaTime = m_deltaTime;
     m_mainPass.passData.totalTime = m_totalTime;
+    m_mainPass.passData.lightSpace = lightSpace;
 
     m_skyboxPass.passData.deltaTime = m_deltaTime;
     m_skyboxPass.passData.totalTime = m_totalTime;
@@ -218,8 +250,12 @@ void SnowglobeScene::OnDraw(Device* _pDevice)
     m_refractionPass.passData.deltaTime = m_deltaTime;
     m_refractionPass.passData.totalTime = m_totalTime;
 
+    _pDevice->BeginPass(m_shadowPass);
+        DrawObjects(_pDevice, shadowFrustum, OPAQUE);
+    _pDevice->EndPass();
+
     _pDevice->BeginPass(m_mainPass);
-    DrawObjects(_pDevice, m_camera.GetFrustum(), OPAQUE);
+        DrawObjects(_pDevice, m_camera.GetFrustum(), OPAQUE);
     _pDevice->EndPass();
 
     if (m_toggleSkybox)

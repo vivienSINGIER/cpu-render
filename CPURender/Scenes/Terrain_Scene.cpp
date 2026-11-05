@@ -5,32 +5,34 @@
 #include "../Factories/ShaderFactory.h"
 #include "../Factories/TextureFactory.h"
 #include "../Datas/Lights/LightHelpers.hpp"
+#include "../Factories/GeometryFactory.h"
+#include "../Factories/TextureFactory.h"
 
 void GenerateTerrainAtlas()
 {    
-   Handle RockDiff = TextureFactory::Instance()->CreateTexture("RockDiff", "Assets/Textures/Rock/diffuse.jpg");
+   Handle RockDiff = TextureFactory::Instance()->CreateTexture("RockDiff", "Assets/Textures/Rock/diffuse.jpg", true);
    Handle RockNorm = TextureFactory::Instance()->CreateTexture("RockNorm", "Assets/Textures/Rock/normal.png");
    Handle RockDisp = TextureFactory::Instance()->CreateTexture("RockDisp", "Assets/Textures/Rock/displacement.png");
    Handle RockRoug = TextureFactory::Instance()->CreateTexture("RockRoug", "Assets/Textures/Rock/roughness.jpg");
-   Handle SnowDiff = TextureFactory::Instance()->CreateTexture("SnowDiff", "Assets/Textures/Snow/diffuse.jpg");
+   Handle SnowDiff = TextureFactory::Instance()->CreateTexture("SnowDiff", "Assets/Textures/Snow/diffuse.jpg", true);
    Handle SnowNorm = TextureFactory::Instance()->CreateTexture("SnowNorm", "Assets/Textures/Snow/normal.png");
    Handle SnowDisp = TextureFactory::Instance()->CreateTexture("SnowDisp", "Assets/Textures/Snow/displacement.png");
    Handle SnowRoug = TextureFactory::Instance()->CreateTexture("SnowRoug", "Assets/Textures/Snow/roughness.jpg");
 
-   Handle SandDiff = TextureFactory::Instance()->CreateTexture("SandDiff", "Assets/Textures/Sand/diffuse.jpg");
+   Handle SandDiff = TextureFactory::Instance()->CreateTexture("SandDiff", "Assets/Textures/Sand/diffuse.jpg", true);
    Handle SandNorm = TextureFactory::Instance()->CreateTexture("SandNorm", "Assets/Textures/Sand/normal.png");
    Handle SandDisp = TextureFactory::Instance()->CreateTexture("SandDisp", "Assets/Textures/Sand/displacement.png");
    Handle SandRoug = TextureFactory::Instance()->CreateTexture("SandRoug", "Assets/Textures/Sand/roughness.png");
-   Handle DrySandDiff = TextureFactory::Instance()->CreateTexture("DrySandDiff", "Assets/Textures/DrySand/diffuse.jpg");;
+   Handle DrySandDiff = TextureFactory::Instance()->CreateTexture("DrySandDiff", "Assets/Textures/DrySand/diffuse.jpg", true);;
    Handle DrySandNorm = TextureFactory::Instance()->CreateTexture("DrySandNorm", "Assets/Textures/DrySand/normal.png"); ;
    Handle DrySandDisp = TextureFactory::Instance()->CreateTexture("DrySandDisp", "Assets/Textures/DrySand/displacement.png"); ;
    Handle DrySandRoug = TextureFactory::Instance()->CreateTexture("DrySandRoug", "Assets/Textures/DrySand/roughness.png"); ;
 
-   Handle DirtDiff = TextureFactory::Instance()->CreateTexture("DirtDiff", "Assets/Textures/Dirt/diffuse.jpg");
+   Handle DirtDiff = TextureFactory::Instance()->CreateTexture("DirtDiff", "Assets/Textures/Dirt/diffuse.jpg", true);
    Handle DirtNorm = TextureFactory::Instance()->CreateTexture("DirtNorm", "Assets/Textures/Dirt/normal.png");
    Handle DirtDisp = TextureFactory::Instance()->CreateTexture("DirtDisp", "Assets/Textures/Dirt/displacement.png");
    Handle DirtRoug = TextureFactory::Instance()->CreateTexture("DirtRoug", "Assets/Textures/Dirt/roughness.png");
-   Handle GrassDiff = TextureFactory::Instance()->CreateTexture("GrassDiff", "Assets/Textures/Grass/diffuse.jpg");
+   Handle GrassDiff = TextureFactory::Instance()->CreateTexture("GrassDiff", "Assets/Textures/Grass/diffuse.jpg", true);
    Handle GrassNorm = TextureFactory::Instance()->CreateTexture("GrassNorm", "Assets/Textures/Grass/normal.png");
    Handle GrassDisp = TextureFactory::Instance()->CreateTexture("GrassDisp", "Assets/Textures/Grass/displacement.png");
    Handle GrassRoug = TextureFactory::Instance()->CreateTexture("GrassRoug", "Assets/Textures/Grass/roughness.png");
@@ -81,10 +83,19 @@ void Terrain_Scene::OnInit(Device* _pDevice)
 
     m_mainPass.fb = _pDevice->GetDefaultFrameBuffer();
 
-    m_shadowPass.fb = _pDevice->CreateFrameBuffer(1024, 1024, 0, true);
-    m_shadowPass.state.cullMode = CullMode::FRONT;
+    m_skyboxPass.fb = _pDevice->GetDefaultFrameBuffer();
+    m_skyboxPass.state.depthTest = false;
+    m_skyboxPass.state.depthWrite = false;
+    m_waterPass.clearFlags.clearGBuffer[0] = false;
+    m_waterPass.clearFlags.clearDepth = false;
+
+    m_waterPass.fb = _pDevice->GetDefaultFrameBuffer();
+    m_waterPass.state.cullMode = CullMode::NONE;
+    m_waterPass.state.depthWrite = false;
+    m_waterPass.clearFlags.clearGBuffer[0] = false;
+    m_waterPass.clearFlags.clearDepth = false;
     
-    m_presentTarget = m_mainPass.fb.gBuffer[0];
+    m_presentTarget = m_waterPass.fb.gBuffer[0];
 
     _pDevice->SetLightData(m_lightData);
 
@@ -93,42 +104,75 @@ void Terrain_Scene::OnInit(Device* _pDevice)
     
     m_terrainGenerator.m_grid_size = TERRAIN_GRID_SIZE;
     m_terrainGenerator.m_cellSize = TERRAIN_CELL_SIZE;
-    m_terrainDesc.frequency = 0.008f;
-    m_terrainDesc.octaveCount = 6;
-    m_terrainDesc.heightScale = 7.0f;
+    m_terrainDesc.frequency = 0.014f;          // smaller features => more ridges/valleys for erosion to carve
+    m_terrainDesc.octaveCount = 8;             // fine detail on the slopes
+    m_terrainDesc.domainWarpStrength = 0.4f;   // bent, less regular ridgelines
+    m_terrainDesc.ridged = false;               // sharp crests instead of round bumps
+    m_terrainDesc.baseHeight = -8.0f;          // everything outside the mountain stays underwater
+    m_terrainDesc.heightScale = 3.0f;
     m_terrainDesc.heightRedistribution = 1.7f;
-    m_terrainDesc.minHeight = -20.0f;                                                                                                                                                                                                 
-    m_terrainDesc.maxHeight = 25.0f;                                                                                                                                                                                                  
-    m_terrainDesc.domainWarpStrength = 0.25f;                                                                                                                                                                                         
-    m_terrainDesc.useCenterMountain = true;                                                                                                                                                                                           
-    m_terrainDesc.mountainCenter = glm::vec2(0.5f);                                                                                                                                                                                   
-    m_terrainDesc.mountainRadius = 0.35f;                                                                                                                                                                                             
-    m_terrainDesc.mountainHeight = 15.0f;
-    m_terrainDesc.edgeWarp = 0.2f;
+    m_terrainDesc.useCenterMountain = true;
+    m_terrainDesc.mountainCenter = {0.5f, 0.5f};
+    m_terrainDesc.mountainRadius = 0.38f;      // narrower base => steeper flanks
+    m_terrainDesc.mountainHeight = 32.0f;
+    m_terrainDesc.mountainNoiseScale = 0.7f;   // ridged noise strongly sculpts the mountain
+    m_terrainDesc.edgeWarp = 0.25f;
+    m_terrainDesc.maxHeight = 48.0f;           // above the highest summit (-8 + 32 * 1.7) so nothing is clamped flat
+    m_terrainDesc.minHeight = -23.5f;          // sand threshold (0.35) lands ~1.5 above water: (1.5 - 0.35 * 48) / 0.65
 
     m_terrainGenerator.GenerateMesh(m_terrainDesc);
     PrintControls();
     PrintTerrainDesc();
     
-    float terrainSide = (m_terrainGenerator.m_grid_size-1) * TERRAIN_CELL_SIZE;
+    float terrainSide = ( m_terrainGenerator.m_grid_size - 1.0f) * TERRAIN_CELL_SIZE;
 
+    Cubemap cubemap;
+    cubemap.SetTexture("Skybox", "Assets/Textures/Cubemap/sky/front.png", "Assets/Textures/Cubemap/sky/back.png",
+        "Assets/Textures/Cubemap/sky/right.png", "Assets/Textures/Cubemap/sky/left.png",
+        "Assets/Textures/Cubemap/sky/up.png", "Assets/Textures/Cubemap/sky/down.png", true, false);
+        
     m_terrainCb = {
-        {1.0f, 1.0f, 1.0f, 1.0f},
+            {1.0f, 1.0f, 1.0f, 1.0f},
             Lighting::g_fresnelR0Templates[PLASTIC],
                 1.0f, 0.0f, 0.0f, {terrainSide, terrainSide}, true, 0.05f
     };
 
-    Handle Atlas = TextureFactory::Instance()->CreateTexture("TerrainTextureAtlas", "Atlas.hdr");
+    Handle Atlas = TextureFactory::Instance()->CreateTexture("TerrainTextureAtlas", "Atlas.hdr", true);
 
     m_mat = ShaderFactory::Instance()->CreateMaterial("Lit4T_BP");
     m_mat->SetParams<LitTerrain_BP_PS::MaterialCB>(LitTerrain_BP_PS::CB_SLOT_mat, m_terrainCb);
     m_mat->SetTexture(LitTerrain_BP_VS::TEX_SLOT_texWeight, m_terrainGenerator.m_textureWeights);
     m_mat->SetTexture(LitTerrain_BP_PS::TEX_SLOT_textureAtlas, Atlas);
 
+    Handle BakedSeaBase = TextureFactory::Instance()->CreateTexture("PreBakedSeaBase", 512, 512);
+    WaveSim::BakeSeaBase(TextureFactory::Instance()->GetTexture(BakedSeaBase));
+    
+    m_waterMaterial = ShaderFactory::Instance()->CreateMaterial("Water");
+    m_waterMaterial->SetParams(Water_PS::CB_SLOT_mat, m_waterCb);
+    m_waterMaterial->SetParams(Water_VS::CB_SLOT_waves, m_waveCb);
+    m_waterMaterial->SetTexture(Water_PS::TEX_SLOT_depth, m_mainPass.fb.depthBuffer);
+    m_waterMaterial->SetTexture(Water_PS::TEX_SLOT_screen, m_mainPass.fb.gBuffer[0]);
+    m_waterMaterial->SetTexture(Water_PS::TEX_SLOT_seaBase, BakedSeaBase);
+    m_waterMaterial->SetTexture(Water_PS::TEX_SLOT_envCubeMap, cubemap.GetTexture());
+    
+    float terrY = m_terrainDesc.baseHeight + (m_terrainDesc.maxHeight - m_terrainDesc.minHeight) / 2.0f;
+    
     m_terrain = CreateObject(STATIC);
     m_terrain->mesh = m_terrainGenerator.GetTerrainMesh();
     m_terrain->mat = m_mat.get();
     m_terrain->transform.SetPosition(glm::vec3(0.0f, 0.0f, 0.0f));
+    m_terrain->drawMask = 0b10;
+    
+    float scaleW = TERRAIN_GRID_SIZE * TERRAIN_CELL_SIZE;
+    
+    m_water = CreateObject(STATIC);
+    m_water->mesh = GeometryFactory::Instance()->BuildPlane(false, 6);
+    m_water->mat = m_waterMaterial.get();
+    m_water->transform.SetPosition(glm::vec3(0.0f, 0.0f, 0.0f));
+    m_water->transform.SetScale(vec3(scaleW, 1.0f, scaleW));
+    m_water->drawMask = 0b01;
+    
+    SetSkybox(cubemap);
 }
 
 // Terrain controls, physical keys (scancodes) so the numpad works with NumLock on or off. Hold to repeat.
@@ -155,6 +199,14 @@ void Terrain_Scene::OnHandleEvent(const SDL_Event& event)
     case SDL_SCANCODE_T: ToggleTextures(); return;
     case SDL_SCANCODE_B: IncreaseBlending(+0.001f); return;
     case SDL_SCANCODE_N: IncreaseBlending(-0.001f); return;
+
+    case SDL_SCANCODE_G: IncreaseWaveHeight(+0.2f); return;
+    case SDL_SCANCODE_H: IncreaseWaveHeight(-0.2f); return;
+
+    case SDL_SCANCODE_J: IncreaseWaterLevel(+1.0f); return;
+    case SDL_SCANCODE_K: IncreaseWaterLevel(-1.0f); return;
+
+    case SDL_SCANCODE_L: ToggleWater(); return;
         
     // --- Arrows : noise offset | Shift : mountain center ---
     case SDL_SCANCODE_LEFT:  if (shift) add(d.mountainCenter.x, -centerStep, 0.0f, 1.0f); else d.noiseOffset.x -= offsetStep; break;
@@ -208,6 +260,21 @@ void Terrain_Scene::OnUpdate(float dt)
         m_terrainDirty = false;
         RegenerateTerrain();
     }
+
+    if (m_waveCb.height != m_targetWaveHeight)
+    {
+        float t = 2.0f * dt;
+        m_waveCb.height = m_waveCb.height + (m_targetWaveHeight - m_waveCb.height) * t;
+        m_waterMaterial->SetParams(Water_VS::CB_SLOT_waves, m_waveCb);
+    }
+
+    if (m_waterCb.waterLevel != m_targetWaterLevel)
+    {
+        float t = 2.0f * dt;
+        m_waterCb.waterLevel = m_waterCb.waterLevel + (m_targetWaterLevel - m_waterCb.waterLevel) * t;
+        m_waterMaterial->SetParams(Water_PS::CB_SLOT_mat, m_waterCb);
+        m_water->transform.SetPosition(glm::vec3(0.0f, m_waterCb.waterLevel, 0.0f));
+    }
 }
 
 void Terrain_Scene::RegenerateTerrain()
@@ -249,7 +316,9 @@ void Terrain_Scene::PrintControls() const
               << "  PgUp / PgDn       : mountain radius + / -   Shift + PgUp / PgDn : min height + / -\n"
               << "  Ins / Del         : mountain noise + / -    Shift + Ins / Del   : edge warp + / -\n"
               << "=== Render controls ===\n"
-              << "  T                 : toggle textures         B / N               : terrain blending + / -\n";
+              << "  T                 : toggle textures         B / N               : terrain blending + / -\n"
+              << "=== Simulation controls ===\n"
+              << "  G / H             : wave height + / -       J / K               : water level + / -\n";
 }
 
 void Terrain_Scene::ToggleTextures()
@@ -265,25 +334,57 @@ void Terrain_Scene::IncreaseBlending(float _value)
     m_mat->SetParams<LitTerrain_BP_PS::MaterialCB>(LitTerrain_BP_PS::CB_SLOT_mat, m_terrainCb);
 }
 
+void Terrain_Scene::IncreaseWaveHeight(float _value)
+{
+    m_targetWaveHeight += _value;
+}
+
+void Terrain_Scene::IncreaseWaterLevel(float _value)
+{
+    m_targetWaterLevel += _value;
+}
+
+void Terrain_Scene::ToggleWater()
+{
+    m_waterToggle = !m_waterToggle;
+}
+
 void Terrain_Scene::OnDraw(Device* _pDevice)
 {
-    Frustum shadowFrustum;
-    glm::mat4x4 lightSpace = Lighting::ComputeDirLightViewProj(m_shadowPass.passData.view, m_camera.GetShadowProj(),
-                                        m_lightData.lights[0].light.direction, m_shadowPass.fb.width, shadowFrustum, 0.0f);
-
     m_camera.FillData(&m_mainPass.passData);
     m_mainPass.passData.deltaTime = m_deltaTime;
     m_mainPass.passData.totalTime = m_totalTime;
-    m_mainPass.passData.lightSpace = lightSpace;
+    // m_mainPass.passData.lightSpace = lightSpace;
+    
+    m_camera.FillData(&m_waterPass.passData);
+    m_waterPass.passData.deltaTime = m_deltaTime;
+    m_waterPass.passData.totalTime = m_totalTime;
 
-    m_camera.FillData(&m_shadowPass.passData);
-    m_shadowPass.passData.viewProj = lightSpace;
-
-    // _pDevice->BeginPass(m_shadowPass);
-    //     DrawObjects(_pDevice, shadowFrustum);
-    // _pDevice->EndPass();
+    m_camera.FillData(&m_skyboxPass.passData);
 
     _pDevice->BeginPass(m_mainPass);
-        DrawObjects(_pDevice, m_camera.GetFrustum());
+        DrawObjects(_pDevice, m_camera.GetFrustum(), 0b10);
     _pDevice->EndPass();
+
+    _pDevice->BeginPass(m_skyboxPass);
+    _pDevice->RegisterCommand(skyboxObject->mesh, skyboxObject->transform.GetMatrix(), skyboxObject->mat);
+    _pDevice->EndPass();
+    
+    if (m_waterToggle)
+    {
+        _pDevice->BeginPass(m_waterPass);
+            DrawObjects(_pDevice, m_camera.GetFrustum(), 0b01);
+        _pDevice->EndPass();
+    }
+}
+
+void Terrain_Scene::SetSkybox(Cubemap _cubemap)
+{
+    skyboxObject = new Object();
+    m_skyboxMat = ShaderFactory::Instance()->CreateMaterial("UnlitSkybox");
+    m_skyboxMat->SetTexture(UnlitSkybox_PS::TEX_SLOT_albedo, _cubemap.GetTexture());
+
+    skyboxObject->mat = m_skyboxMat.get();
+    skyboxObject->mesh = GeometryFactory::Instance()->BuildSkybox();
+    skyboxObject->transform.SetScale(50.0f);
 }

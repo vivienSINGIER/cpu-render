@@ -97,7 +97,7 @@ glm::vec4 Shader::SampleCube(int _slot, glm::vec3 _dir) const
 
     Texture const* tex = m_r->textures[_slot];
 
-    return tex->SampleNPCube(_dir);
+    return tex->SampleCube(_dir);
 }
 
 glm::vec4 Shader::SampleCubeLod(int _slot, glm::vec3 _dir, float _lod) const
@@ -108,7 +108,7 @@ glm::vec4 Shader::SampleCubeLod(int _slot, glm::vec3 _dir, float _lod) const
 
     Texture const* tex = m_r->textures[_slot];
 
-    return tex->SampleNPCubeLod(_dir, _lod);
+    return tex->SampleCubeLod(_dir, _lod);
 }
 
 glm::vec4 Shader::Load(uint32_t _slot, int _x, int _y) const
