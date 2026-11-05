@@ -34,7 +34,7 @@ public:
     
     void SetSize(uint32 _width, uint32 _height);
     
-    glm::vec4 SampleNP(glm::vec2 uv) const; // nearest point, format aware
+    glm::vec4 SampleNP(glm::vec2 uv) const;
     glm::vec4 SampleBilinear(glm::vec2 _uv, uint32 _lod) const;
     glm::vec4 SampleLod(glm::vec2 uv, float _lod) const;
     glm::vec4 SampleGrad(glm::vec2 _uv, glm::vec2 _ddx, glm::vec2 _ddy) const; // lod from screen space uv derivatives

@@ -69,7 +69,7 @@ void Device::Clear(FrameBuffer _fb, ClearFlags _flags)
 	depth->Clear(glm::vec4(1.0f));
 }
 
-void Device::RegisterCommand(Mesh const& _m, glm::mat4x4 _world, MaterialData const* _mat, std::vector<glm::mat4x4> _finalBoneMatrices)
+void Device::RegisterCommand(Mesh const& _m, glm::mat4x4 _world, MaterialData const* _mat, std::vector<glm::mat4x4> const& _finalBoneMatrices)
 {
 	assert(m_hasOpenPass == true && "Can't push command into close pass queue");
 	
@@ -140,13 +140,13 @@ void Device::Present(Handle _texH)
 	float exposure = m_autoExposure ? glm::clamp(m_exposure * 0.18f / m_adaptedLum, 0.25f, 2.0f)
 	                                : m_exposure;
 	
-#pragma omp parallel
-#pragma omp for reduction(+:logSum, count)
-	for (int32_t i = 0; i < HEIGHT * WIDTH; i++)
+	int32_t nanCount = 0;
+
+#pragma omp parallel for collapse(2) reduction(+:logSum, count, nanCount)
+	for (int32_t y = 0; y < (int32_t)HEIGHT; y++)
+	for (int32_t x = 0; x < (int32_t)WIDTH; x++)
 	{
-		uint32_t y = i / WIDTH;
-		uint32_t x = i % WIDTH;
-		
+
 		glm::vec4 v;
 
 		if (match)
@@ -164,7 +164,7 @@ void Device::Present(Handle _texH)
 			vec3 hdr = vec3(v);
 			
 			if (v.x != v.x)
-				std::cout << "NaN Pixel\n";
+				nanCount++;
 
 			logSum += glm::log(1e-4f + glm::max(Lighting::Luminance(hdr), 0.0f)); // start at small positive value to avoid inf from log on negative number
 			count++;
@@ -177,9 +177,12 @@ void Device::Present(Handle _texH)
 		}
 		
 		m_renderTarget->Store(x, HEIGHT - y - 1, vec4(mapped, 1.0f));
-	
+
 	}
-	
+
+	if (nanCount > 0)
+		std::cout << nanCount << " NaN Pixel(s)\n";
+
 	if (!isSingleChannel && count > 0)
 	{
 		float avgLum = glm::exp((float)(logSum / count));
@@ -403,7 +406,7 @@ void Device::ClipToScreen()
 #pragma omp parallel for
 	for (uint32_t v = 0; v < m_clipped.size(); v++)
 	{
-		wPreDiv[v] = m_clipped[v].posH.w;
+		wPreDiv[v] = 1.0f / m_clipped[v].posH.w;
 
 		// Perspective Divide
 		m_clipped[v].posH /= m_clipped[v].posH.w;
@@ -461,8 +464,6 @@ void Device::RasterStep(ShaderStages _s)
 					if (IsInTriangle(tBary) == false)
 						continue;
 					
-					glm::vec3 baryP = BarycentricWeightPerspective(tBary, wPreDiv[v], wPreDiv[v + 1], wPreDiv[v + 2]);
-					
 					glm::vec4 posH = InterpolatePositionH(glm::vec2({ (float)x + 0.5f, (float)y + 0.5f }), tri, tBary);
 					float pixelDepth = posH.z;
 					
@@ -474,6 +475,8 @@ void Device::RasterStep(ShaderStages _s)
 							continue;	
 					}
 					
+					glm::vec3 baryP = BarycentricWeightPerspective(tBary, wPreDiv[v], wPreDiv[v + 1], wPreDiv[v + 2]);
+					
 					Vertex_OUT px;
 					px.posH = posH;
 					InterpolateVertex(px, glm::vec2({ (float)x + 0.5f, (float)y + 0.5f }), tri, baryP);
@@ -483,16 +486,25 @@ void Device::RasterStep(ShaderStages _s)
 					glm::vec3 baryPY = BarycentricWeightPerspective(tBary + baryOffsetY, wPreDiv[v], wPreDiv[v + 1], wPreDiv[v + 2]);
 					px.uvDdx = InterpolateUV(tri, baryPX) - px.uv;
 					px.uvDdy = InterpolateUV(tri, baryPY) - px.uv;
-					
 					px.screenUV = vec2( ((float)x + 0.5f) / (float)m_boundFB.width, ((float)y + 0.5f) / (float)m_boundFB.height);
 					
-					if (state.depthWrite && db)
+					glm::vec4 src = _s.ps->Execute(px);
+					
+					if (src == Color::DISCARDED)
+						continue;
+					
+					if (db && state.depthWrite && (src.a >= 1.0f || state.blendMode == Blending::OPAQUE))
 						db->Store(x, y, vec4(pixelDepth, 0.0f, 0.0f, 1.0f));
 					
 					if (writeColor == false)
 						continue;
 					
-					glm::vec4 src = _s.ps->Execute(px);
+					if (state.blendMode == Blending::OPAQUE)
+					{
+						fb->Store(x, y, src);
+						continue;
+					}
+					
 					glm::vec4 dest = fb->Load(x, y);
 					
 					fb->Store(x, y, Blending::Blend(src, dest, state.blendMode)); 

@@ -50,7 +50,7 @@ public:
         Vertex_OUT v;
         v.color = _in.color;
         v.posModel = Object().model * totalPosition;
-        v.posH = Pass().proj * Pass().view * v.posModel;
+        v.posH = v.posModel * Pass().viewProj; // viewProj is stored transposed
         v.normal = glm::mat3x3(Object().normalMatrix) * totalNormal;
         v.uv = _in.uv;
 
@@ -83,6 +83,41 @@ public:
 
     float Depth(glm::vec2 _uv, glm::vec2 _ddx, glm::vec2 _ddy) const { return 1.0f - Sample_Grad_displacement(_uv, _ddx, _ddy).x; }
     
+    vec2 ParralaxOcclusionMapping(vec2 _uv, vec3 _viewT, glm::vec2 _ddx, glm::vec2 _ddy) const
+    {
+        vec2 P = vec2(_viewT) / _viewT.z * mat().heightScale;
+        
+        const float minLayers = 8.0f;
+        const float maxLayers = 32.0f;
+        float numLayers = mix(maxLayers, minLayers, abs(_viewT.z));
+        float layerStep = 1.0f / numLayers;
+        vec2 deltaUV = P / numLayers;
+        
+        float layerDepth = 0.0f;
+        vec2 curUV = _uv;
+        float curDepth = Depth(curUV, _ddx, _ddy);
+        vec2 prevUV = curUV;
+        float prevDepth = curDepth;
+        
+        const int maxSteps = (int)numLayers + 1;
+        for (int i = 0; i < maxSteps && layerDepth < curDepth; i++)
+        {
+            prevUV = curUV;
+            prevDepth = curDepth;
+            
+            curUV -= deltaUV;
+            layerDepth += layerStep;
+            curDepth = Depth(curUV, _ddx, _ddy);
+        }
+        
+        float after = curDepth - layerDepth;
+        float before = prevDepth - (layerDepth - layerStep);
+        float denom = after - before;
+        float w = (abs(denom) > 1e-6f) ? after / denom : 0.0f;
+        
+        return mix(curUV, prevUV, w);
+    }
+    
     float ShadowCalc(glm::vec4 posLightSpace) const
     {
         vec3 projCoords = vec3(posLightSpace) / posLightSpace.w;
@@ -105,10 +140,12 @@ public:
 
         //Verification
         glm::vec3 resultT = T - glm::dot(N, T) * N;
-        if (glm::dot(resultT, resultT) > 1e-8f) {
+        if (glm::dot(resultT, resultT) > 1e-8f) 
+        {
             T = glm::normalize(resultT);
         }
-        else {
+        else 
+        {
             // Degenerated
             T = (std::abs(N.z) < 0.999f) ? glm::normalize(glm::cross(N, glm::vec3(0, 0, 1))) : glm::normalize(glm::cross(N, glm::vec3(0, 1, 0)));
         }
@@ -124,8 +161,10 @@ public:
         viewT.y = -viewT.y;
         
         glm::vec2 uv = _in.uv;
-        if (Has_displacement())
-            uv = _in.uv - glm::vec2(viewT) / glm::max(viewT.z, 0.3f) * (Depth(_in.uv, _in.uvDdx, _in.uvDdy) * mat().heightScale);
+        if (Has_displacement() && viewT.z > 1e-3f)
+        {
+            uv = ParralaxOcclusionMapping(_in.uv, viewT, _in.uvDdx, _in.uvDdy);
+        }
         
         glm::vec4 albedo;
         if (Has_diffuse())
