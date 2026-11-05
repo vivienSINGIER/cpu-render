@@ -47,8 +47,7 @@ glm::vec4 TerrainGenerator::SampleTex(TerrainDesc const& _d, float _x, float _y,
 
 	float height = (_height - _d.minHeight) / (_d.maxHeight - _d.minHeight);
 	height += PerlinNoise::FractalBrownianMotion(_x * 2.0f -4.1f, _y * 1.8f + 12.0f, 0.02f, 4) * 0.05f; // Add noise
-	float humidity = (PerlinNoise::FractalBrownianMotion(_x * 0.8f + 2.1f, _y * 0.6f + 16.7f, 0.005f, 4)+1) / 2.0f;
-	glm::vec4 weights = glm::vec4(height, humidity, 0.0f, 0.0f);
+	glm::vec4 weights = glm::vec4(height, 0.0f, 0.0f, 0.0f);
 
 	return weights;
 }
