@@ -178,23 +178,17 @@ glm::vec4 Texture::SampleCubeLod(glm::vec3 _dir, float _lod) const
     {
         uint32 F_L = F >> _l;
         
-        vec2 p  = (uv - floor(uv)) * vec2((float)F_L) - 0.5f;
+        // Cube faces must NOT wrap: wrapping would blend texels from the opposite edge of the same face
+        // and create a visible seam. Clamp to the face edge instead (GL_CLAMP_TO_EDGE behaviour).
+        vec2 p  = glm::clamp(uv, 0.0f, 1.0f) * vec2((float)F_L) - 0.5f;
         vec2 base = glm::floor(p);
         vec2 f = p - base;
-        
-        int32 x0 = (int32)base.x;
-        int32 y0 = (int32)base.y;
-        int32 x1 = x0 + 1;
-        int32 y1 = y0 + 1;
-    
-        if (x0 < 0) 
-            x0 += (int32)F_L;
-        if (y0 < 0)
-            y0 += (int32)F_L;
-        if (x1 >= (int32)F_L)
-            x1 -= (int32)F_L;
-        if (y1 >= (int32)F_L)
-            y1 -= (int32)F_L;
+
+        int32 maxT = (int32)F_L - 1;
+        int32 x0 = glm::clamp((int32)base.x,     0, maxT);
+        int32 y0 = glm::clamp((int32)base.y,     0, maxT);
+        int32 x1 = glm::clamp((int32)base.x + 1, 0, maxT);
+        int32 y1 = glm::clamp((int32)base.y + 1, 0, maxT);
         
         vec4 top = glm::mix(Load(CubeTexel(_l, face, x0, y0)), Load(CubeTexel(_l, face, x1, y0)), f.x);
         vec4 bot = glm::mix(Load(CubeTexel(_l, face, x0, y1)), Load(CubeTexel(_l, face, x1, y1)), f.x);
