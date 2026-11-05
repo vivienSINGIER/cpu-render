@@ -484,13 +484,17 @@ void Device::RasterStep(ShaderStages _s)
 					px.uvDdx = InterpolateUV(tri, baryPX) - px.uv;
 					px.uvDdy = InterpolateUV(tri, baryPY) - px.uv;
 					
+					glm::vec4 src = _s.ps->Execute(px);
+					
+					if (src == Color::DISCARDED)
+						continue;
+					
 					if (state.depthWrite && db && px.color.a >= 1.0f || state.blendMode == Blending::OPAQUE)
 						db->Store(x, y, vec4(pixelDepth, 0.0f, 0.0f, 1.0f));
 					
 					if (writeColor == false)
 						continue;
 					
-					glm::vec4 src = _s.ps->Execute(px);
 					glm::vec4 dest = fb->Load(x, y);
 					
 					fb->Store(x, y, Blending::Blend(src, dest, state.blendMode)); 

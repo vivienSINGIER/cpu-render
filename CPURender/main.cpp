@@ -85,7 +85,7 @@ int main(void) {
 
     Engine engine;
     Texture frameBuffer(WIDTH, HEIGHT,  Texture::RGBA32, Texture::LINEAR);
-    engine.Init<SnowglobeScene>(&frameBuffer);
+    engine.Init<SceneBlinnPhong>(&frameBuffer);
     
     bool isRunning = true;
     uint32_t frame = 1;

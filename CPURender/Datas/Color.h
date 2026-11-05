@@ -29,6 +29,8 @@ namespace Color
     inline static glm::vec4 LIGHT_GRAY = {0.75f, 0.75f, 0.75f, 1.0f};
     inline static glm::vec4 DARK_GRAY  = {0.25f, 0.25f, 0.25f, 1.0f};
     inline static glm::vec4 NONE       = {0.0f, 0.0f, 0.0f, 0.0f};
+    
+    inline static glm::vec4 DISCARDED  = {255.0f, 0.0f, 255.0f, 1.0f};
 };
 
 #endif

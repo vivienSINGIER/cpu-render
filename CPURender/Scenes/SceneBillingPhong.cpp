@@ -34,7 +34,7 @@ namespace
         { "Linoleum",       "diff.png",    "nor.png",    "arm.png", nullptr,            0.0f,  0.5f, 0.0f },
         { "BlueMetalPlate", "diff.png",    "nor.png",    "arm.png", nullptr,            0.0f,  0.4f, 1.0f },
         { "RustyMetal",     "diff.png",    "nor.png",    "arm.png", nullptr,            0.0f,  0.6f, 1.0f },
-        { "Gold",           "diffuse.png", "normal.png", nullptr,   "displacement.png", 0.02f, 0.3f, 1.0f },
+        { "Brick",          "diff.png",    "nor.png",    "arm.png", "disp.png",         0.04f, 0.8f, 0.0f },
     };
     constexpr int MATERIAL_COUNT = (int)(sizeof(g_materials) / sizeof(g_materials[0]));
 
