@@ -37,7 +37,8 @@ private:
 
 	static std::vector<Vertex> CalculateNormalsAndTangentsSeamless(std::vector<Vertex>& _vertices, std::vector<Index>& _indices);
 
-	static std::vector<Vertex> CalculateNormalsAndTangents(std::vector<Vertex>& _vertices, const std::vector<uint32_t>& _indices);
+	// _keepNormals: keep the vertices' existing (e.g. file-provided) normals and only recompute where they are invalid
+	static std::vector<Vertex> CalculateNormalsAndTangents(std::vector<Vertex>& _vertices, const std::vector<uint32_t>& _indices, bool _keepNormals = false);
 	
 	static void ApplyPaletteColors(std::vector<Vertex>& _vertices);
 	static void ApplyGradientColors(std::vector<Vertex>& _vertices);

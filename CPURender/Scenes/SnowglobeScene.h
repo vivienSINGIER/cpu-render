@@ -30,6 +30,7 @@ private:
 
     Material m_floorMat;
     Material m_snowMat;
+    Material m_chaletMat;
     Material m_glassMat;
 
     Material m_transparentMat;
@@ -42,6 +43,7 @@ private:
 
     int m_blendIndex = Blending::ALPHA;
     PassDesc m_skyboxPass;
+    PassDesc m_shadowPass;
     PassDesc m_mainPass;
     PassDesc m_particlesPass;
     PassDesc m_depthCopyPass;

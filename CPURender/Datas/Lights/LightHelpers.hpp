@@ -155,7 +155,7 @@ namespace Lighting
         glm::mat4x4 const& _camProjShadow,
         glm::vec3 _lightDir,
         uint32_t _shadowMapSize,
-        Frustum _out,
+        Frustum& _out,
         float _zExtend)     // Extra depth towards the light for off screen caster
     {
         glm::mat4x4 invVP = glm::inverse(_camProjShadow * _camView);
@@ -193,7 +193,7 @@ namespace Lighting
         lightProj[3][0] += offset.x;
         lightProj[3][1] += offset.y;
         
-        _out = Frustum(lightView, lightProj);
+        _out = Frustum(lightView, lightProj, true); // orthoLH_NO -> GL style [-1, 1] depth
         return glm::transpose(lightProj * lightView);
     }
 }
