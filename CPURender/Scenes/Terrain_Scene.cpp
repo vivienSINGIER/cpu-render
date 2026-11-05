@@ -84,10 +84,10 @@ void Terrain_Scene::OnInit(Device* _pDevice)
     m_mainPass.fb = _pDevice->GetDefaultFrameBuffer();
 
     m_skyboxPass.fb = _pDevice->GetDefaultFrameBuffer();
-    m_skyboxPass.state.depthTest = false;
+    m_skyboxPass.state.depthTest = true;
     m_skyboxPass.state.depthWrite = false;
-    m_waterPass.clearFlags.clearGBuffer[0] = false;
-    m_waterPass.clearFlags.clearDepth = false;
+    m_skyboxPass.clearFlags.clearGBuffer[0] = false;
+    m_skyboxPass.clearFlags.clearDepth = false;
 
     m_waterPass.fb = _pDevice->GetDefaultFrameBuffer();
     m_waterPass.state.cullMode = CullMode::NONE;
@@ -386,5 +386,5 @@ void Terrain_Scene::SetSkybox(Cubemap _cubemap)
 
     skyboxObject->mat = m_skyboxMat.get();
     skyboxObject->mesh = GeometryFactory::Instance()->BuildSkybox();
-    skyboxObject->transform.SetScale(50.0f);
+    skyboxObject->transform.SetScale(500.0f);
 }
