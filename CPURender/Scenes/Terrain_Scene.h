@@ -29,9 +29,12 @@ private:
     void PrintControls() const;
     void ToggleTextures();
     void IncreaseBlending( float _value);
+    void IncreaseWaveHeight(float _value);
+    void IncreaseWaterLevel(float _value);
+    void ToggleWater();
 
     static constexpr uint32_t TERRAIN_GRID_SIZE = 256;
-    static constexpr float TERRAIN_CELL_SIZE = 0.25f;
+    static constexpr float TERRAIN_CELL_SIZE = 0.5f;
 
     Erosion m_eroder; 
     TerrainGenerator m_terrainGenerator;
@@ -45,6 +48,12 @@ private:
     
     Object* m_water = nullptr;
     Material m_waterMaterial;
+
+    bool m_waterToggle = false;
+    Water_PS::WaterMat m_waterCb = {};
+    WaveSim::SeaParams m_waveCb = { 0.5f, 0.2f, 3.0f, 0.5f };
+    float m_targetWaveHeight = 0.2f;
+    float m_targetWaterLevel = 0.0f;
 
     Material m_mat;
     LitTerrain_BP_PS::MaterialCB m_terrainCb;

@@ -142,12 +142,9 @@ void Terrain_Scene::OnInit(Device* _pDevice)
     Handle BakedSeaBase = TextureFactory::Instance()->CreateTexture("PreBakedSeaBase", 512, 512);
     WaveSim::BakeSeaBase(TextureFactory::Instance()->GetTexture(BakedSeaBase));
     
-    Water_PS::WaterMat wCb = {};
-    WaveSim::SeaParams waveCb = { 0.5f, 0.2f, 3.0f, 0.5f };
-    
     m_waterMaterial = ShaderFactory::Instance()->CreateMaterial("Water");
-    m_waterMaterial->SetParams(Water_PS::CB_SLOT_mat, wCb);
-    m_waterMaterial->SetParams(Water_VS::CB_SLOT_waves, waveCb);
+    m_waterMaterial->SetParams(Water_PS::CB_SLOT_mat, m_waterCb);
+    m_waterMaterial->SetParams(Water_VS::CB_SLOT_waves, m_waveCb);
     m_waterMaterial->SetTexture(Water_PS::TEX_SLOT_depth, m_mainPass.fb.depthBuffer);
     m_waterMaterial->SetTexture(Water_PS::TEX_SLOT_screen, m_mainPass.fb.gBuffer[0]);
     m_waterMaterial->SetTexture(Water_PS::TEX_SLOT_seaBase, BakedSeaBase);
@@ -197,6 +194,14 @@ void Terrain_Scene::OnHandleEvent(const SDL_Event& event)
     case SDL_SCANCODE_T: ToggleTextures(); return;
     case SDL_SCANCODE_B: IncreaseBlending(+0.001f); return;
     case SDL_SCANCODE_N: IncreaseBlending(-0.001f); return;
+
+    case SDL_SCANCODE_G: IncreaseWaveHeight(+0.2f); return;
+    case SDL_SCANCODE_H: IncreaseWaveHeight(-0.2f); return;
+
+    case SDL_SCANCODE_J: IncreaseWaterLevel(+1.0f); return;
+    case SDL_SCANCODE_K: IncreaseWaterLevel(-1.0f); return;
+
+    case SDL_SCANCODE_L: ToggleWater(); return;
         
     // --- Arrows : noise offset | Shift : mountain center ---
     case SDL_SCANCODE_LEFT:  if (shift) add(d.mountainCenter.x, -centerStep, 0.0f, 1.0f); else d.noiseOffset.x -= offsetStep; break;
@@ -250,6 +255,21 @@ void Terrain_Scene::OnUpdate(float dt)
         m_terrainDirty = false;
         RegenerateTerrain();
     }
+
+    if (m_waveCb.height != m_targetWaveHeight)
+    {
+        float t = 2.0f * dt;
+        m_waveCb.height = m_waveCb.height + (m_targetWaveHeight - m_waveCb.height) * t;
+        m_waterMaterial->SetParams(Water_VS::CB_SLOT_waves, m_waveCb);
+    }
+
+    if (m_waterCb.waterLevel != m_targetWaterLevel)
+    {
+        float t = 2.0f * dt;
+        m_waterCb.waterLevel = m_waterCb.waterLevel + (m_targetWaterLevel - m_waterCb.waterLevel) * t;
+        m_waterMaterial->SetParams(Water_PS::CB_SLOT_mat, m_waterCb);
+        m_water->transform.SetPosition(glm::vec3(0.0f, m_waterCb.waterLevel, 0.0f));
+    }
 }
 
 void Terrain_Scene::RegenerateTerrain()
@@ -291,7 +311,9 @@ void Terrain_Scene::PrintControls() const
               << "  PgUp / PgDn       : mountain radius + / -   Shift + PgUp / PgDn : min height + / -\n"
               << "  Ins / Del         : mountain noise + / -    Shift + Ins / Del   : edge warp + / -\n"
               << "=== Render controls ===\n"
-              << "  T                 : toggle textures         B / N               : terrain blending + / -\n";
+              << "  T                 : toggle textures         B / N               : terrain blending + / -\n"
+              << "=== Simulation controls ===\n"
+              << "  G / H             : wave height + / -       J / K               : water level + / -\n";
 }
 
 void Terrain_Scene::ToggleTextures()
@@ -305,6 +327,21 @@ void Terrain_Scene::IncreaseBlending(float _value)
     m_terrainCb.blendDistance += _value;
     m_terrainCb.blendDistance = clamp(m_terrainCb.blendDistance, 0.0f, 0.5f);
     m_mat->SetParams<LitTerrain_BP_PS::MaterialCB>(LitTerrain_BP_PS::CB_SLOT_mat, m_terrainCb);
+}
+
+void Terrain_Scene::IncreaseWaveHeight(float _value)
+{
+    m_targetWaveHeight += _value;
+}
+
+void Terrain_Scene::IncreaseWaterLevel(float _value)
+{
+    m_targetWaterLevel += _value;
+}
+
+void Terrain_Scene::ToggleWater()
+{
+    m_waterToggle = !m_waterToggle;
 }
 
 void Terrain_Scene::OnDraw(Device* _pDevice)
@@ -334,9 +371,12 @@ void Terrain_Scene::OnDraw(Device* _pDevice)
         DrawObjects(_pDevice, m_camera.GetFrustum(), 0b10);
     _pDevice->EndPass();
     
-    _pDevice->BeginPass(m_waterPass);
-        DrawObjects(_pDevice, m_camera.GetFrustum(), 0b01);
-    _pDevice->EndPass();
+    if (m_waterToggle)
+    {
+        _pDevice->BeginPass(m_waterPass);
+            DrawObjects(_pDevice, m_camera.GetFrustum(), 0b01);
+        _pDevice->EndPass();
+    }
 }
 
 void Terrain_Scene::SetSkybox(Cubemap _cubemap)
