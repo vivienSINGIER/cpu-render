@@ -114,19 +114,16 @@ void Animator::CalculateBoneTransform(const AssimpNodeData* node, glm::mat4 pare
 
 	glm::mat4 globalTransformation = parentTransform * nodeTransform;
 
-	auto boneInfoMap = m_CurrentAnimation->GetBoneIDMap();
-	if (boneInfoMap.find(nodeName) != boneInfoMap.end())
-	{
-		int index = boneInfoMap[nodeName].id;
-		glm::mat4 offset = boneInfoMap[nodeName].offset;
-		m_FinalBoneMatrices[index] = globalTransformation * offset;
-	}
+	auto const& boneInfoMap = m_CurrentAnimation->GetBoneIDMap();
+	auto it = boneInfoMap.find(nodeName);
+	if (it != boneInfoMap.end())
+		m_FinalBoneMatrices[it->second.id] = globalTransformation * it->second.offset;
 
 	for (int i = 0; i < node->childrenCount; i++)
 		CalculateBoneTransform(&node->children[i], globalTransformation);
 }
 
-std::vector<glm::mat4> Animator::GetFinalBoneMatrices()
+std::vector<glm::mat4> const& Animator::GetFinalBoneMatrices() const
 {
 	return m_FinalBoneMatrices;
 }

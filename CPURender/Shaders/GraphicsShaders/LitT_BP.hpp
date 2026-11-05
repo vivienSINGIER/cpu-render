@@ -50,7 +50,7 @@ public:
         Vertex_OUT v;
         v.color = _in.color;
         v.posModel = Object().model * totalPosition;
-        v.posH = Pass().proj * Pass().view * v.posModel;
+        v.posH = v.posModel * Pass().viewProj; // viewProj is stored transposed
         v.normal = glm::mat3x3(Object().normalMatrix) * totalNormal;
         v.uv = _in.uv;
 

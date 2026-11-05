@@ -37,19 +37,8 @@ float GetAreaDouble(glm::vec2 a, glm::vec2 b, glm::vec2 c)
 
 glm::vec3 BarycentricWeightPerspective(const glm::vec3& _bary, float _w1, float _w2, float _w3)
 {
-    float invW1 = 1 / _w1;
-    float invW2 = 1 / _w2;
-    float invW3 = 1 / _w3;
-
-    float gamma = _bary.x * invW1 + _bary.y * invW2 + _bary.z * invW3;
-    float invGamma = 1/gamma;
-
-    glm::vec3 weightsCorrected = {
-        _bary.x * invW1 * invGamma,
-        _bary.y * invW2 * invGamma,
-        _bary.z * invW3 * invGamma };
-
-    return weightsCorrected;
+    glm:: vec3 b = { _bary.x * _w1, _bary.y * _w2, _bary.z * _w3 };
+    return b / (b.x + b.y + b.z);
 }
 
 glm::vec3  BarycentricWeight(const glm::vec2& _point, const Triangle& _tri)

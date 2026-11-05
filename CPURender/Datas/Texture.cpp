@@ -147,12 +147,13 @@ glm::vec4 Texture::SampleLod(glm::vec2 _uv, float _lod) const
 
 glm::vec4 Texture::SampleGrad(glm::vec2 _uv, glm::vec2 _ddx, glm::vec2 _ddy) const
 {
-    // footprint of the pixel in level 0 texels, each axis scaled by its own size
     vec2 size = vec2(m_width, m_height);
-    float lx = glm::length(_ddx * size), ly = glm::length(_ddy * size);
-    float pMax = glm::max(lx, ly), pMin = glm::max(glm::min(lx, ly), 1e-6f);
+    float lx = glm::length(_ddx * size); 
+    float ly = glm::length(_ddy * size);
+    float pMax = glm::max(lx, ly);
+    float pMin = glm::max(glm::min(lx, ly), 1e-6f);
 
-    float n   = glm::min(glm::ceil(pMax / pMin), 8.0f);         // max 8x aniso
+    float n   = glm::min(glm::ceil(pMax / pMin), 2.0f);
     float lod = glm::log2(glm::max(pMax / n, 1e-6f));
     if (n <= 1.0f) return SampleLod(_uv, lod);
 
@@ -273,7 +274,11 @@ void Texture::StoreCube(uint32 _lod, uint32 _face, uvec2 _uv, vec4 _c)
 
 void Texture::Clear(glm::vec4 _color)
 {
-    m_data.assign(m_data.size(), EncodeTexel(m_format, _color));
+    auto const texel = EncodeTexel(m_format, _color);
+    int64_t count = (int64_t)m_data.size();
+#pragma omp parallel for
+    for (int64_t i = 0; i < count; i++)
+        m_data[i] = texel;
 }
 
 void Texture::StoreAsHDR(std::string _name, uint32_t _lod)
