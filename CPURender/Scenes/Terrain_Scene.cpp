@@ -118,7 +118,7 @@ void Terrain_Scene::OnInit(Device* _pDevice)
                 1.0f, 0.0f, 0.0f, {terrainSide, terrainSide}, true, 0.05f
     };
 
-    Handle Atlas = TextureFactory::Instance()->CreateTexture("TerrainTextureAtlas", "Atlas.hdr");
+    Handle Atlas = TextureFactory::Instance()->CreateTexture("TerrainTextureAtlas", "Atlas.hdr", true);
 
     m_mat = ShaderFactory::Instance()->CreateMaterial("Lit4T_BP");
     m_mat->SetParams<LitTerrain_BP_PS::MaterialCB>(LitTerrain_BP_PS::CB_SLOT_mat, m_terrainCb);
