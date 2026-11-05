@@ -5,6 +5,8 @@
 #include "../Factories/ShaderFactory.h"
 #include "../Factories/TextureFactory.h"
 #include "../Datas/Lights/LightHelpers.hpp"
+#include "../Factories/GeometryFactory.h"
+#include "../Factories/TextureFactory.h"
 
 void GenerateTerrainAtlas()
 {    
@@ -81,10 +83,17 @@ void Terrain_Scene::OnInit(Device* _pDevice)
 
     m_mainPass.fb = _pDevice->GetDefaultFrameBuffer();
 
-    m_shadowPass.fb = _pDevice->CreateFrameBuffer(1024, 1024, 0, true);
-    m_shadowPass.state.cullMode = CullMode::FRONT;
+    m_skyboxPass.fb = _pDevice->GetDefaultFrameBuffer();
+    m_skyboxPass.state.depthTest = false;
+    m_skyboxPass.state.depthWrite = false;
     
-    m_presentTarget = m_mainPass.fb.gBuffer[0];
+    m_waterPass.fb = _pDevice->GetDefaultFrameBuffer();
+    m_waterPass.state.cullMode = CullMode::NONE;
+    m_waterPass.state.depthWrite = false;
+    m_waterPass.clearFlags.clearGBuffer[0] = false;
+    m_waterPass.clearFlags.clearDepth = false;
+    
+    m_presentTarget = m_waterPass.fb.gBuffer[0];
 
     _pDevice->SetLightData(m_lightData);
 
@@ -112,8 +121,13 @@ void Terrain_Scene::OnInit(Device* _pDevice)
     
     float terrainSide = (m_terrainGenerator.m_grid_size-1) * TERRAIN_CELL_SIZE;
 
+    Cubemap cubemap;
+    cubemap.SetTexture("Skybox", "Assets/Textures/Cubemap/FishPond/posz.jpg", "Assets/Textures/Cubemap/FishPond/negz.jpg",
+        "Assets/Textures/Cubemap/FishPond/negx.jpg", "Assets/Textures/Cubemap/FishPond/posx.jpg",
+        "Assets/Textures/Cubemap/FishPond/posy.jpg", "Assets/Textures/Cubemap/FishPond/negy.jpg", true, false);
+        
     m_terrainCb = {
-        {1.0f, 1.0f, 1.0f, 1.0f},
+            {1.0f, 1.0f, 1.0f, 1.0f},
             Lighting::g_fresnelR0Templates[PLASTIC],
                 1.0f, 0.0f, 0.0f, {terrainSide, terrainSide}, true, 0.05f
     };
@@ -125,10 +139,38 @@ void Terrain_Scene::OnInit(Device* _pDevice)
     m_mat->SetTexture(LitTerrain_BP_VS::TEX_SLOT_texWeight, m_terrainGenerator.m_textureWeights);
     m_mat->SetTexture(LitTerrain_BP_PS::TEX_SLOT_textureAtlas, Atlas);
 
+    Handle BakedSeaBase = TextureFactory::Instance()->CreateTexture("PreBakedSeaBase", 512, 512);
+    WaveSim::BakeSeaBase(TextureFactory::Instance()->GetTexture(BakedSeaBase));
+    
+    Water_PS::WaterMat wCb = {};
+    WaveSim::SeaParams waveCb = { 0.5f, 0.2f, 3.0f, 0.5f };
+    
+    m_waterMaterial = ShaderFactory::Instance()->CreateMaterial("Water");
+    m_waterMaterial->SetParams(Water_PS::CB_SLOT_mat, wCb);
+    m_waterMaterial->SetParams(Water_VS::CB_SLOT_waves, waveCb);
+    m_waterMaterial->SetTexture(Water_PS::TEX_SLOT_depth, m_mainPass.fb.depthBuffer);
+    m_waterMaterial->SetTexture(Water_PS::TEX_SLOT_screen, m_mainPass.fb.gBuffer[0]);
+    m_waterMaterial->SetTexture(Water_PS::TEX_SLOT_seaBase, BakedSeaBase);
+    m_waterMaterial->SetTexture(Water_PS::TEX_SLOT_envCubeMap, cubemap.GetTexture());
+    
+    float terrY = m_terrainDesc.baseHeight + (m_terrainDesc.maxHeight - m_terrainDesc.minHeight) / 2.0f;
+    
     m_terrain = CreateObject(STATIC);
     m_terrain->mesh = m_terrainGenerator.GetTerrainMesh();
     m_terrain->mat = m_mat.get();
     m_terrain->transform.SetPosition(glm::vec3(0.0f, 0.0f, 0.0f));
+    m_terrain->drawMask = 0b10;
+    
+    float scaleW = TERRAIN_GRID_SIZE * TERRAIN_CELL_SIZE;
+    
+    m_water = CreateObject(STATIC);
+    m_water->mesh = GeometryFactory::Instance()->BuildPlane(false, 6);
+    m_water->mat = m_waterMaterial.get();
+    m_water->transform.SetPosition(glm::vec3(0.0f, 0.0f, 0.0f));
+    m_water->transform.SetScale(vec3(scaleW, 1.0f, scaleW));
+    m_water->drawMask = 0b01;
+    
+    SetSkybox(cubemap);
 }
 
 // Terrain controls, physical keys (scancodes) so the numpad works with NumLock on or off. Hold to repeat.
@@ -267,23 +309,44 @@ void Terrain_Scene::IncreaseBlending(float _value)
 
 void Terrain_Scene::OnDraw(Device* _pDevice)
 {
-    Frustum shadowFrustum;
-    glm::mat4x4 lightSpace = Lighting::ComputeDirLightViewProj(m_shadowPass.passData.view, m_camera.GetShadowProj(),
-                                        m_lightData.lights[0].light.direction, m_shadowPass.fb.width, shadowFrustum, 0.0f);
+    // Frustum shadowFrustum;
+    // glm::mat4x4 lightSpace = Lighting::ComputeDirLightViewProj(m_shadowPass.passData.view, m_camera.GetShadowProj(),
+    //                                     m_lightData.lights[0].light.direction, m_shadowPass.fb.width, shadowFrustum, 0.0f);
 
     m_camera.FillData(&m_mainPass.passData);
     m_mainPass.passData.deltaTime = m_deltaTime;
     m_mainPass.passData.totalTime = m_totalTime;
-    m_mainPass.passData.lightSpace = lightSpace;
+    // m_mainPass.passData.lightSpace = lightSpace;
 
-    m_camera.FillData(&m_shadowPass.passData);
-    m_shadowPass.passData.viewProj = lightSpace;
+    // m_camera.FillData(&m_shadowPass.passData);
+    // m_shadowPass.passData.viewProj = lightSpace;
+    
+    m_camera.FillData(&m_waterPass.passData);
+    m_waterPass.passData.deltaTime = m_deltaTime;
+    m_waterPass.passData.totalTime = m_totalTime;
 
-    // _pDevice->BeginPass(m_shadowPass);
-    //     DrawObjects(_pDevice, shadowFrustum);
-    // _pDevice->EndPass();
+    m_camera.FillData(&m_skyboxPass.passData);
+    _pDevice->BeginPass(m_skyboxPass);
+    _pDevice->RegisterCommand(skyboxObject->mesh, skyboxObject->transform.GetMatrix(), skyboxObject->mat);
+    _pDevice->EndPass();
 
     _pDevice->BeginPass(m_mainPass);
-        DrawObjects(_pDevice, m_camera.GetFrustum());
+        DrawObjects(_pDevice, m_camera.GetFrustum(), 0b10);
     _pDevice->EndPass();
+    
+    _pDevice->BeginPass(m_waterPass);
+        DrawObjects(_pDevice, m_camera.GetFrustum(), 0b01);
+    _pDevice->EndPass();
+}
+
+void Terrain_Scene::SetSkybox(Cubemap _cubemap)
+{
+    skyboxObject = new Object();
+    m_skyboxMat = ShaderFactory::Instance()->CreateMaterial("UnlitSkybox");
+    m_skyboxMat->SetTexture(UnlitSkybox_PS::TEX_SLOT_albedo, _cubemap.GetTexture());
+
+    skyboxObject->mat = m_skyboxMat.get();
+    skyboxObject->mesh = GeometryFactory::Instance()->BuildSkybox();
+    skyboxObject->transform.SetScale(50.0f);
+    m_mainPass.clearFlags.clearGBuffer[0] = false;
 }

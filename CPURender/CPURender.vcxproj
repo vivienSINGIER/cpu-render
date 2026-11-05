@@ -242,6 +242,7 @@
     <ClInclude Include="Maths\Plane.h" />
     <ClInclude Include="Maths\Ray.h" />
     <ClInclude Include="Maths\Transform.h" />
+    <ClInclude Include="Maths\WaveSim.hpp" />
     <ClInclude Include="Octree.h" />
     <ClInclude Include="Scenes\ErosionTimelapseScene.h" />
     <ClInclude Include="Scenes\PBR_Scene.h" />
@@ -264,6 +265,7 @@
     <ClInclude Include="Shaders\GraphicsShaders\PBR.hpp" />
     <ClInclude Include="Shaders\GraphicsShaders\LitT_BP_Cube.hpp" />
     <ClInclude Include="Shaders\GraphicsShaders\UnlitSkybox.hpp" />
+    <ClInclude Include="Shaders\GraphicsShaders\Water.hpp" />
     <ClInclude Include="Shaders\ShaderBase\Material.h" />
     <ClInclude Include="Shaders\ShaderBase\Material.inl" />
     <ClInclude Include="Shaders\ShaderBase\ResourceLayout.hpp" />

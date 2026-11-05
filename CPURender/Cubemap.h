@@ -18,7 +18,7 @@ public:
 		const char* _right,
 		const char* _up,
 		const char* _down,
-		bool _isSrgb = false,
+		bool _isSrgb = false, bool _genPBR = true,
 		uint32_t _irradianceFaceSize = 32);
 	Handle GetTexture();
 	Handle GetIrradianceTexture();

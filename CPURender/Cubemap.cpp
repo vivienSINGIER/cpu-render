@@ -2,7 +2,7 @@
 #include <chrono>
 #include <iostream>
 
-Handle Cubemap::SetTexture(const char* _name, const char* _front, const char* _back, const char* _left, const char* _right, const char* _up, const char* _down, bool _isSrgb, uint32_t _irradianceFaceSize)
+Handle Cubemap::SetTexture(const char* _name, const char* _front, const char* _back, const char* _left, const char* _right, const char* _up, const char* _down, bool _isSrgb, bool _genPBR, uint32_t _irradianceFaceSize)
 {
 	std::chrono::time_point start = std::chrono::high_resolution_clock::now();
 	
@@ -44,17 +44,20 @@ Handle Cubemap::SetTexture(const char* _name, const char* _front, const char* _b
 	
 	texture->GenerateCubeMips();
 	
-	std::string irrName = std::string(_name) + "_irradiance";
-	m_irradianceHandle = TextureFactory::Instance()->CreateTexture(irrName, _irradianceFaceSize * 3, _irradianceFaceSize * 3);
-	Texture* irr = TextureFactory::Instance()->GetTexture(irrName);
+	if (_genPBR)
+	{
+		std::string irrName = std::string(_name) + "_irradiance";
+		m_irradianceHandle = TextureFactory::Instance()->CreateTexture(irrName, _irradianceFaceSize * 3, _irradianceFaceSize * 3);
+		Texture* irr = TextureFactory::Instance()->GetTexture(irrName);
 	
-	Texture::BakeIrradiance(texture, irr, _irradianceFaceSize);
+		Texture::BakeIrradiance(texture, irr, _irradianceFaceSize);
 	
-	std::string prefName = std::string(_name) + "_prefilter";
-	m_prefilterHandle = TextureFactory::Instance()->CreateTexture(prefName, width * 3, height * 3);
-	Texture* prefilter = TextureFactory::Instance()->GetTexture(prefName);
+		std::string prefName = std::string(_name) + "_prefilter";
+		m_prefilterHandle = TextureFactory::Instance()->CreateTexture(prefName, width * 3, height * 3);
+		Texture* prefilter = TextureFactory::Instance()->GetTexture(prefName);
 	
-	Texture::BakePrefilter(texture, prefilter);
+		Texture::BakePrefilter(texture, prefilter);
+	}
 	
 	std::chrono::time_point end = std::chrono::high_resolution_clock::now();
 	std::cout << std::chrono::duration<double>(end - start).count() << " s" << std::endl;

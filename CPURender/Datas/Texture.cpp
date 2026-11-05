@@ -133,16 +133,16 @@ glm::vec4 Texture::SampleLod(glm::vec2 _uv, float _lod) const
     if (m_mipCount == 1)                                                                                                                                                                                                     
           return SampleNP(_uv);                                                                                                                                                                                                
                                                                                                                                                                                                                                
-      _lod = glm::clamp(_lod, 0.0f, (float)(m_mipCount - 1));                                                                                                                                                                  
-      uint32 l0 = (uint32)_lod;                                                                                                                                                                                                
-      uint32 l1 = glm::min(l0 + 1, m_mipCount - 1);                                                                                                                                                                            
-      float blend = _lod - (float)l0;                                                                                                                                                                                          
-                                                                                                                                                                                                                               
-      vec4 c0 = SampleBilinear(_uv, l0);                                                                                                                                                                                       
-      if (blend == 0.0f)                                                                                                                                                                                                       
-          return c0;                                                                                                                                                                                                           
-                                                                                                                                                                                                                               
-      return glm::mix(c0, SampleBilinear(_uv, l1), blend);
+    _lod = glm::clamp(_lod, 0.0f, (float)(m_mipCount - 1));                                                                                                                                                                  
+    uint32 l0 = (uint32)_lod;                                                                                                                                                                                                
+    uint32 l1 = glm::min(l0 + 1, m_mipCount - 1);                                                                                                                                                                            
+    float blend = _lod - (float)l0;                                                                                                                                                                                          
+                                                                                                                                                                                                                           
+    vec4 c0 = SampleBilinear(_uv, l0);                                                                                                                                                                                       
+    if (blend == 0.0f)                                                                                                                                                                                                       
+      return c0;                                                                                                                                                                                                           
+                                                                                                                                                                                                                           
+    return glm::mix(c0, SampleBilinear(_uv, l1), blend);
 }
 
 glm::vec4 Texture::SampleGrad(glm::vec2 _uv, glm::vec2 _ddx, glm::vec2 _ddy) const
@@ -163,23 +163,42 @@ glm::vec4 Texture::SampleGrad(glm::vec2 _uv, glm::vec2 _ddx, glm::vec2 _ddy) con
     return sum / n;
 }
 
-glm::vec4 Texture::SampleNPCube(glm::vec3 _dir) const
+glm::vec4 Texture::SampleCube(glm::vec3 _dir) const
 {
-    return SampleNPCubeLod(_dir, 0.0f);
+    return SampleCubeLod(_dir, 0.0f);
 }
 
-glm::vec4 Texture::SampleNPCubeLod(glm::vec3 _dir, float _lod) const
+glm::vec4 Texture::SampleCubeLod(glm::vec3 _dir, float _lod) const
 {
     uint32 face;
     vec2 uv = GetCubeSampleUV(_dir, face);
     uint32 F = CubeFaceSize();
     
-    auto texelAt = [&](uint32 _l) -> uvec2
+    auto texelAt = [&](uint32 _l) -> vec4
     {
         uint32 F_L = F >> _l;
-        uint32 x = clamp((uint32)floor(uv.x * (float)F_L), (uint32)0, F_L - 1);
-        uint32 y = clamp((uint32)floor(uv.y * (float)F_L), (uint32)0, F_L - 1);
-        return CubeTexel(_l, face, x, y);
+        
+        vec2 p  = (uv - floor(uv)) * vec2((float)F_L) - 0.5f;
+        vec2 base = glm::floor(p);
+        vec2 f = p - base;
+        
+        int32 x0 = (int32)base.x;
+        int32 y0 = (int32)base.y;
+        int32 x1 = x0 + 1;
+        int32 y1 = y0 + 1;
+    
+        if (x0 < 0) 
+            x0 += (int32)F_L;
+        if (y0 < 0)
+            y0 += (int32)F_L;
+        if (x1 >= (int32)F_L)
+            x1 -= (int32)F_L;
+        if (y1 >= (int32)F_L)
+            y1 -= (int32)F_L;
+        
+        vec4 top = glm::mix(Load(CubeTexel(_l, face, x0, y0)), Load(CubeTexel(_l, face, x1, y0)), f.x);
+        vec4 bot = glm::mix(Load(CubeTexel(_l, face, x0, y1)), Load(CubeTexel(_l, face, x1, y1)), f.x);
+        return glm::mix(top, bot, f.y);
     };
 
     uint32 maxLod = MaxCubeLod();
@@ -190,11 +209,11 @@ glm::vec4 Texture::SampleNPCubeLod(glm::vec3 _dir, float _lod) const
 
     float blend = _lod - (float)l0;
     
-    vec4 c1 = Load(texelAt(l0));
+    vec4 c1 = texelAt(l0);
     if (blend == 0.0f)
         return c1;
     
-    vec4 c2 = Load(texelAt(l1));
+    vec4 c2 = texelAt(l1);
     
     return glm::mix(c1, c2, blend);
 } 
@@ -377,7 +396,7 @@ void Texture::BakeIrradiance(Texture* _src, Texture* _dst, uint32_t _faceSize)
                     vec3 ts = vec3(sin(theta) * cos(phi), sin(theta) * sin(phi), cos(theta));
                     vec3 sampleDir = ts.x * right + ts.y * up + ts.z * N;
                     
-                    irradience += _src->SampleNPCubeLod(sampleDir, lodLvl) * cos(theta) * sin(theta);
+                    irradience += _src->SampleCubeLod(sampleDir, lodLvl) * cos(theta) * sin(theta);
                     nrSamples += 1.0f;
                 }
             }
@@ -474,7 +493,7 @@ void Texture::BakePrefilter(Texture* _src, Texture* _dst)
                         // float ly = c * smp.L.z - s * smp.L.x;
                         
                         vec3 l = normalize(right * smp.L.x + up * smp.L.y + Nt * smp.L.z);
-                        color += _src->SampleNPCubeLod(l, smp.lod) * smp.weight;
+                        color += _src->SampleCubeLod(l, smp.lod) * smp.weight;
                     }
                     color = color * invTotalWeight;
                     
