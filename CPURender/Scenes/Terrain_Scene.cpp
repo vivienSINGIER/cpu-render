@@ -86,7 +86,9 @@ void Terrain_Scene::OnInit(Device* _pDevice)
     m_skyboxPass.fb = _pDevice->GetDefaultFrameBuffer();
     m_skyboxPass.state.depthTest = false;
     m_skyboxPass.state.depthWrite = false;
-    
+    m_waterPass.clearFlags.clearGBuffer[0] = false;
+    m_waterPass.clearFlags.clearDepth = false;
+
     m_waterPass.fb = _pDevice->GetDefaultFrameBuffer();
     m_waterPass.state.cullMode = CullMode::NONE;
     m_waterPass.state.depthWrite = false;
@@ -346,29 +348,23 @@ void Terrain_Scene::ToggleWater()
 
 void Terrain_Scene::OnDraw(Device* _pDevice)
 {
-    // Frustum shadowFrustum;
-    // glm::mat4x4 lightSpace = Lighting::ComputeDirLightViewProj(m_shadowPass.passData.view, m_camera.GetShadowProj(),
-    //                                     m_lightData.lights[0].light.direction, m_shadowPass.fb.width, shadowFrustum, 0.0f);
-
     m_camera.FillData(&m_mainPass.passData);
     m_mainPass.passData.deltaTime = m_deltaTime;
     m_mainPass.passData.totalTime = m_totalTime;
     // m_mainPass.passData.lightSpace = lightSpace;
-
-    // m_camera.FillData(&m_shadowPass.passData);
-    // m_shadowPass.passData.viewProj = lightSpace;
     
     m_camera.FillData(&m_waterPass.passData);
     m_waterPass.passData.deltaTime = m_deltaTime;
     m_waterPass.passData.totalTime = m_totalTime;
 
     m_camera.FillData(&m_skyboxPass.passData);
-    _pDevice->BeginPass(m_skyboxPass);
-    _pDevice->RegisterCommand(skyboxObject->mesh, skyboxObject->transform.GetMatrix(), skyboxObject->mat);
-    _pDevice->EndPass();
 
     _pDevice->BeginPass(m_mainPass);
         DrawObjects(_pDevice, m_camera.GetFrustum(), 0b10);
+    _pDevice->EndPass();
+
+    _pDevice->BeginPass(m_skyboxPass);
+    _pDevice->RegisterCommand(skyboxObject->mesh, skyboxObject->transform.GetMatrix(), skyboxObject->mat);
     _pDevice->EndPass();
     
     if (m_waterToggle)
@@ -388,5 +384,4 @@ void Terrain_Scene::SetSkybox(Cubemap _cubemap)
     skyboxObject->mat = m_skyboxMat.get();
     skyboxObject->mesh = GeometryFactory::Instance()->BuildSkybox();
     skyboxObject->transform.SetScale(50.0f);
-    m_mainPass.clearFlags.clearGBuffer[0] = false;
 }
