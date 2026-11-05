@@ -56,7 +56,7 @@ void ErosionTimelapseScene::OnInit(Device* _pDevice)
                 0.9f, 0.0f, 0.0f, {terrainSide, terrainSide}, false, 0.05f
     };
 
-    Handle Atlas = TextureFactory::Instance()->CreateTexture("TerrainTextureAtlas", "Atlas.hdr", true);
+    Handle Atlas = TextureFactory::Instance()->CreateTexture("TerrainTextureAtlas", "Assets/Textures/Atlas/Atlas.hdr", true);
 
     m_mat = ShaderFactory::Instance()->CreateMaterial("Lit4T_BP");
     m_mat->SetParams<LitTerrain_BP_PS::MaterialCB>(LitTerrain_BP_PS::CB_SLOT_mat, m_terrainCb);
