@@ -19,6 +19,8 @@ public:
         v.color = _in.color;
         v.posModel = Object().model * glm::vec4({ _in.position, 1 });
         v.posH = Pass().proj * glm::mat4(glm::mat3(Pass().view)) * v.posModel;
+        v.posH.z = v.posH.w * 0.99999f;
+        
         v.normal = glm::mat3x3(Object().model) * _in.normal;
         v.uv = _in.uv;
         return v;
