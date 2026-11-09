@@ -7,8 +7,8 @@
 
 using namespace glm;
 
-#define WIDTH 640
-#define HEIGHT 460
+#define WIDTH 512
+#define HEIGHT 512
 
-#define SCREEN_WIDTH 1280
-#define SCREEN_HEIGHT 920
+#define SCREEN_WIDTH 512
+#define SCREEN_HEIGHT 512

@@ -27,6 +27,9 @@ void Engine::handleEvent(const SDL_Event& event)
 
 void Engine::mainLoop()
 {
+    if (m_mainScene->m_running == false)
+        return;
+    
     uint64_t now = SDL_GetPerformanceCounter();
     float dt = m_lastTime == 0 ? 0.0f : (float)(now - m_lastTime) / (float)SDL_GetPerformanceFrequency();
     m_lastTime = now;

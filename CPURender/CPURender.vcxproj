@@ -149,6 +149,7 @@
   <ItemGroup>
     <ClCompile Include="Animation\AnimationData.cpp" />
     <ClCompile Include="Animation\AnimationPlayer.cpp" />
+    <ClCompile Include="BMP-Parser\BMPParser.cpp" />
     <ClCompile Include="Camera.cpp" />
     <ClCompile Include="Clipping.cpp" />
     <ClCompile Include="Core\Device.cpp" />
@@ -170,6 +171,7 @@
     <ClCompile Include="Heaps\UAVHeap.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Octree.cpp" />
+    <ClCompile Include="Scenes\BMPScene.cpp" />
     <ClCompile Include="Scenes\ErosionTimelapseScene.cpp" />
     <ClCompile Include="Scenes\PBR_Scene.cpp" />
     <ClCompile Include="Scenes\Scene.cpp" />
@@ -196,6 +198,9 @@
     <ClInclude Include="Animation\AnimationData.h" />
     <ClInclude Include="Animation\AnimationPlayer.h" />
     <ClInclude Include="Animation\AssimpGLMHelpers.h" />
+    <ClInclude Include="BMP-Parser\BMParser.inl" />
+    <ClInclude Include="BMP-Parser\BMPParser.hpp" />
+    <ClInclude Include="BMP-Parser\Structs.hpp" />
     <ClInclude Include="Camera.h" />
     <ClInclude Include="Clipping.h" />
     <ClInclude Include="Core\Binning.hpp" />
@@ -244,6 +249,7 @@
     <ClInclude Include="Maths\Transform.h" />
     <ClInclude Include="Maths\WaveSim.hpp" />
     <ClInclude Include="Octree.h" />
+    <ClInclude Include="Scenes\BMPScene.h" />
     <ClInclude Include="Scenes\ErosionTimelapseScene.h" />
     <ClInclude Include="Scenes\PBR_Scene.h" />
     <ClInclude Include="Scenes\Scene.h" />

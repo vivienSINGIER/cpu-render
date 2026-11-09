@@ -47,7 +47,7 @@ protected:
 
 	Device* m_pDevice = nullptr;
 
-private:
+protected:
 	void UpdateCamera(float _dt);
 	void RotateCamera(float _yaw, float _pitch);
 	void UpdateFps(float _dt);

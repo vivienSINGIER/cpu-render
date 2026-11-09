@@ -271,7 +271,7 @@ void Texture::Store(uvec2 _c, uint32 _lod, glm::vec4 _v)
 
 void Texture::Store(uint32 _x, uint32 _y, glm::vec4 _v)
 {
-    m_data[GetIndex(_x, _y)] = EncodeTexel(m_format, _v);;
+    m_data[GetIndex(_x, _y)] = EncodeTexel(m_format, _v);
 }
 
 void Texture::Store(uint32 _x, uint32 _y, uint32 _lod, glm::vec4 _v)

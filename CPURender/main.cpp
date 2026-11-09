@@ -8,6 +8,7 @@
 
 #include "engine.hpp"
 #include "Core/Device.h"
+#include "Scenes/BMPScene.h"
 
 #include "Scenes/TexturedBP_Scene.h"
 #include "Scenes/SceneParticlesTest.h"
@@ -85,7 +86,7 @@ int main(void) {
 
     Engine engine;
     Texture frameBuffer(WIDTH, HEIGHT,  Texture::RGBA32, Texture::LINEAR);
-    engine.Init<Terrain_Scene>(&frameBuffer);
+    engine.Init<BMPScene>(&frameBuffer);
     
     bool isRunning = true;
     uint32_t frame = 1;
